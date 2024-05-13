@@ -9,40 +9,45 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
+	"go.uber.org/zap"
 )
 
 func main() {
-	ctx := context.Background();
+	ctx := context.Background()
 
 	//setup env
-	err := godotenv.Load();
+	err := godotenv.Load()
 	if err != nil {
-		fmt.Println("error loading.env file");
-        return
+		fmt.Println("error loading.env file")
+		return
 	}
 
-	fmt.Println("Starting Server...");
-	defer fmt.Println("Shutting Down Server...");
+	//setting logger
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+
+	fmt.Println("Starting Server...")
+	defer fmt.Println("Shutting Down Server...")
 
 	//Initialize DB
-	db, err := repository.InitializeDatabase(ctx);
-	if err != nil{
-		fmt.Println("Database Error : ", err);
-		return 
+	db, err := repository.InitializeDatabase(ctx)
+	if err != nil {
+		fmt.Println("Database Error : ", err)
+		logger.Error("Database Error  : ", zap.Error(err))
+		return
 	}
 	fmt.Println("Connected to Database!")
 
 	//Creating Services
-	services := app.NewServices(db);
+	services := app.NewServices(db)
 
 	//Initializaing Router
-	router := api.NewRouter(services);
+	router := api.NewRouter(services)
 
 	err = http.ListenAndServe("localhost:1925", router)
-	if err != nil{
-        fmt.Println("Error Starting Server : ", err);
-        return
-    }
-
-
+	if err != nil {
+		fmt.Println("Error Starting Server : ", err)
+		logger.Error("Error Starting Server  : ", zap.Error(err))
+		return
+	}
 }
