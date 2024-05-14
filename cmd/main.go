@@ -39,10 +39,10 @@ func main() {
 	fmt.Println("Connected to Database!")
 
 	//Creating Services
-	services := app.NewServices(db)
+	services := app.NewServices(db,ctx)
 
 	//Initializaing Router
-	router := api.NewRouter(services)
+	router := api.NewRouter(services,ctx)
 
 	err = http.ListenAndServe("localhost:1925", router)
 	if err != nil {

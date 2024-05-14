@@ -1,0 +1,36 @@
+package post
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/joshsoftware/profile_builder_backend_go/internal/app/profile"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
+)
+
+func CreateProfileHandler(profileSvc profile.Service, ctx context.Context) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req, err := decodeCreateProfileRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			return
+		}
+
+		err = req.Validate()
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			return
+		}
+
+		err = profileSvc.CreateProfile(req, ctx)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusCreated, dto.MessageResponse{
+			Message: "Basic info added successfully",
+		})
+	}
+}

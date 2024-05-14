@@ -1,12 +1,18 @@
 package api
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/gorilla/mux"
+	post "github.com/joshsoftware/profile_builder_backend_go/internal/api/POST"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app"
 )
 
-func NewRouter(deps app.Dependencies) *mux.Router{
+func NewRouter(deps app.Dependencies, ctx context.Context) *mux.Router{
 	router := mux.NewRouter();
+
+	router.HandleFunc("/profiles",post.CreateProfileHandler(deps.ProfileService,ctx)).Methods(http.MethodPost)
 	
 	return router
 }

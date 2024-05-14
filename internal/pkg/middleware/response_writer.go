@@ -6,9 +6,11 @@ import (
 	"net/http"
 )
 
-type response struct {
+type errorResponse struct {
 	ErrorCode    int         `json:"error_code"`
 	ErrorMessage string      `json:"error_message"`
+}
+type successResponse struct {
 	Data         interface{} `json:"data"`
 }
 
@@ -16,7 +18,7 @@ func SuccessResponse(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
-	payload := response{
+	payload := successResponse{
 		Data: data,
 	}
 
@@ -42,7 +44,7 @@ func ErrorResponse(w http.ResponseWriter, httpStatus int, err error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
 
-	payload := response{
+	payload := errorResponse{
 		ErrorCode:    httpStatus,
 		ErrorMessage: err.Error(),
 	}
