@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS users(
 CREATE TABLE IF NOT EXISTS profiles (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	name VARCHAR(100) NOT NULL,
-    email VARCHAR(60) NOT NULL,
+    email VARCHAR(60) NOT NULL UNIQUE,
     gender VARCHAR(10),
-    mobile char(10) NOT NULL,
+    mobile char(10) NOT NULL UNIQUE,
     designation VARCHAR(30),
     description TEXT,
     title VARCHAR(60) NOT NULL,
