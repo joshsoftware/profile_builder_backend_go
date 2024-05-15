@@ -26,7 +26,11 @@ CREATE TABLE IF NOT EXISTS profiles (
     github_link VARCHAR(100),
     linkedin_link VARCHAR(100),
     is_active INT NOT NULL,
-    is_current_employee INT NOT NULL
+    is_current_employee INT NOT NULL,
+    created_at DATE NOT NULL DEFAULT CURRENT_DATE,
+	updated_at DATE NOT NULL DEFAULT CURRENT_DATE,
+    created_by_id INT NOT NULL,
+    updated_by_id INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS skills (

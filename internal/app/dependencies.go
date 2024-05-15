@@ -8,16 +8,16 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 )
 
-type Dependencies struct{
+type Dependencies struct {
 	ProfileService profile.Service
 }
 
-func NewServices(db *pgx.Conn, ctx context.Context) Dependencies{
-	profileRepo := repository.NewProfileRepo(db);
+func NewServices(ctx context.Context, db *pgx.Conn) Dependencies {
+	profileRepo := repository.NewProfileRepo(db)
 
 	profileService := profile.NewServices(profileRepo)
 
 	return Dependencies{
 		ProfileService: profileService,
-    }
+	}
 }

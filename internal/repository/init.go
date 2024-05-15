@@ -8,16 +8,16 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func InitializeDatabase(ctx context.Context)(*pgx.Conn, error){
-	db, err := pgx.Connect(ctx, os.Getenv("PSQL_INFO"));
+func InitializeDatabase(ctx context.Context) (*pgx.Conn, error) {
+	db, err := pgx.Connect(ctx, os.Getenv("PSQL_INFO"))
 	if err != nil {
-		return nil, errors.New("error connecting to database");
+		return nil, errors.New("error connecting to database")
 	}
 
 	err = db.Ping(ctx)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
-	return db, nil;
+	return db, nil
 }

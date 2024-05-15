@@ -7,11 +7,11 @@ import (
 )
 
 type errorResponse struct {
-	ErrorCode    int         `json:"error_code"`
-	ErrorMessage string      `json:"error_message"`
+	ErrorCode    int    `json:"error_code"`
+	ErrorMessage string `json:"error_message"`
 }
 type successResponse struct {
-	Data         interface{} `json:"data"`
+	Data interface{} `json:"data"`
 }
 
 func SuccessResponse(w http.ResponseWriter, status int, data any) {

@@ -17,3 +17,13 @@ func decodeCreateProfileRequest(r *http.Request) (dto.CreateProfileRequest, erro
 
 	return req, nil
 }
+
+func decodeCreateEducationRequest(r *http.Request) (dto.CreateEducationRequest, error) {
+	var req dto.CreateEducationRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return dto.CreateEducationRequest{}, errors.New("invalid Json in request body")
+	}
+
+	return req, nil
+}
