@@ -9,10 +9,14 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app"
 )
 
-func NewRouter(deps app.Dependencies, ctx context.Context) *mux.Router{
-	router := mux.NewRouter();
+func NewRouter(ctx context.Context, deps app.Dependencies) *mux.Router {
+	router := mux.NewRouter()
 
-	router.HandleFunc("/profiles",post.CreateProfileHandler(deps.ProfileService,ctx)).Methods(http.MethodPost)
-	
+	router.HandleFunc("/profiles", post.CreateProfileHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
+
+	//Subrouter routes of profiles
+	subrouter := router.PathPrefix("/profiles").Subrouter()
+	subrouter.HandleFunc("/educations", post.CreateEducationHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
+
 	return router
 }

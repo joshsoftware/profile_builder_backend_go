@@ -9,7 +9,7 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 )
 
-func CreateProfileHandler(profileSvc profile.Service, ctx context.Context) func(http.ResponseWriter, *http.Request) {
+func CreateProfileHandler(ctx context.Context, profileSvc profile.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeCreateProfileRequest(r)
 		if err != nil {
@@ -23,7 +23,7 @@ func CreateProfileHandler(profileSvc profile.Service, ctx context.Context) func(
 			return
 		}
 
-		err = profileSvc.CreateProfile(req, ctx)
+		err = profileSvc.CreateProfile(ctx, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			return
@@ -31,6 +31,32 @@ func CreateProfileHandler(profileSvc profile.Service, ctx context.Context) func(
 
 		middleware.SuccessResponse(w, http.StatusCreated, dto.MessageResponse{
 			Message: "Basic info added successfully",
+		})
+	}
+}
+
+func CreateEducationHandler(ctx context.Context, profileSvc profile.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req, err := decodeCreateEducationRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			return
+		}
+
+		err = req.Validate()
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			return
+		}
+
+		err = profileSvc.CreateEducation(ctx, req)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusCreated, dto.MessageResponse{
+			Message: "Education(s) added successfully",
 		})
 	}
 }

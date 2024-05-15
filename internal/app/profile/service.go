@@ -4,27 +4,56 @@ import (
 	"context"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 )
 
-
-type service struct{
+type service struct {
 	Repo repository.ProfileStorer
 }
 
 type Service interface {
-	CreateProfile(profileDetail dto.CreateProfileRequest, ctx context.Context) error
+	CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) error
+	CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) error
 }
 
-func NewServices(repo repository.ProfileStorer) Service{
+func NewServices(repo repository.ProfileStorer) Service {
 	return &service{
 		Repo: repo,
 	}
 }
 
-func (profileSvc *service) CreateProfile(profileDetail dto.CreateProfileRequest, ctx context.Context) error {
-	
-	err := profileSvc.Repo.CreateProfile(profileDetail,ctx)
+func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) error {
+
+	err := profileSvc.Repo.CreateProfile(ctx, profileDetail)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (profileSvc *service) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) error {
+	today := helpers.GetTodaysDate()
+
+	var value []repository.EducationDao
+	for i := 0; i < len(eduDetail.Educations); i++ {
+		var val repository.EducationDao
+		val.ProfileId = eduDetail.ProfileId
+		val.Degree = eduDetail.Educations[i].Degree
+		val.UniversityName = eduDetail.Educations[i].UniversityName
+		val.Place = eduDetail.Educations[i].Place
+		val.PercentageOrCgpa = eduDetail.Educations[i].PercentageOrCgpa
+		val.PassingYear = eduDetail.Educations[i].PassingYear
+		val.CreatedAt = today
+		val.UpdatedAt = today
+		val.CreatedById = 1
+		val.UpdatedById = 1
+
+		value = append(value, val)
+	}
+
+	err := profileSvc.Repo.CreateEducation(ctx, value)
 	if err != nil {
 		return err
 	}

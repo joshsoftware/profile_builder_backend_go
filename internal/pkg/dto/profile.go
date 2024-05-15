@@ -7,27 +7,27 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 )
 
-type CreateProfileRequest struct{
+type CreateProfileRequest struct {
 	Profile Profile `json:"profile"`
 }
 
-type Profile struct{
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Gender string `json:"gender"`
-	Mobile string `json:"mobile"`
-	Designation string `json:"designation"`
-	Description string `json:"description"`
-	Title string `json:"title"`
-	YearsOfExperience float64 `json:"years_of_experience"`
+type Profile struct {
+	Name              string   `json:"name"`
+	Email             string   `json:"email"`
+	Gender            string   `json:"gender"`
+	Mobile            string   `json:"mobile"`
+	Designation       string   `json:"designation"`
+	Description       string   `json:"description"`
+	Title             string   `json:"title"`
+	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
 	SecondarySkills   []string `json:"secondary_skills"`
-	GithubLink string `json:"github_link"`
-	LinkedinLink string `json:"linkedin_link"`
+	GithubLink        string   `json:"github_link"`
+	LinkedinLink      string   `json:"linkedin_link"`
 }
 
 func (req *CreateProfileRequest) Validate() error {
-	// var errors []string
+
 	if req.Profile.Name == "" {
 		return errors.New("name is required")
 	}
@@ -36,7 +36,7 @@ func (req *CreateProfileRequest) Validate() error {
 		return errors.New("email is required")
 	}
 
-	matchMail, _ := regexp.MatchString(constants.EMAIL_REGEX, req.Profile.Email)
+	matchMail, _ := regexp.MatchString(constants.EmailRegex, req.Profile.Email)
 	if !matchMail {
 		return errors.New("invalid email format")
 	}
@@ -45,7 +45,7 @@ func (req *CreateProfileRequest) Validate() error {
 		return errors.New("mobile is required")
 	}
 
-	matchMob, _ := regexp.MatchString(constants.MOBILE_REGEX, req.Profile.Mobile)
+	matchMob, _ := regexp.MatchString(constants.MobileRegex, req.Profile.Mobile)
 	if !matchMob {
 		return errors.New("invalid mobile format")
 	}
@@ -58,7 +58,7 @@ func (req *CreateProfileRequest) Validate() error {
 		return errors.New("title is required")
 	}
 
-	if req.Profile.YearsOfExperience <= 0.0 {
+	if req.Profile.YearsOfExperience < 0.0 {
 		return errors.New("years of experience must be a positive number")
 	}
 

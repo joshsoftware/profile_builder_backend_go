@@ -15,16 +15,17 @@ import (
 func main() {
 	ctx := context.Background()
 
+	//setting logger
+	logger, _ := zap.NewProduction()
+	zap.ReplaceGlobals(logger)
+	defer logger.Sync()
+
 	//setup env
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Println("error loading.env file")
+		logger.Info("error loading.env file")
 		return
 	}
-
-	//setting logger
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
 
 	fmt.Println("Starting Server...")
 	defer fmt.Println("Shutting Down Server...")
@@ -32,21 +33,19 @@ func main() {
 	//Initialize DB
 	db, err := repository.InitializeDatabase(ctx)
 	if err != nil {
-		fmt.Println("Database Error : ", err)
 		logger.Error("Database Error  : ", zap.Error(err))
 		return
 	}
 	fmt.Println("Connected to Database!")
 
 	//Creating Services
-	services := app.NewServices(db,ctx)
+	services := app.NewServices(ctx, db)
 
 	//Initializaing Router
-	router := api.NewRouter(services,ctx)
+	router := api.NewRouter(ctx, services)
 
 	err = http.ListenAndServe("localhost:1925", router)
 	if err != nil {
-		fmt.Println("Error Starting Server : ", err)
 		logger.Error("Error Starting Server  : ", zap.Error(err))
 		return
 	}
