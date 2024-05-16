@@ -15,6 +15,7 @@ type service struct {
 type Service interface {
 	CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) error
 	CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) error
+	CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) error
 }
 
 func NewServices(repo repository.ProfileStorer) Service {
@@ -54,6 +55,37 @@ func (profileSvc *service) CreateEducation(ctx context.Context, eduDetail dto.Cr
 	}
 
 	err := profileSvc.Repo.CreateEducation(ctx, value)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (profileSvc *service) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) error {
+	today := helpers.GetTodaysDate()
+
+	var value []repository.ProjectDao
+	for i := 0; i < len(projDetail.Projects); i++ {
+		var val repository.ProjectDao
+
+		val.ProfileId = projDetail.ProfileId
+		val.Name = projDetail.Projects[i].Name
+		val.Description = projDetail.Projects[i].Description
+		val.Role = projDetail.Projects[i].Role
+		val.Responsibilities = projDetail.Projects[i].Responsibilities
+		val.Technologies = projDetail.Projects[i].Technologies
+		val.TechWorkedOn = projDetail.Projects[i].TechWorkedOn
+		val.Duration = projDetail.Projects[i].Duration
+		val.CreatedAt = today
+		val.UpdatedAt = today
+		val.CreatedById = 1
+		val.UpdatedById = 1
+
+		value = append(value, val)
+	}
+
+	err := profileSvc.Repo.CreateProject(ctx, value)
 	if err != nil {
 		return err
 	}

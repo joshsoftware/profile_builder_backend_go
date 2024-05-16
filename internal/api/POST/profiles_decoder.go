@@ -27,3 +27,13 @@ func decodeCreateEducationRequest(r *http.Request) (dto.CreateEducationRequest, 
 
 	return req, nil
 }
+
+func decodeCreateProjectRequest(r *http.Request) (dto.CreateProjectRequest, error) {
+	var req dto.CreateProjectRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return dto.CreateProjectRequest{}, errors.New("invalid Json in request body")
+	}
+
+	return req, nil
+}
