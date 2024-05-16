@@ -141,3 +141,76 @@ func TestCreateEducation(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateProject(t *testing.T) {
+	mockProfileRepo := mocks.NewProfileStorer(t)
+	profileService := NewServices(mockProfileRepo)
+
+	tests := []struct {
+		name            string
+		input           dto.CreateProjectRequest
+		setup           func(projectMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name: "Success for project details",
+			input: dto.CreateProjectRequest{
+				ProfileId: 1,
+				Projects: []dto.Project{
+					{
+						Name:              "Project X",
+						Description:       "Description of Project X",
+						Role:              "Developer",
+						Responsibilities:  "Coding, testing",
+						Technologies:      "Golang, Python",
+						TechWorkedOn:      "Java, C++",
+						WorkingStartDate:  "2024-01-01",
+						WorkingEndDate:    "2024-06-01",
+						Duration:          "5 months",
+					},
+				},
+			},
+			setup: func(projectMock *mocks.ProfileStorer) {
+				projectMock.On("CreateProject", mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name: "Failed because CreateProject",
+			input: dto.CreateProjectRequest{
+				ProfileId: 123,
+				Projects: []dto.Project{
+					{
+						Name:              "",
+						Description:       "Description of Project Y",
+						Role:              "Tester",
+						Responsibilities:  "Testing",
+						Technologies:      "Java, Selenium",
+						TechWorkedOn:      "Python, C#",
+						WorkingStartDate:  "2024-01-01",
+						WorkingEndDate:    "2024-06-01",
+						Duration:          "5 months",
+					},
+				},
+			},
+			setup: func(projectMock *mocks.ProfileStorer) {
+				projectMock.On("CreateProject", mock.Anything).Return(errors.New("Error")).Once()
+			},
+			isErrorExpected: true,
+		},
+	}
+	
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProfileRepo)
+
+			// test service
+			err := profileService.CreateProject(context.TODO(), test.input)
+
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}

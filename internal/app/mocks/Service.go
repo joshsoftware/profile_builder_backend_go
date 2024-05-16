@@ -50,6 +50,24 @@ func (_m *Service) CreateProfile(ctx context.Context, profileDetail dto.CreatePr
 	return r0
 }
 
+// CreateProject provides a mock function with given fields: ctx, projDetail
+func (_m *Service) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) error {
+	ret := _m.Called(ctx, projDetail)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateProject")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProjectRequest) error); ok {
+		r0 = rf(ctx, projDetail)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewService creates a new instance of Service. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewService(t interface {

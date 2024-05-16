@@ -60,3 +60,29 @@ func CreateEducationHandler(ctx context.Context, profileSvc profile.Service) fun
 		})
 	}
 }
+
+func CreateProjectsHandler(ctx context.Context, profileSvc profile.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req, err := decodeCreateProjectRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			return
+		}
+
+		err = req.Validate()
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			return
+		}
+
+		err = profileSvc.CreateProject(ctx, req)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusCreated, dto.MessageResponse{
+			Message: "Profile(s) added successfully",
+		})
+	}
+}

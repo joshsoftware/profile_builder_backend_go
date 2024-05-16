@@ -52,6 +52,24 @@ func (_m *ProfileStorer) CreateProfile(ctx context.Context, profileDetail dto.Cr
 	return r0
 }
 
+// CreateProject provides a mock function with given fields: ctx, values
+func (_m *ProfileStorer) CreateProject(ctx context.Context, values []repository.ProjectDao) error {
+	ret := _m.Called(ctx, values)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateProject")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []repository.ProjectDao) error); ok {
+		r0 = rf(ctx, values)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewProfileStorer creates a new instance of ProfileStorer. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewProfileStorer(t interface {

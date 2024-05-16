@@ -17,6 +17,7 @@ func NewRouter(ctx context.Context, deps app.Dependencies) *mux.Router {
 	//Subrouter routes of profiles
 	subrouter := router.PathPrefix("/profiles").Subrouter()
 	subrouter.HandleFunc("/educations", post.CreateEducationHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
+	subrouter.HandleFunc("/projects", post.CreateProjectsHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
 
 	return router
 }

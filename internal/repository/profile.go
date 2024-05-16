@@ -19,6 +19,7 @@ type ProfileStore struct {
 type ProfileStorer interface {
 	CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) error
 	CreateEducation(ctx context.Context, values []EducationDao) error
+	CreateProject(ctx context.Context, values []ProjectDao) error
 }
 
 func NewProfileRepo(db *pgx.Conn) ProfileStorer {
@@ -79,6 +80,37 @@ func (profileStore *ProfileStore) CreateEducation(ctx context.Context, values []
 				return errors.New("education already exists")
 			}
 			zap.S().Error("error executing create education insert query:", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (profileStore *ProfileStore) CreateProject(ctx context.Context, values []ProjectDao) error {
+
+	for i := 0; i < len(values); i++ {
+
+		value := []interface{}{
+			values[i].Name, values[i].Description, values[i].Role, values[i].Responsibilities,
+			values[i].Technologies, values[i].TechWorkedOn, values[i].WorkingStartDate, values[i].WorkingEndDate, values[i].Duration, values[i].CreatedAt, values[i].UpdatedAt, values[i].CreatedById, values[i].UpdatedById, values[i].ProfileId,
+		}
+
+		insertQuery, args, err := sq.Insert("projects").
+			Columns(constants.CreateProjectColumns...).
+			Values(value...).
+			PlaceholderFormat(sq.Dollar).
+			ToSql()
+		if err != nil {
+			zap.S().Error("Error generating project insert query: ", err)
+			return err
+		}
+
+		_, err = profileStore.db.Exec(ctx, insertQuery, args...)
+		if err != nil {
+			if helpers.IsDuplicateKeyError(err) {
+				return errors.New("project already exists")
+			}
+			zap.S().Error("error executing create project insert query:", err)
 			return err
 		}
 	}
