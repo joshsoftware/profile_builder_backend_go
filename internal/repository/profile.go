@@ -20,6 +20,7 @@ type ProfileStorer interface {
 	CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) error
 	CreateEducation(ctx context.Context, values []EducationDao) error
 	CreateProject(ctx context.Context, values []ProjectDao) error
+	ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error)
 }
 
 func NewProfileRepo(db *pgx.Conn) ProfileStorer {
@@ -60,8 +61,8 @@ func (profileStore *ProfileStore) CreateEducation(ctx context.Context, values []
 
 		value := []interface{}{
 			values[i].Degree, values[i].UniversityName, values[i].Place, values[i].PercentageOrCgpa,
-			values[i].PassingYear, values[i].CreatedAt, values[i].UpdatedAt, values[i].CreatedById,
-			values[i].UpdatedById, values[i].ProfileId,
+			values[i].PassingYear, values[i].CreatedAt, values[i].UpdatedAt, values[i].CreatedByID,
+			values[i].UpdatedByID, values[i].ProfileID,
 		}
 
 		insertQuery, args, err := sq.Insert("educations").
@@ -92,7 +93,7 @@ func (profileStore *ProfileStore) CreateProject(ctx context.Context, values []Pr
 
 		value := []interface{}{
 			values[i].Name, values[i].Description, values[i].Role, values[i].Responsibilities,
-			values[i].Technologies, values[i].TechWorkedOn, values[i].WorkingStartDate, values[i].WorkingEndDate, values[i].Duration, values[i].CreatedAt, values[i].UpdatedAt, values[i].CreatedById, values[i].UpdatedById, values[i].ProfileId,
+			values[i].Technologies, values[i].TechWorkedOn, values[i].WorkingStartDate, values[i].WorkingEndDate, values[i].Duration, values[i].CreatedAt, values[i].UpdatedAt, values[i].CreatedByID, values[i].UpdatedByID, values[i].ProfileID,
 		}
 
 		insertQuery, args, err := sq.Insert("projects").
@@ -115,4 +116,28 @@ func (profileStore *ProfileStore) CreateProject(ctx context.Context, values []Pr
 		}
 	}
 	return nil
+}
+
+func (profileStore *ProfileStore) ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error) {
+
+	sql, args, err := sq.Select(constants.ListProfilesColumns...).From("profiles").ToSql()
+	if err != nil {
+		zap.S().Error("Error generating list project select query: ", err)
+		return []dto.ListProfiles{}, err
+	}
+	rows, err := profileStore.db.Query(ctx, sql, args...)
+	if err != nil {
+		zap.S().Error("error executing create project insert query:", err)
+		return []dto.ListProfiles{}, err
+	}
+
+	for rows.Next() {
+		var value dto.ListProfiles
+		rows.Scan(&value.ID, &value.Name, &value.Email, &value.YearsOfExperience, &value.PrimarySkills, &value.IsCurrentEmployee)
+
+		values = append(values, value)
+	}
+	defer rows.Close()
+
+	return values, nil
 }

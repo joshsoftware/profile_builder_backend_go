@@ -26,6 +26,19 @@ type Profile struct {
 	LinkedinLink      string   `json:"linkedin_link"`
 }
 
+type ListProfiles struct {
+	ID                int      `json:"id"`
+	Name              string   `json:"name"`
+	Email             string   `json:"email"`
+	YearsOfExperience float64  `json:"years_of_experience"`
+	PrimarySkills     []string `json:"primary_skills"`
+	IsCurrentEmployee int64    `json:"is_current_employee"`
+}
+
+type ListProfilesResponse struct {
+	Profiles []ListProfiles `json:"profiles"`
+}
+
 func (req *CreateProfileRequest) Validate() error {
 
 	if req.Profile.Name == "" {
