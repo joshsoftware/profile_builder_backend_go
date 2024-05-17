@@ -16,6 +16,7 @@ type Service interface {
 	CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) error
 	CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) error
 	CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) error
+	ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error)
 }
 
 func NewServices(repo repository.ProfileStorer) Service {
@@ -40,7 +41,7 @@ func (profileSvc *service) CreateEducation(ctx context.Context, eduDetail dto.Cr
 	var value []repository.EducationDao
 	for i := 0; i < len(eduDetail.Educations); i++ {
 		var val repository.EducationDao
-		val.ProfileId = eduDetail.ProfileId
+		val.ProfileID = eduDetail.ProfileID
 		val.Degree = eduDetail.Educations[i].Degree
 		val.UniversityName = eduDetail.Educations[i].UniversityName
 		val.Place = eduDetail.Educations[i].Place
@@ -48,8 +49,8 @@ func (profileSvc *service) CreateEducation(ctx context.Context, eduDetail dto.Cr
 		val.PassingYear = eduDetail.Educations[i].PassingYear
 		val.CreatedAt = today
 		val.UpdatedAt = today
-		val.CreatedById = 1
-		val.UpdatedById = 1
+		val.CreatedByID = 1
+		val.UpdatedByID = 1
 
 		value = append(value, val)
 	}
@@ -69,7 +70,7 @@ func (profileSvc *service) CreateProject(ctx context.Context, projDetail dto.Cre
 	for i := 0; i < len(projDetail.Projects); i++ {
 		var val repository.ProjectDao
 
-		val.ProfileId = projDetail.ProfileId
+		val.ProfileID = projDetail.ProfileID
 		val.Name = projDetail.Projects[i].Name
 		val.Description = projDetail.Projects[i].Description
 		val.Role = projDetail.Projects[i].Role
@@ -79,8 +80,8 @@ func (profileSvc *service) CreateProject(ctx context.Context, projDetail dto.Cre
 		val.Duration = projDetail.Projects[i].Duration
 		val.CreatedAt = today
 		val.UpdatedAt = today
-		val.CreatedById = 1
-		val.UpdatedById = 1
+		val.CreatedByID = 1
+		val.UpdatedByID = 1
 
 		value = append(value, val)
 	}
@@ -91,4 +92,14 @@ func (profileSvc *service) CreateProject(ctx context.Context, projDetail dto.Cre
 	}
 
 	return nil
+}
+
+func (profileSvc *service) ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error) {
+
+	values, err = profileSvc.Repo.ListProfiles(ctx)
+	if err != nil {
+		return []dto.ListProfiles{}, err
+	}
+
+	return values, nil
 }

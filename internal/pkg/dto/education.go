@@ -6,20 +6,20 @@ import (
 )
 
 type CreateEducationRequest struct {
-	ProfileId int64       `json:"profile_id"`
+	ProfileID  int64       `json:"profile_id"`
 	Educations []Education `json:"educations"`
 }
 
 type Education struct {
 	Degree           string `json:"degree"`
-	UniversityName  string `json:"university_name"`
+	UniversityName   string `json:"university_name"`
 	Place            string `json:"place"`
 	PercentageOrCgpa string `json:"percent_or_cgpa"`
 	PassingYear      string `json:"passing_year"`
 }
 
 func (req *CreateEducationRequest) Validate() error {
-	if req.ProfileId == 0 {
+	if req.ProfileID == 0 {
 		return errors.New("profile_id is required")
 	}
 

@@ -5,28 +5,28 @@ import (
 )
 
 type CreateProjectRequest struct {
-	ProfileId int64       `json:"profile_id"`
-	Projects []Project `json:"projects"`
+	ProfileID int64     `json:"profile_id"`
+	Projects  []Project `json:"projects"`
 }
 
 type Project struct {
-	Name           string `json:"name"`
-	Description string `json:"description"`
-	Role string `json:"role"`
+	Name             string `json:"name"`
+	Description      string `json:"description"`
+	Role             string `json:"role"`
 	Responsibilities string `json:"responsibilities"`
-	Technologies string `json:"technologies"`
-	TechWorkedOn string `json:"tech_worked_on"`
+	Technologies     string `json:"technologies"`
+	TechWorkedOn     string `json:"tech_worked_on"`
 	WorkingStartDate string `json:"working_start_date"`
-	WorkingEndDate string `json:"working_end_date"`
-	Duration string `json:"duration"`
+	WorkingEndDate   string `json:"working_end_date"`
+	Duration         string `json:"duration"`
 }
 
 func (req *CreateProjectRequest) Validate() error {
-	
-	if req.ProfileId <= 0 {
+
+	if req.ProfileID <= 0 {
 		return errors.New("profile_id must be a positive integer")
 	}
-	
+
 	for _, project := range req.Projects {
 		if err := project.Validate(); err != nil {
 			return err

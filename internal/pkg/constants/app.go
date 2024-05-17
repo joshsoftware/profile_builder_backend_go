@@ -9,5 +9,6 @@ var CreateUserColumns = []string{"name", "email", "gender", "mobile", "designati
 
 var CreateEducationColumns = []string{"degree", "university_name", "place", "percent_or_cgpa", "passing_year", "created_at", "updated_at", "created_by_id", "updated_by_id", "profile_id"}
 
+var CreateProjectColumns = []string{"name", "description", "role", "responsibilities", "technologies", "tech_worked_on", "duration", "working_start_date", "working_end_date", "created_at", "updated_at", "created_by_id", "updated_by_id", "profile_id"}
 
-var CreateProjectColumns = []string{"name", "description", "role", "responsibilities", "technologies", "tech_worked_on", "duration", "working_start_date","working_end_date","created_at", "updated_at", "created_by_id", "updated_by_id", "profile_id"}
+var ListProfilesColumns = []string{"id", "name", "email", "years_of_experience", "primary_skills", "is_current_employee"}
