@@ -40,7 +40,7 @@ func CreateProfileHandler(profileSvc profile.Service, ctx context.Context) func(
 	}
 }
 
-func Login(profileSvc profile.Service, ctx context.Context) func(http.ResponseWriter, *http.Request) {
+func Login(ctx context.Context, profileSvc profile.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeUserLoginRequest(r)
 		if err != nil {
@@ -56,7 +56,6 @@ func Login(profileSvc profile.Service, ctx context.Context) func(http.ResponseWr
 			return
 		}
 
-		fmt.Println("service request : ", serverRequest)
 		serverRequest.Header.Set("Authorization", "Bearer "+req.AccessToken)
 
 		resp, err := http.DefaultClient.Do(serverRequest)
@@ -82,7 +81,7 @@ func Login(profileSvc profile.Service, ctx context.Context) func(http.ResponseWr
 
 		token, err := profileSvc.GenerateLoginToken(ctx, userInfo.Email)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusUnauthorized, err)
+			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
 			return
 		}
 		w.Header().Set("Authorization", "Bearer "+token)
