@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
@@ -46,12 +47,7 @@ func main() {
 	router := api.NewRouter(ctx, services)
 
 	// CORS middleware
-    cors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowCredentials: true,
-		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
-		AllowedHeaders:   []string{"*"},
-	})
+	cors := cors.New(constants.CorsOptions)
 
 	err = http.ListenAndServe("localhost:1925", cors.Handler(router))
 	if err != nil {

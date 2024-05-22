@@ -9,7 +9,8 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 )
 
-func GetProfileListHandler(ctx context.Context, profileSvc profile.Service) func(http.ResponseWriter, *http.Request) {
+// ProfileListHandler returns an HTTP handler that lists profiles using profileSvc.
+func ProfileListHandler(ctx context.Context, profileSvc profile.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		values, err := profileSvc.ListProfiles(ctx)
 		if err != nil {

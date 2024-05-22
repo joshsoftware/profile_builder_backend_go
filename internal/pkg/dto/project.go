@@ -1,14 +1,18 @@
 package dto
 
 import (
-	"errors"
+	"fmt"
+
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+// CreateProjectRequest struct represents a request to create project details.
 type CreateProjectRequest struct {
-	ProfileID int64     `json:"profile_id"`
+	ProfileID int       `json:"profile_id"`
 	Projects  []Project `json:"projects"`
 }
 
+// Project struct represents details of a project.
 type Project struct {
 	Name             string `json:"name"`
 	Description      string `json:"description"`
@@ -21,10 +25,14 @@ type Project struct {
 	Duration         string `json:"duration"`
 }
 
+// Validate func checks if the CreateProjectRequest is valid.
 func (req *CreateProjectRequest) Validate() error {
 
 	if req.ProfileID <= 0 {
-		return errors.New("profile_id must be a positive integer")
+		return errors.ErrInvalidID
+	}
+	if len(req.Projects) == 0 {
+		return fmt.Errorf("%s : projects ", errors.ErrEmptyPayload.Error())
 	}
 
 	for _, project := range req.Projects {
@@ -35,35 +43,35 @@ func (req *CreateProjectRequest) Validate() error {
 	return nil
 }
 
+// Validate func checks if the Project details are valid.
 func (p *Project) Validate() error {
 
 	if p.Name == "" {
-		return errors.New("name is required")
+		return fmt.Errorf("%s : name ", errors.ErrParameterMissing.Error())
 	}
 	if p.Description == "" {
-		return errors.New("description is required")
+		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
 	}
 	if p.Role == "" {
-		return errors.New("role is required")
+		return fmt.Errorf("%s : role ", errors.ErrParameterMissing.Error())
 	}
 	if p.Responsibilities == "" {
-		return errors.New("responsibility is required")
+		return fmt.Errorf("%s : responsibilities ", errors.ErrParameterMissing.Error())
 	}
 	if p.Technologies == "" {
-		return errors.New("technologies is required")
+		return fmt.Errorf("%s : technologies ", errors.ErrParameterMissing.Error())
 	}
 	if p.TechWorkedOn == "" {
-		return errors.New("tech_worked_on is required")
+		return fmt.Errorf("%s : techonology worked on ", errors.ErrParameterMissing.Error())
 	}
 	if p.WorkingStartDate == "" {
-		return errors.New("working_start_date is required")
+		return fmt.Errorf("%s : working startv date ", errors.ErrParameterMissing.Error())
 	}
 	if p.WorkingEndDate == "" {
-		return errors.New("working_end_date is required")
+		return fmt.Errorf("%s : working end date ", errors.ErrParameterMissing.Error())
 	}
 	if p.Duration == "" {
-		return errors.New("duration is required")
+		return fmt.Errorf("%s : duration ", errors.ErrParameterMissing.Error())
 	}
-
 	return nil
 }
