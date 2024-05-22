@@ -40,7 +40,7 @@ func TestCreateProfile(t *testing.T) {
 				},
 			},
 			setup: func(profileMock *mocks.ProfileStorer) {
-				profileMock.On("CreateProfile", mock.Anything, mock.AnythingOfType("dto.CreateProfileRequest")).Return(nil).Once()
+				profileMock.On("CreateProfile", mock.Anything, mock.AnythingOfType("dto.CreateProfileRequest")).Return(1, nil).Once()
 			},
 			isErrorExpected: false,
 		},
@@ -63,7 +63,7 @@ func TestCreateProfile(t *testing.T) {
 				},
 			},
 			setup: func(profileMock *mocks.ProfileStorer) {
-				profileMock.On("CreateProfile", mock.Anything, mock.AnythingOfType("dto.CreateProfileRequest")).Return(errors.New("profile creation failed")).Once()
+				profileMock.On("CreateProfile", mock.Anything, mock.AnythingOfType("dto.CreateProfileRequest")).Return(0, errors.New("profile creation failed")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -74,7 +74,7 @@ func TestCreateProfile(t *testing.T) {
 			test.setup(mockProfileRepo)
 
 			// test service
-			err := profileService.CreateProfile(context.TODO(), test.input)
+			_, err := profileService.CreateProfile(context.TODO(), test.input)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
@@ -131,13 +131,22 @@ func TestCreateEducation(t *testing.T) {
 			},
 			isErrorExpected: true,
 		},
+		{
+			name: "Failed because of empty payload",
+			input: dto.CreateEducationRequest{
+				ProfileID:  456,
+				Educations: []dto.Education{},
+			},
+			setup:           func(profileMock *mocks.ProfileStorer) {},
+			isErrorExpected: true,
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockProfileRepo)
 
-			err := profileService.CreateEducation(context.Background(), test.input)
+			_, err := profileService.CreateEducation(context.Background(), test.input)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
 			}
@@ -201,6 +210,15 @@ func TestCreateProject(t *testing.T) {
 			},
 			isErrorExpected: true,
 		},
+		{
+			name: "Failed because empty payload",
+			input: dto.CreateProjectRequest{
+				ProfileID: 123,
+				Projects:  []dto.Project{},
+			},
+			setup:           func(projectMock *mocks.ProfileStorer) {},
+			isErrorExpected: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -208,7 +226,7 @@ func TestCreateProject(t *testing.T) {
 			test.setup(mockProfileRepo)
 
 			// test service
-			err := profileService.CreateProject(context.TODO(), test.input)
+			_, err := profileService.CreateProject(context.TODO(), test.input)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
@@ -265,6 +283,272 @@ func TestListProfile(t *testing.T) {
 			if !assert.Equal(t, test.wantResponse, gotResp) {
 				t.Errorf("Test Failed, expected resp to be %v, but got resp %v", test.wantResponse, gotResp)
 			}
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+func TestCreateExperience(t *testing.T) {
+	mockProfileRepo := mocks.NewProfileStorer(t)
+	profileService := NewServices(mockProfileRepo)
+
+	tests := []struct {
+		name            string
+		input           dto.CreateExperienceRequest
+		setup           func(experienceMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name: "Success for experience details",
+			input: dto.CreateExperienceRequest{
+				ProfileID: 1,
+				Experiences: []dto.Experience{
+					{
+						Designation: "Software Engineer",
+						CompanyName: "Josh Software Pvt.Ltd.",
+						FromDate:    "2023-01-01",
+						ToDate:      "2024-01-01",
+					},
+				},
+			},
+			setup: func(experienceMock *mocks.ProfileStorer) {
+				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceDao")).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name: "Failed because CreateExperience returns an error",
+			input: dto.CreateExperienceRequest{
+				ProfileID: 10000000000,
+				Experiences: []dto.Experience{
+					{
+						Designation: "Software Engineer",
+						CompanyName: "Tech Corp",
+						FromDate:    "2023-01-01",
+						ToDate:      "2024-01-01",
+					},
+				},
+			},
+			setup: func(experienceMock *mocks.ProfileStorer) {
+				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceDao")).Return(errors.New("Error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed because of missing designation",
+			input: dto.CreateExperienceRequest{
+				ProfileID: 1,
+				Experiences: []dto.Experience{
+					{
+						Designation: "",
+						CompanyName: "Tech Corp",
+						FromDate:    "2023-01-01",
+						ToDate:      "2024-01-01",
+					},
+				},
+			},
+			setup: func(experienceMock *mocks.ProfileStorer) {
+				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceDao")).Return(errors.New("Missing designation")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed because of empty payload",
+			input: dto.CreateExperienceRequest{
+				ProfileID:   1,
+				Experiences: []dto.Experience{},
+			},
+			setup:           func(experienceMock *mocks.ProfileStorer) {},
+			isErrorExpected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProfileRepo)
+
+			// Test the service
+			_, err := profileService.CreateExperience(context.TODO(), test.input)
+
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+func TestCreateCertificate(t *testing.T) {
+	mockProfileRepo := mocks.NewProfileStorer(t)
+	profileService := NewServices(mockProfileRepo)
+
+	tests := []struct {
+		name            string
+		input           dto.CreateCertificateRequest
+		setup           func(certificateMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name: "Success for certificate details",
+			input: dto.CreateCertificateRequest{
+				ProfileID: 1,
+				Certificates: []dto.Certificate{
+					{
+						Name:             "Full Stack GO Certificate",
+						OrganizationName: "Josh Software",
+						Description:      "Description about certificate",
+						IssuedDate:       "2024-01-01",
+						FromDate:         "2024-01-01",
+						ToDate:           "2024-06-01",
+					},
+				},
+			},
+			setup: func(certificateMock *mocks.ProfileStorer) {
+				certificateMock.On("CreateCertificate", mock.Anything, mock.AnythingOfType("[]repository.CertificateDao")).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name: "Failed because CreateCertificate returns an error",
+			input: dto.CreateCertificateRequest{
+				ProfileID: 10000,
+				Certificates: []dto.Certificate{
+					{
+						Name:             "Full Stack Data Science Certificate",
+						OrganizationName: "Balambika Team",
+						Description:      "Description",
+						IssuedDate:       "2024-01-01",
+						FromDate:         "2024-01-01",
+						ToDate:           "2024-06-01",
+					},
+				},
+			},
+			setup: func(certificateMock *mocks.ProfileStorer) {
+				certificateMock.On("CreateCertificate", mock.Anything, mock.AnythingOfType("[]repository.CertificateDao")).Return(errors.New("Error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed because of missing certificate name",
+			input: dto.CreateCertificateRequest{
+				ProfileID: 1,
+				Certificates: []dto.Certificate{
+					{
+						Name:             "",
+						OrganizationName: "Org C",
+						Description:      "Description C",
+						IssuedDate:       "2024-01-01",
+						FromDate:         "2024-01-01",
+						ToDate:           "2024-06-01",
+					},
+				},
+			},
+			setup: func(certificateMock *mocks.ProfileStorer) {
+				certificateMock.On("CreateCertificate", mock.Anything, mock.AnythingOfType("[]repository.CertificateDao")).Return(errors.New("Missing certificate name")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed because of empty paylaod",
+			input: dto.CreateCertificateRequest{
+				ProfileID:    1,
+				Certificates: []dto.Certificate{},
+			},
+			setup:           func(certificateMock *mocks.ProfileStorer) {},
+			isErrorExpected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProfileRepo)
+
+			// Test the service
+			_, err := profileService.CreateCertificate(context.TODO(), test.input)
+
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+func TestCreateAchievement(t *testing.T) {
+	mockProfileRepo := mocks.NewProfileStorer(t)
+	profileService := NewServices(mockProfileRepo)
+
+	tests := []struct {
+		name            string
+		input           dto.CreateAchievementRequest
+		setup           func(achievementMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name: "Success for achievement details",
+			input: dto.CreateAchievementRequest{
+				ProfileID: 1,
+				Achievements: []dto.Achievement{
+					{
+						Name:        "Star Performer",
+						Description: "Description",
+					},
+				},
+			},
+			setup: func(achievementMock *mocks.ProfileStorer) {
+				achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementDao")).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name: "Failed because CreateAchievement returns an error",
+			input: dto.CreateAchievementRequest{
+				ProfileID: 100000000000000000,
+				Achievements: []dto.Achievement{
+					{
+						Name:        "Achievement B",
+						Description: "Description B",
+					},
+				},
+			},
+			setup: func(achievementMock *mocks.ProfileStorer) {
+				achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementDao")).Return(errors.New("Error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed because of missing achievement name",
+			input: dto.CreateAchievementRequest{
+				ProfileID: 1,
+				Achievements: []dto.Achievement{
+					{
+						Name:        "",
+						Description: "Description",
+					},
+				},
+			},
+			setup: func(achievementMock *mocks.ProfileStorer) {
+				achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementDao")).Return(errors.New("Missing achievement name")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed because of empty payload",
+			input: dto.CreateAchievementRequest{
+				ProfileID:    1,
+				Achievements: []dto.Achievement{},
+			},
+			setup:           func(achievementMock *mocks.ProfileStorer) {},
+			isErrorExpected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProfileRepo)
+
+			_, err := profileService.CreateAchievement(context.TODO(), test.input)
+
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
 			}

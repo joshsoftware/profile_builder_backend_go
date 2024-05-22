@@ -16,6 +16,42 @@ type ProfileStorer struct {
 	mock.Mock
 }
 
+// CreateAchievement provides a mock function with given fields: ctx, values
+func (_m *ProfileStorer) CreateAchievement(ctx context.Context, values []repository.AchievementDao) error {
+	ret := _m.Called(ctx, values)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateAchievement")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []repository.AchievementDao) error); ok {
+		r0 = rf(ctx, values)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// CreateCertificate provides a mock function with given fields: ctx, values
+func (_m *ProfileStorer) CreateCertificate(ctx context.Context, values []repository.CertificateDao) error {
+	ret := _m.Called(ctx, values)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateCertificate")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []repository.CertificateDao) error); ok {
+		r0 = rf(ctx, values)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // CreateEducation provides a mock function with given fields: ctx, values
 func (_m *ProfileStorer) CreateEducation(ctx context.Context, values []repository.EducationDao) error {
 	ret := _m.Called(ctx, values)
@@ -34,22 +70,50 @@ func (_m *ProfileStorer) CreateEducation(ctx context.Context, values []repositor
 	return r0
 }
 
-// CreateProfile provides a mock function with given fields: ctx, profileDetail
-func (_m *ProfileStorer) CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) error {
-	ret := _m.Called(ctx, profileDetail)
+// CreateExperience provides a mock function with given fields: ctx, values
+func (_m *ProfileStorer) CreateExperience(ctx context.Context, values []repository.ExperienceDao) error {
+	ret := _m.Called(ctx, values)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CreateProfile")
+		panic("no return value specified for CreateExperience")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProfileRequest) error); ok {
-		r0 = rf(ctx, profileDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, []repository.ExperienceDao) error); ok {
+		r0 = rf(ctx, values)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
+}
+
+// CreateProfile provides a mock function with given fields: ctx, pd
+func (_m *ProfileStorer) CreateProfile(ctx context.Context, pd dto.CreateProfileRequest) (int, error) {
+	ret := _m.Called(ctx, pd)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateProfile")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProfileRequest) (int, error)); ok {
+		return rf(ctx, pd)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProfileRequest) int); ok {
+		r0 = rf(ctx, pd)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateProfileRequest) error); ok {
+		r1 = rf(ctx, pd)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // CreateProject provides a mock function with given fields: ctx, values

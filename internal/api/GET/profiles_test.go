@@ -25,7 +25,7 @@ var mockListProfile = []dto.ListProfiles{
 
 func TestGetProfileListHandler(t *testing.T) {
 	profileSvc := mocks.NewService(t)
-	getProfileListHandler := GetProfileListHandler(context.Background(), profileSvc)
+	getProfileListHandler := ProfileListHandler(context.Background(), profileSvc)
 
 	tests := []struct {
 		name               string

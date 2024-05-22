@@ -1,15 +1,18 @@
 package dto
 
 import (
-	"errors"
 	"fmt"
+
+	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+// CreateEducationRequest represents a request to create education details.
 type CreateEducationRequest struct {
-	ProfileID  int64       `json:"profile_id"`
+	ProfileID  int         `json:"profile_id"`
 	Educations []Education `json:"educations"`
 }
 
+// Education represents details of an educational qualification.
 type Education struct {
 	Degree           string `json:"degree"`
 	UniversityName   string `json:"university_name"`
@@ -18,31 +21,34 @@ type Education struct {
 	PassingYear      string `json:"passing_year"`
 }
 
+// Validate func checks if the CreateEducationRequest is valid.
 func (req *CreateEducationRequest) Validate() error {
 	if req.ProfileID == 0 {
-		return errors.New("profile_id is required")
+		return fmt.Errorf("%s : profile id ", errors.ErrParameterMissing.Error())
+	}
+	if len(req.Educations) == 0 {
+		return fmt.Errorf("%s : educations ", errors.ErrEmptyPayload.Error())
 	}
 
 	for _, edu := range req.Educations {
 		if edu.Degree == "" {
-			return errors.New("degree is required")
+			return fmt.Errorf("%s : degree ", errors.ErrParameterMissing.Error())
 		}
 
 		if edu.UniversityName == "" {
-			return errors.New("university name is required")
+			return fmt.Errorf("%s : university name ", errors.ErrParameterMissing.Error())
 		}
 
 		if edu.Place == "" {
-			return errors.New("place name is required")
+			return fmt.Errorf("%s : place ", errors.ErrParameterMissing.Error())
 		}
 
-		fmt.Println("cgpa:", edu.PercentageOrCgpa)
 		if edu.PercentageOrCgpa == "" {
-			return errors.New("percentage or cgpa is required")
+			return fmt.Errorf("%s : percentage or cgpa ", errors.ErrParameterMissing.Error())
 		}
 
 		if edu.PassingYear == "" {
-			return errors.New("passing year is required")
+			return fmt.Errorf("%s : passing year ", errors.ErrParameterMissing.Error())
 		}
 	}
 
