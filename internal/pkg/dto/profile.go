@@ -44,6 +44,23 @@ type ListProfilesResponse struct {
 	Profiles []ListProfiles `json:"profiles"`
 }
 
+// ResponseProfile struct represents details of a user profile as in response.
+type ResponseProfile struct {
+	ProfileID int `json:"profile_id"`
+	Name              string   `json:"name"`
+	Email             string   `json:"email"`
+	Gender            string   `json:"gender"`
+	Mobile            string   `json:"mobile"`
+	Designation       string   `json:"designation"`
+	Description       string   `json:"description"`
+	Title             string   `json:"title"`
+	YearsOfExperience float64  `json:"years_of_experience"`
+	PrimarySkills     []string `json:"primary_skills"`
+	SecondarySkills   []string `json:"secondary_skills"`
+	GithubLink        string   `json:"github_link"`
+	LinkedinLink      string   `json:"linkedin_link"`
+}
+
 // Validate func checks if the CreateProfileRequest is valid.
 func (req *CreateProfileRequest) Validate() error {
 

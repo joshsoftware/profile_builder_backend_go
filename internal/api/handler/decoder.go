@@ -1,4 +1,4 @@
-package post
+package handler
 
 import (
 	"encoding/json"
