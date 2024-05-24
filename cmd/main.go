@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/app"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"github.com/rs/cors"
@@ -41,7 +45,9 @@ func main() {
 	fmt.Println("Connected to Database!")
 
 	//Creating Services
-	services := app.NewServices(ctx, db)
+	//services := app.NewServices(db)
+	// profileRepo := repository.NewProfileRepo(db)
+	services := service.NewServices(db)
 
 	//Initializaing Router
 	router := api.NewRouter(ctx, services)
@@ -49,9 +55,32 @@ func main() {
 	// CORS middleware
 	cors := cors.New(constants.CorsOptions)
 
-	err = http.ListenAndServe("localhost:1925", cors.Handler(router))
-	if err != nil {
-		logger.Error("Error Starting Server  : ", zap.Error(err))
-		return
+	// Setup the server
+	server := &http.Server{
+		Addr:    os.Getenv("PORT_INFO"),
+		Handler: cors.Handler(router),
+	}
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal("Error starting server: ", zap.Error(err))
+		}
+	}()
+
+	//Graceful shutdown
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	signal.Notify(signalChan, syscall.SIGTERM)
+
+	sig := <-signalChan
+	fmt.Println("Received terminate, gracefully shutting down: ", sig)
+
+	tc, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	server.Shutdown(tc)
+	cancel()
+
+	//Shutdown any other resources here, e.g., database connections
+	if err := db.Close(ctx); err != nil {
+		logger.Error("Database close error: ", zap.Error(err))
 	}
 }

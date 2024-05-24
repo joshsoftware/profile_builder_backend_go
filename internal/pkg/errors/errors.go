@@ -20,4 +20,5 @@ var (
 	ErrConnectionFailed = errors.New("error connecting to database")
 	ErrDuplicateKey     = errors.New("record already exists")
 	ErrInvalidProfile   = errors.New("invalid profile id")
+	ErrNoRecordFound = errors.New("no record found")
 )

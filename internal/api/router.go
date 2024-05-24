@@ -5,27 +5,28 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	get "github.com/joshsoftware/profile_builder_backend_go/internal/api/GET"
-	post "github.com/joshsoftware/profile_builder_backend_go/internal/api/POST"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/app"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 )
 
 // NewRouter returns a object that contains all routes of application
-func NewRouter(ctx context.Context, deps app.Dependencies) *mux.Router {
+func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	router := mux.NewRouter()
 
-	//POST APIs
-	router.HandleFunc("/profiles", post.CreateProfileHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
-
 	subrouter := router.PathPrefix("/profiles").Subrouter()
-	subrouter.HandleFunc("/educations", post.CreateEducationHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
-	subrouter.HandleFunc("/projects", post.CreateProjectHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
-	subrouter.HandleFunc("/experiences", post.CreateExperienceHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
-	subrouter.HandleFunc("/certificates", post.CreateCertificateHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
-	subrouter.HandleFunc("/achievements", post.CreateAchievementHandler(ctx, deps.ProfileService)).Methods(http.MethodPost)
+
+	// api/profiles
+
+	//POST APIs
+	router.HandleFunc("/profiles", handler.CreateProfileHandler(ctx, svc)).Methods(http.MethodPost)
+	subrouter.HandleFunc("/educations", handler.CreateEducationHandler(ctx, svc)).Methods(http.MethodPost)
+	subrouter.HandleFunc("/projects", handler.CreateProjectHandler(ctx, svc)).Methods(http.MethodPost)
+	subrouter.HandleFunc("/experiences", handler.CreateExperienceHandler(ctx, svc)).Methods(http.MethodPost)
+	subrouter.HandleFunc("/certificates", handler.CreateCertificateHandler(ctx, svc)).Methods(http.MethodPost)
+	subrouter.HandleFunc("/achievements", handler.CreateAchievementHandler(ctx, svc)).Methods(http.MethodPost)
 
 	//GET APIs
-	router.HandleFunc("/list_profiles", get.ProfileListHandler(ctx, deps.ProfileService)).Methods(http.MethodGet)
-
+	router.HandleFunc("/list_profiles", handler.ProfileListHandler(ctx, svc)).Methods(http.MethodGet)
+	router.HandleFunc("/profiles/", handler.GetProfileHandler(ctx, svc)).Methods(http.MethodGet)
 	return router
 }
