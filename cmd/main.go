@@ -44,12 +44,10 @@ func main() {
 	}
 	fmt.Println("Connected to Database!")
 
-	//Creating Services
-	//services := app.NewServices(db)
-	// profileRepo := repository.NewProfileRepo(db)
+	//Initializing Services
 	services := service.NewServices(db)
 
-	//Initializaing Router
+	//Initializing Router
 	router := api.NewRouter(ctx, services)
 
 	// CORS middleware

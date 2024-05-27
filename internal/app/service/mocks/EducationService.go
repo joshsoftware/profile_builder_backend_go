@@ -42,6 +42,64 @@ func (_m *EducationService) CreateEducation(ctx context.Context, eduDetail dto.C
 	return r0, r1
 }
 
+// GetEducation provides a mock function with given fields: ctx, profileID
+func (_m *EducationService) GetEducation(ctx context.Context, profileID string) ([]dto.EducationResponse, error) {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetEducation")
+	}
+
+	var r0 []dto.EducationResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]dto.EducationResponse, error)); ok {
+		return rf(ctx, profileID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []dto.EducationResponse); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.EducationResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateEducation provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *EducationService) UpdateEducation(ctx context.Context, profileID string, eduID string, req dto.UpdateEducationRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateEducation")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateEducationRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateEducationRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateEducationRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewEducationService creates a new instance of EducationService. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewEducationService(t interface {

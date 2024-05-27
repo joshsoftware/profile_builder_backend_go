@@ -3,30 +3,19 @@ package service
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 )
 
-type projectService struct {
-	ProjectRepo repository.ProjectStorer
-}
-
 type ProjectService interface {
 	CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (profileID int, err error)
-}
-
-func NewProjectService(db *pgx.Conn) ProjectService {
-	projectRepo := repository.NewProjectRepo(db)
-
-	return &projectService{
-		ProjectRepo: projectRepo,
-	}
+	GetProject(ctx context.Context, profileID string) (values []dto.ProjectResponse, err error)
 }
 
 // CreateProject : Service layer function adds project details to a user profile.
-func (profileSvc *projectService) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (profileID int, err error) {
+func (projSvc *service) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (profileID int, err error) {
 	if len(projDetail.Projects) == 0 {
 		return 0, errors.ErrEmptyPayload
 	}
@@ -51,10 +40,24 @@ func (profileSvc *projectService) CreateProject(ctx context.Context, projDetail 
 		value = append(value, val)
 	}
 
-	err = profileSvc.ProjectRepo.CreateProject(ctx, value)
+	err = projSvc.ProjectRepo.CreateProject(ctx, value)
 	if err != nil {
 		return 0, err
 	}
 
 	return projDetail.ProfileID, nil
+}
+
+// GetProject in the service layer retrieves a projects of specific profile.
+func (projSvc *service) GetProject(ctx context.Context, profileID string) (values []dto.ProjectResponse, err error) {
+	id, err := helpers.ConvertStringToInt(profileID)
+	if err!= nil {
+        return []dto.ProjectResponse{}, err
+    }
+
+	values, err = projSvc.ProjectRepo.GetProjects(ctx, id)
+	if err != nil {
+		return []dto.ProjectResponse{}, err
+	}
+	return values, nil
 }

@@ -20,6 +20,20 @@ type Experience struct {
 	ToDate      string `json:"to_date"`
 }
 
+// Experience struct represents details of an experiences.
+type ExperienceResponse struct {
+	ProfileID int `json:"profile_id"`
+	Designation string `json:"designation"`
+	CompanyName string `json:"company_name"`
+	FromDate    string `json:"from_date"`
+	ToDate      string `json:"to_date"`
+}
+
+//ResponseEducation used for response of educations of profiles
+type ResponseExperience struct {
+	Experiences []ExperienceResponse `json:"experiences"`
+}
+
 // Validate func checks if the CreateExperienceRequest is valid.
 func (req *CreateExperienceRequest) Validate() error {
 	if req.ProfileID == 0 {

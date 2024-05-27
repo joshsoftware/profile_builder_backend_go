@@ -3,30 +3,19 @@ package service
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 )
 
-type experienceService struct {
-	ExperienceRepo repository.ExperienceStorer
-}
-
 type ExperienceService interface {
 	CreateExperience(ctx context.Context, expDetail dto.CreateExperienceRequest) (profileID int, err error)
+	GetExperience(ctx context.Context, profileID string) (values []dto.ExperienceResponse, err error)
 }
 
-func NewExperienceService(db *pgx.Conn) ExperienceService {
-	experienceRepo := repository.NewExperienceRepo(db)
-
-	return &experienceService{
-		ExperienceRepo: experienceRepo,
-	}
-}
-
-// CreateProject : Service layer function adds experiences details to a user profile.
-func (profileSvc *experienceService) CreateExperience(ctx context.Context, expDetail dto.CreateExperienceRequest) (profileID int, err error) {
+// CreateExperience : Service layer function adds experiences details to a user profile.
+func (expSvc *service) CreateExperience(ctx context.Context, expDetail dto.CreateExperienceRequest) (profileID int, err error) {
 	if len(expDetail.Experiences) == 0 {
 		return 0, errors.ErrEmptyPayload
 	}
@@ -48,10 +37,24 @@ func (profileSvc *experienceService) CreateExperience(ctx context.Context, expDe
 		value = append(value, val)
 	}
 
-	err = profileSvc.ExperienceRepo.CreateExperience(ctx, value)
+	err = expSvc.ExperienceRepo.CreateExperience(ctx, value)
 	if err != nil {
 		return 0, err
 	}
 
 	return expDetail.ProfileID, nil
+}
+
+// GetExperience in the service layer retrieves a experiences of specific profile.
+func (expSvc *service) GetExperience(ctx context.Context, profileID string) (values []dto.ExperienceResponse, err error) {
+	id, err := helpers.ConvertStringToInt(profileID)
+	if err!= nil {
+        return []dto.ExperienceResponse{}, err
+    }
+
+	values, err = expSvc.ExperienceRepo.GetExperiences(ctx, id)
+	if err != nil {
+		return []dto.ExperienceResponse{}, err
+	}
+	return values, nil
 }
