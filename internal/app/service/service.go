@@ -12,6 +12,7 @@ import (
 
 // service implements the Service interface.
 type service struct {
+	UserLoginRepo   repository.UserStorer
 	ProfileRepo     repository.ProfileStorer
 	EducationRepo   repository.EducationStorer
 	ExperienceRepo  repository.ExperienceStorer
@@ -27,6 +28,7 @@ type Service interface {
 	GetProfile(ctx context.Context, profileID string) (value dto.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, profileID string, profileDetail dto.UpdateProfileRequest) (ID int, err error)
 
+	UserLoginServive
 	EducationService
 	ProjectService
 	ExperienceService
@@ -36,6 +38,7 @@ type Service interface {
 
 // NewServices creates a new instance of the Service.
 func NewServices(db *pgx.Conn) Service {
+	userLoginRepo := repository.NewUserLoginRepo(db)
 	profileRepo := repository.NewProfileRepo(db)
 	educationRepo := repository.NewEducationRepo(db)
 	experienceRepo := repository.NewExperienceRepo(db)
@@ -43,6 +46,7 @@ func NewServices(db *pgx.Conn) Service {
 	certificateRepo := repository.NewCertificateRepo(db)
 	achievementRepo := repository.NewAchievementRepo(db)
 	return &service{
+		UserLoginRepo:   userLoginRepo,
 		ProfileRepo:     profileRepo,
 		EducationRepo:   educationRepo,
 		ExperienceRepo:  experienceRepo,
