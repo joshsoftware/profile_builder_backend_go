@@ -12,18 +12,18 @@ import (
 	"go.uber.org/zap"
 )
 
-// ProfileStore implements the ProfileStorer interface.
+// ProjectStore implements the ProfileStorer interface.
 type ProjectStore struct {
 	db *pgx.Conn
 }
 
-// ProfileStorer defines methods to interact with user profile data.
+// ProjectStorer defines methods to interact with user profile data.
 type ProjectStorer interface {
 	CreateProject(ctx context.Context, values []ProjectDao) error
 	GetProjects(ctx context.Context, profileID int) (values []dto.ProjectResponse, err error)
 }
 
-// NewProfileRepo creates a new instance of ProfileRepo.
+// NewProjectRepo creates a new instance of ProfileRepo.
 func NewProjectRepo(db *pgx.Conn) ProjectStorer {
 	return &ProjectStore{
 		db: db,
@@ -68,35 +68,34 @@ func (projectStore *ProjectStore) CreateProject(ctx context.Context, values []Pr
 
 // GetProjects returns a details projects in the Database that are currently available for perticular ID
 func (projectStore *ProjectStore) GetProjects(ctx context.Context, profileID int) (values []dto.ProjectResponse, err error) {
-    sql, args, err := sq.Select(constants.ResponseProjectsColumns...).From("projects").
-        Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
-    if err != nil {
-        zap.S().Error("Error generating get projects select query: ", err)
-        return []dto.ProjectResponse{}, err
-    }
-	
-    rows, err := projectStore.db.Query(ctx, sql, args...)
-    if err != nil {
-        zap.S().Error("Error executing get projects query: ", err)
-        return []dto.ProjectResponse{}, err
-    }
-    defer rows.Close()
+	sql, args, err := sq.Select(constants.ResponseProjectsColumns...).From("projects").
+		Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		zap.S().Error("Error generating get projects select query: ", err)
+		return []dto.ProjectResponse{}, err
+	}
 
-    for rows.Next() {
-        var value dto.ProjectResponse
-        if err := rows.Scan(&value.ProfileID, &value.Name, &value.Description, &value.Role, &value.Responsibilities, &value.Technologies, &value.TechWorkedOn, &value.WorkingStartDate,
-			&value.WorkingEndDate, &value.Duration ); err != nil {
-            zap.S().Error("Error scanning row: ", err)
-            return []dto.ProjectResponse{}, err
-        }
-        values = append(values, value)
-    }
+	rows, err := projectStore.db.Query(ctx, sql, args...)
+	if err != nil {
+		zap.S().Error("Error executing get projects query: ", err)
+		return []dto.ProjectResponse{}, err
+	}
+	defer rows.Close()
 
-    if len(values) == 0 {
-        zap.S().Info("No project found for profileID: ", profileID)
-        return []dto.ProjectResponse{}, errors.ErrNoRecordFound
-    }
+	for rows.Next() {
+		var value dto.ProjectResponse
+		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Description, &value.Role, &value.Responsibilities, &value.Technologies, &value.TechWorkedOn, &value.WorkingStartDate,
+			&value.WorkingEndDate, &value.Duration); err != nil {
+			zap.S().Error("Error scanning row: ", err)
+			return []dto.ProjectResponse{}, err
+		}
+		values = append(values, value)
+	}
 
-    return values, nil
+	if len(values) == 0 {
+		zap.S().Info("No project found for profileID: ", profileID)
+		return []dto.ProjectResponse{}, errors.ErrNoRecordFound
+	}
+
+	return values, nil
 }
-

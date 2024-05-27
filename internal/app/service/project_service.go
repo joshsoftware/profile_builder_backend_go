@@ -7,8 +7,10 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
+	"go.uber.org/zap"
 )
 
+// ProjectService represents a set of methods for accessing the projects.
 type ProjectService interface {
 	CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (profileID int, err error)
 	GetProject(ctx context.Context, profileID string) (values []dto.ProjectResponse, err error)
@@ -17,6 +19,7 @@ type ProjectService interface {
 // CreateProject : Service layer function adds project details to a user profile.
 func (projSvc *service) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (profileID int, err error) {
 	if len(projDetail.Projects) == 0 {
+		zap.S().Error("projects payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 
@@ -42,6 +45,7 @@ func (projSvc *service) CreateProject(ctx context.Context, projDetail dto.Create
 
 	err = projSvc.ProjectRepo.CreateProject(ctx, value)
 	if err != nil {
+		zap.S().Error("Unable to create project : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
 
@@ -51,12 +55,14 @@ func (projSvc *service) CreateProject(ctx context.Context, projDetail dto.Create
 // GetProject in the service layer retrieves a projects of specific profile.
 func (projSvc *service) GetProject(ctx context.Context, profileID string) (values []dto.ProjectResponse, err error) {
 	id, err := helpers.ConvertStringToInt(profileID)
-	if err!= nil {
-        return []dto.ProjectResponse{}, err
-    }
+	if err != nil {
+		zap.S().Error("error to get projects params : ", err, " for profile id : ", profileID)
+		return []dto.ProjectResponse{}, err
+	}
 
 	values, err = projSvc.ProjectRepo.GetProjects(ctx, id)
 	if err != nil {
+		zap.S().Error("Unable to get projects : ", err, " for profile id : ", profileID)
 		return []dto.ProjectResponse{}, err
 	}
 	return values, nil

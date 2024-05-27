@@ -15,8 +15,8 @@ type CreateProfileRequest struct {
 
 // UpdateProfileRequest struct represents a request to update a user profile.
 type UpdateProfileRequest struct {
-	ProfileID string `json:"id"`
-	Profile Profile `json:"profile"`
+	ProfileID string  `json:"id"`
+	Profile   Profile `json:"profile"`
 }
 
 // Profile struct represents details of a user profile.
@@ -57,7 +57,7 @@ type ProfileResponse struct {
 
 // ResponseProfile struct represents details of a user profile as in response.
 type ResponseProfile struct {
-	ProfileID int `json:"profile_id"`
+	ProfileID         int      `json:"profile_id"`
 	Name              string   `json:"name"`
 	Email             string   `json:"email"`
 	Gender            string   `json:"gender"`
@@ -167,4 +167,3 @@ func (req *UpdateProfileRequest) Validate() error {
 
 	return nil
 }
-

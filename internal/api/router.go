@@ -36,4 +36,3 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 
 	return router
 }
-

@@ -28,7 +28,7 @@ type Education struct {
 
 // EducationResponse represents details of an educational qualification for specific id.
 type EducationResponse struct {
-	ProfileID int `json:"profile_id"`
+	ProfileID        int    `json:"profile_id"`
 	Degree           string `json:"degree"`
 	UniversityName   string `json:"university_name"`
 	Place            string `json:"place"`
@@ -36,7 +36,7 @@ type EducationResponse struct {
 	PassingYear      string `json:"passing_year"`
 }
 
-//ResponseEducation used for response of educations of profiles
+// ResponseEducation used for response of educations of profiles
 type ResponseEducation struct {
 	Educations []EducationResponse `json:"educations"`
 }
@@ -77,26 +77,26 @@ func (req *CreateEducationRequest) Validate() error {
 
 // Validate func checks if the UpdateEducationRequest is valid.
 func (req *UpdateEducationRequest) Validate() error {
-	
-		if req.Education.Degree == "" {
-			return fmt.Errorf("%s : degree ", errors.ErrParameterMissing.Error())
-		}
 
-		if req.Education.UniversityName == "" {
-			return fmt.Errorf("%s : university name ", errors.ErrParameterMissing.Error())
-		}
+	if req.Education.Degree == "" {
+		return fmt.Errorf("%s : degree ", errors.ErrParameterMissing.Error())
+	}
 
-		if req.Education.Place == "" {
-			return fmt.Errorf("%s : place ", errors.ErrParameterMissing.Error())
-		}
+	if req.Education.UniversityName == "" {
+		return fmt.Errorf("%s : university name ", errors.ErrParameterMissing.Error())
+	}
 
-		if req.Education.PercentageOrCgpa == "" {
-			return fmt.Errorf("%s : percentage or cgpa ", errors.ErrParameterMissing.Error())
-		}
+	if req.Education.Place == "" {
+		return fmt.Errorf("%s : place ", errors.ErrParameterMissing.Error())
+	}
 
-		if req.Education.PassingYear == "" {
-			return fmt.Errorf("%s : passing year ", errors.ErrParameterMissing.Error())
-		}
+	if req.Education.PercentageOrCgpa == "" {
+		return fmt.Errorf("%s : percentage or cgpa ", errors.ErrParameterMissing.Error())
+	}
+
+	if req.Education.PassingYear == "" {
+		return fmt.Errorf("%s : passing year ", errors.ErrParameterMissing.Error())
+	}
 
 	return nil
 }

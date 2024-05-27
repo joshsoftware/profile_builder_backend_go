@@ -24,7 +24,7 @@ type EducationStorer interface {
 	UpdateEducation(ctx context.Context, profileID int, eduID int, req dto.UpdateEducationRequest) (int, error)
 }
 
-// NewProfileRepo creates a new instance of ProfileRepo.
+// NewEducationRepo creates a new instance of EducationRepo.
 func NewEducationRepo(db *pgx.Conn) EducationStorer {
 	return &EducationStore{
 		db: db,
@@ -68,46 +68,46 @@ func (eduStore *EducationStore) CreateEducation(ctx context.Context, values []Ed
 
 // GetEducation returns a details education in the Database that are currently available for perticular ID
 func (eduStore *EducationStore) GetEducation(ctx context.Context, profileID int) (values []dto.EducationResponse, err error) {
-    sql, args, err := sq.Select(constants.ResponseEducationColumns...).From("educations").
-        Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
-    if err != nil {
-        zap.S().Error("Error generating get education select query: ", err)
-        return []dto.EducationResponse{}, err
-    }
-	
-    rows, err := eduStore.db.Query(ctx, sql, args...)
-    if err != nil {
-        zap.S().Error("Error executing get education query: ", err)
-        return []dto.EducationResponse{}, err
-    }
-    defer rows.Close()
+	sql, args, err := sq.Select(constants.ResponseEducationColumns...).From("educations").
+		Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		zap.S().Error("Error generating get education select query: ", err)
+		return []dto.EducationResponse{}, err
+	}
 
-    for rows.Next() {
-        var value dto.EducationResponse
-        if err := rows.Scan(&value.ProfileID, &value.Degree, &value.UniversityName, &value.Place,
-            &value.PercentageOrCgpa, &value.PassingYear); err != nil {
-            zap.S().Error("Error scanning row: ", err)
-            return []dto.EducationResponse{}, err
-        }
-        values = append(values, value)
-    }
+	rows, err := eduStore.db.Query(ctx, sql, args...)
+	if err != nil {
+		zap.S().Error("Error executing get education query: ", err)
+		return []dto.EducationResponse{}, err
+	}
+	defer rows.Close()
 
-    if len(values) == 0 {
-        zap.S().Info("No education found for profileID: ", profileID)
-        return []dto.EducationResponse{}, errors.ErrNoRecordFound
-    }
+	for rows.Next() {
+		var value dto.EducationResponse
+		if err := rows.Scan(&value.ProfileID, &value.Degree, &value.UniversityName, &value.Place,
+			&value.PercentageOrCgpa, &value.PassingYear); err != nil {
+			zap.S().Error("Error scanning row: ", err)
+			return []dto.EducationResponse{}, err
+		}
+		values = append(values, value)
+	}
 
-    return values, nil
+	if len(values) == 0 {
+		zap.S().Info("No education found for profileID: ", profileID)
+		return []dto.EducationResponse{}, errors.ErrNoRecordFound
+	}
+
+	return values, nil
 }
 
 // UpdateEducation updates education details into the database.
 func (eduStore *EducationStore) UpdateEducation(ctx context.Context, profileID int, eduID int, req dto.UpdateEducationRequest) (int, error) {
 	updateQuery, args, err := sq.Update("educations").
-	Set("degree", req.Education.Degree).
-	Set("university_name", req.Education.UniversityName).
-	Set("place", req.Education.Place).
-	Set("percent_or_cgpa", req.Education.PercentageOrCgpa).
-	Set("passing_year", req.Education.PassingYear).
+		Set("degree", req.Education.Degree).
+		Set("university_name", req.Education.UniversityName).
+		Set("place", req.Education.Place).
+		Set("percent_or_cgpa", req.Education.PercentageOrCgpa).
+		Set("passing_year", req.Education.PassingYear).
 		Where(sq.Eq{"profile_id": profileID, "id": eduID}).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
@@ -131,4 +131,3 @@ func (eduStore *EducationStore) UpdateEducation(ctx context.Context, profileID i
 
 	return profileID, nil
 }
-

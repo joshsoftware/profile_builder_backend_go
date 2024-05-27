@@ -6,8 +6,10 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
+	"go.uber.org/zap"
 )
 
+// CertificateService represents a set of methods for accessing the certificates.
 type CertificateService interface {
 	CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (profileID int, err error)
 }
@@ -15,6 +17,7 @@ type CertificateService interface {
 // CreateCerticate : Service layer function adds certicates details to a user profile.
 func (profileSvc *service) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (profileID int, err error) {
 	if len(cDetail.Certificates) == 0 {
+		zap.S().Error("certificates payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 
@@ -39,6 +42,7 @@ func (profileSvc *service) CreateCertificate(ctx context.Context, cDetail dto.Cr
 
 	err = profileSvc.CertificateRepo.CreateCertificate(ctx, value)
 	if err != nil {
+		zap.S().Error("Unable to create Certificate : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
 
