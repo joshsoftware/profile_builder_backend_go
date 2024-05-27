@@ -5,14 +5,22 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	post "github.com/joshsoftware/profile_builder_backend_go/internal/api/POST"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/app"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 )
 
-func NewRouter(deps app.Dependencies, ctx context.Context) *mux.Router {
+// NewRouter returns a object that contains all routes of application
+func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/profiles", post.CreateProfileHandler(deps.ProfileService, ctx)).Methods(http.MethodPost)
-	router.HandleFunc("/login", post.Login(ctx, deps.ProfileService)).Methods(http.MethodPost)
+	subrouter := router.PathPrefix("/profiles").Subrouter()
+
+	// api/profiles
+
+	//POST APIs
+	router.HandleFunc("/profiles", handler.CreateProfileHandler(ctx, svc)).Methods(http.MethodPost)
+	subrouter.HandleFunc("/educations", handler.CreateEducationHandler(ctx, svc)).Methods(http.MethodPost)
+
+	//GET APIs
 	return router
 }
