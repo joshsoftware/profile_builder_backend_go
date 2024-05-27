@@ -4,68 +4,76 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
-type response struct {
-	ErrorCode    int         `json:"error_code"`
-	ErrorMessage string      `json:"error_message"`
-	Data         interface{} `json:"data"`
+// errorResponse is a response that is returned when an error is encountered
+type errorResponse struct {
+	ErrorCode    int    `json:"error_code"`
+	ErrorMessage string `json:"error_message"`
 }
 
+// successResponse is a response that is returned when an success is encountered
+type successResponse struct {
+	Data interface{} `json:"data"`
+}
+
+// SuccessResponse function returns a response that is returned when an success is encountered
 func SuccessResponse(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
-	payload := response{
+	payload := successResponse{
 		Data: data,
 	}
 
 	out, err := json.Marshal(payload)
 	if err != nil {
-		fmt.Println("cannot marshal success response payload")
+		zap.S().Error("cannot marshal success response payload")
 		writeServerErrorResponse(w)
 		return
 	}
 
 	_, err = w.Write(out)
 	if err != nil {
-		fmt.Println("cannot write json success response")
+		zap.S().Error("cannot write json success response")
 		writeServerErrorResponse(w)
 		return
 	}
 }
 
+// ErrorResponse function returns a response that is returned when an failure is encountered
 func ErrorResponse(w http.ResponseWriter, httpStatus int, err error) {
-	// Printing the error
-	fmt.Println(err)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
 
-	payload := response{
+	payload := errorResponse{
 		ErrorCode:    httpStatus,
 		ErrorMessage: err.Error(),
 	}
 
 	out, err := json.Marshal(payload)
 	if err != nil {
-		fmt.Println("error occurred while marshaling response payload")
+		zap.S().Error("error occurred while marshaling response payload")
 		writeServerErrorResponse(w)
 		return
 	}
 
 	_, err = w.Write(out)
 	if err != nil {
-		fmt.Println("error occurred while writing response")
+		zap.S().Error("error occurred while writing response")
 		writeServerErrorResponse(w)
 		return
 	}
 }
 
+// writeServerErrorResponse writes the error response to help with ErrorResponse
 func writeServerErrorResponse(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 	_, err := w.Write([]byte(fmt.Sprintf("{\"message\":%s}", "internal server error")))
 	if err != nil {
-		fmt.Println("error occurred while writing response")
+		zap.S().Error("error occurred while writing response")
 	}
 }
