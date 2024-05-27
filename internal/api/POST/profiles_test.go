@@ -142,14 +142,12 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-// Helper function to simulate errors in ReadAll
 type errReader int
 
 func (errReader) Read(p []byte) (int, error) {
 	return 0, errors.New("read error")
 }
 
-// Helper function to mock HTTP client
 type RoundTripFunc func(req *http.Request) (*http.Response, error)
 
 func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {

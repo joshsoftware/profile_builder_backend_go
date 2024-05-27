@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -48,8 +47,6 @@ func Login(ctx context.Context, profileSvc profile.Service) func(http.ResponseWr
 			return
 		}
 
-		fmt.Println("Access token: ", req.AccessToken)
-
 		serverRequest, err := http.NewRequest("GET", os.Getenv("GOOGLE_USER_INFO_URL"), nil)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
@@ -70,8 +67,6 @@ func Login(ctx context.Context, profileSvc profile.Service) func(http.ResponseWr
 			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
 			return
 		}
-
-		fmt.Println("response body : ", string(body))
 
 		var userInfo dto.UserInfo
 		if err := json.NewDecoder(bytes.NewReader(body)).Decode(&userInfo); err != nil {
