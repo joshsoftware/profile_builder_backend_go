@@ -8,6 +8,7 @@ var (
 	ErrParameterMissing = errors.New("parameter missing")
 	ErrInvalidID        = errors.New("invalid id")
 	ErrEmptyPayload     = errors.New("empty payload array")
+	ErrSecretKey        = errors.New("secret key not found")
 )
 
 // Profile Related variables
