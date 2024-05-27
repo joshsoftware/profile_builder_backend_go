@@ -64,7 +64,7 @@ var ListProfilesColumns = []string{
 
 // ResponseProfileColumns defines the columns required for returning a specific user profile.
 var ResponseProfileColumns = []string{
-	"id","name", "email", "gender", "mobile", "designation", "description", "title",
+	"id", "name", "email", "gender", "mobile", "designation", "description", "title",
 	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link",
 }
 

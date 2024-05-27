@@ -30,7 +30,7 @@ func CreateCertificateHandler(ctx context.Context, profileSvc service.Service) f
 		profileID, err := profileSvc.CreateCertificate(ctx, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error(err)
+			zap.S().Error("Unable to create certificate : ", err, "for profile id : ", profileID)
 			return
 		}
 

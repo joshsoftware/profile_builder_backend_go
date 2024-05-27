@@ -30,7 +30,7 @@ func CreateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 		profileID, err := profileSvc.CreateProfile(ctx, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error(err)
+			zap.S().Error("Unable to create profile : ", err, "for profile id : ", profileID)
 			return
 		}
 
@@ -47,7 +47,7 @@ func ProfileListHandler(ctx context.Context, profileSvc service.Service) func(ht
 		values, err := profileSvc.ListProfiles(ctx)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error(err)
+			zap.S().Error("Unable to list profiles : ", err)
 			return
 		}
 
@@ -65,7 +65,7 @@ func GetProfileHandler(ctx context.Context, profileSvc service.Service) func(htt
 		value, err := profileSvc.GetProfile(ctx, profileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error(err)
+			zap.S().Error("Unable to get profile : ", err, "for profile id : ", profileID)
 			return
 		}
 
@@ -97,7 +97,7 @@ func UpdateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 		ID, err := profileSvc.UpdateProfile(ctx, profileID, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error(err)
+			zap.S().Error("Unable to update profile : ", err, "for profile id : ", profileID)
 			return
 		}
 

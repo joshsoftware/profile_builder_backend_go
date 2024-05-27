@@ -96,17 +96,17 @@ func (profileStore *ProfileStore) ListProfiles(ctx context.Context) (values []dt
 // GetProfile returns a details profile in the Database that are currently available for perticular ID
 func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int) (value dto.ResponseProfile, err error) {
 	query, args, err := sq.Select(constants.ResponseProfileColumns...).From("profiles").
-        Where(sq.Eq{"id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
-    if err != nil {
-        zap.S().Error("Error generating list project select query: ", err)
-        return dto.ResponseProfile{}, err
+		Where(sq.Eq{"id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		zap.S().Error("Error generating list project select query: ", err)
+		return dto.ResponseProfile{}, err
 	}
 
-    rows, err := profileStore.db.Query(ctx, query, args...)
-    if err != nil {
-        zap.S().Error("Error executing get profile query: ", err)
-        return dto.ResponseProfile{}, err
-    }
+	rows, err := profileStore.db.Query(ctx, query, args...)
+	if err != nil {
+		zap.S().Error("Error executing get profile query: ", err)
+		return dto.ResponseProfile{}, err
+	}
 
 	if rows.Next() {
 		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink); err != nil {
@@ -128,10 +128,8 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 	updateQuery, args, err := sq.Update("profiles").
 		Set("name", pd.Profile.Name).Set("email", pd.Profile.Email).Set("gender", pd.Profile.Gender).
 		Set("mobile", pd.Profile.Mobile).Set("designation", pd.Profile.Designation).Set("description", pd.Profile.Description).Set("title", pd.Profile.Title).Set("years_of_experience", pd.Profile.YearsOfExperience).Set("primary_skills", pd.Profile.PrimarySkills).Set("secondary_skills", pd.Profile.SecondarySkills).Set("github_link", pd.Profile.GithubLink).
-		Set("linkedin_link", pd.Profile.LinkedinLink).
-		Where(sq.Eq{"id": profileID}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
+		Set("linkedin_link", pd.Profile.LinkedinLink).Where(sq.Eq{"id": profileID}).
+		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating profile update query: ", err)
 		return 0, err
@@ -153,4 +151,3 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 
 	return profileID, nil
 }
-

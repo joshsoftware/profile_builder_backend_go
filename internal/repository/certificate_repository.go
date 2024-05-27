@@ -21,7 +21,7 @@ type CertificateStorer interface {
 	CreateCertificate(ctx context.Context, values []CertificateDao) error
 }
 
-// NewProfileRepo creates a new instance of ProfileRepo.
+// NewCertificateRepo creates a new instance of CertificateRepo.
 func NewCertificateRepo(db *pgx.Conn) CertificateStorer {
 	return &CertificateStore{
 		db: db,

@@ -6,8 +6,10 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
+	"go.uber.org/zap"
 )
 
+// AchievementService represents a set of methods for accessing the achievements
 type AchievementService interface {
 	CreateAchievement(ctx context.Context, cDetail dto.CreateAchievementRequest) (profileID int, err error)
 }
@@ -15,6 +17,7 @@ type AchievementService interface {
 // CreateAchievement : Service layer function adds certicates details to a user profile.
 func (achSvc *service) CreateAchievement(ctx context.Context, cDetail dto.CreateAchievementRequest) (profileID int, err error) {
 	if len(cDetail.Achievements) == 0 {
+		zap.S().Error("achievements payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 	var value []repository.AchievementDao
@@ -34,6 +37,7 @@ func (achSvc *service) CreateAchievement(ctx context.Context, cDetail dto.Create
 
 	err = achSvc.AchievementRepo.CreateAchievement(ctx, value)
 	if err != nil {
+		zap.S().Error("Unable to create achievement : ", err, "for profile id : ", profileID)
 		return 0, err
 	}
 

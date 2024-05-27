@@ -30,7 +30,7 @@ func CreateAchievementHandler(ctx context.Context, profileSvc service.Service) f
 		profileID, err := profileSvc.CreateAchievement(ctx, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error(err)
+			zap.S().Error("Unable to create achievement : ", err, "for profile id : ", profileID)
 			return
 		}
 

@@ -27,7 +27,7 @@ type Project struct {
 
 // ProjectResponse struct represents details of a project for response.
 type ProjectResponse struct {
-	ProfileID int `json:"profile_id"`
+	ProfileID        int    `json:"profile_id"`
 	Name             string `json:"name"`
 	Description      string `json:"description"`
 	Role             string `json:"role"`
@@ -39,6 +39,7 @@ type ProjectResponse struct {
 	Duration         string `json:"duration"`
 }
 
+// ResponseProject represents a project response
 type ResponseProject struct {
 	Projects []ProjectResponse `json:"projects"`
 }

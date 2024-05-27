@@ -7,8 +7,10 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
+	"go.uber.org/zap"
 )
 
+// EducationService represents a set of methods for accessing the education
 type EducationService interface {
 	CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (profileID int, err error)
 	GetEducation(ctx context.Context, profileID string) (value []dto.EducationResponse, err error)
@@ -16,8 +18,9 @@ type EducationService interface {
 }
 
 // CreateEducation : Service layer function adds education details to a user profile.
-func (profileSvc *service) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (profileID int, err error) {
+func (eduSvc *service) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (profileID int, err error) {
 	if len(eduDetail.Educations) == 0 {
+		zap.S().Error("educations payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 
@@ -38,8 +41,9 @@ func (profileSvc *service) CreateEducation(ctx context.Context, eduDetail dto.Cr
 		value = append(value, val)
 	}
 
-	err = profileSvc.EducationRepo.CreateEducation(ctx, value)
+	err = eduSvc.EducationRepo.CreateEducation(ctx, value)
 	if err != nil {
+		zap.S().Error("Unable to create Education : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
 
@@ -49,12 +53,14 @@ func (profileSvc *service) CreateEducation(ctx context.Context, eduDetail dto.Cr
 // GetEducation in the service layer retrieves a education of specific profile.
 func (eduSvc *service) GetEducation(ctx context.Context, profileID string) (value []dto.EducationResponse, err error) {
 	id, err := helpers.ConvertStringToInt(profileID)
-	if err!= nil {
-        return []dto.EducationResponse{}, err
-    }
+	if err != nil {
+		zap.S().Error("error to get education : ", err, " for profile id : ", profileID)
+		return []dto.EducationResponse{}, err
+	}
 
 	value, err = eduSvc.EducationRepo.GetEducation(ctx, id)
 	if err != nil {
+		zap.S().Error("Unable to get education : ", err, " for profile id : ", profileID)
 		return []dto.EducationResponse{}, err
 	}
 	return value, nil
@@ -62,13 +68,15 @@ func (eduSvc *service) GetEducation(ctx context.Context, profileID string) (valu
 
 // UpdateEducation in the service layer update a education of specific profile.
 func (eduSvc *service) UpdateEducation(ctx context.Context, profileID string, eduID string, req dto.UpdateEducationRequest) (id int, err error) {
-	pid, id, err := helpers.MultipleConvertStringToInt(profileID,eduID)
-	if err!= nil {
-        return 0, err
-    }
+	pid, id, err := helpers.MultipleConvertStringToInt(profileID, eduID)
+	if err != nil {
+		zap.S().Error("error to get education params : ", err, " for profile id : ", profileID)
+		return 0, err
+	}
 
 	id, err = eduSvc.EducationRepo.UpdateEducation(ctx, pid, id, req)
 	if err != nil {
+		zap.S().Error("Unable to update education : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
 	return id, nil

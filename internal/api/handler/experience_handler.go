@@ -31,7 +31,7 @@ func CreateExperienceHandler(ctx context.Context, profileSvc service.Service) fu
 		profileID, err := profileSvc.CreateExperience(ctx, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error(err)
+			zap.S().Error("Unable to create experiences : ", err, "for profile id : ", profileID)
 			return
 		}
 
@@ -55,7 +55,7 @@ func GetExperienceHandler(ctx context.Context, expSvc service.Service) func(http
 		values, err := expSvc.GetExperience(ctx, profileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error(err)
+			zap.S().Error("Unable to get experience : ", err, "for profile id : ", profileID)
 			return
 		}
 

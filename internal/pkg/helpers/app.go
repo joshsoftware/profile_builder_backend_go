@@ -35,12 +35,12 @@ func GetTodaysDate() string {
 }
 
 // ConvertStringToInt returns the integer value of given string
-func ConvertStringToInt(value string)(int,error){
+func ConvertStringToInt(value string) (int, error) {
 	id, err := strconv.Atoi(value)
-    if err!=nil{
-        return 0, errors.ErrInvalidRequestData
-    }
-    return id,nil
+	if err != nil {
+		return 0, errors.ErrInvalidRequestData
+	}
+	return id, nil
 }
 
 // MultipleConvertStringToInt returns the integer value of given string
@@ -58,7 +58,8 @@ func MultipleConvertStringToInt(profileID string, id string) (int, int, error) {
 	return profileIDInt, idInt, nil
 }
 
-func GetParams(r *http.Request)(ID string, err error) {
+// GetParams returns the profileID which is coming from the query parameters
+func GetParams(r *http.Request) (ID string, err error) {
 	vars := mux.Vars(r)
 	profileID, ok := vars["profile_id"]
 	if !ok {
@@ -67,6 +68,7 @@ func GetParams(r *http.Request)(ID string, err error) {
 	return profileID, nil
 }
 
+// GetMultipleParams returns the multiple IDs which is coming from the query parameters
 func GetMultipleParams(r *http.Request) (string, string, error) {
 	vars := mux.Vars(r)
 
