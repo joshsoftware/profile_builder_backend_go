@@ -8,6 +8,18 @@ import (
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+// Decode the
+
+func decodeUserLoginRequest(r *http.Request) (dto.UserLoginRequest, error) {
+	var req dto.UserLoginRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return dto.UserLoginRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
 // Decodes the Profile Creation object Request
 func decodeCreateProfileRequest(r *http.Request) (dto.CreateProfileRequest, error) {
 	var req dto.CreateProfileRequest
