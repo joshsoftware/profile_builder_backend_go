@@ -13,6 +13,7 @@ var (
 // Profile Related variables
 var (
 	ErrInvalidFormat = errors.New("invalid request format")
+	ErrInvalidRequestData = errors.New("invalid request data")
 )
 
 // DB Related variables

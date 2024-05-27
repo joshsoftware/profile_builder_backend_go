@@ -42,6 +42,36 @@ func (_m *ProjectService) CreateProject(ctx context.Context, projDetail dto.Crea
 	return r0, r1
 }
 
+// GetProject provides a mock function with given fields: ctx, profileID
+func (_m *ProjectService) GetProject(ctx context.Context, profileID string) ([]dto.ProjectResponse, error) {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetProject")
+	}
+
+	var r0 []dto.ProjectResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]dto.ProjectResponse, error)); ok {
+		return rf(ctx, profileID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []dto.ProjectResponse); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.ProjectResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewProjectService creates a new instance of ProjectService. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewProjectService(t interface {

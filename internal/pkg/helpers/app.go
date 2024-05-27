@@ -1,10 +1,14 @@
 package helpers
 
 import (
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
 // IsDuplicateKeyError returns true if the given key is duplicate and false otherwise
@@ -28,4 +32,50 @@ func GetTodaysDate() string {
 	now := time.Now()
 	today := strings.Split(now.String(), " ")
 	return today[0]
+}
+
+// ConvertStringToInt returns the integer value of given string
+func ConvertStringToInt(value string)(int,error){
+	id, err := strconv.Atoi(value)
+    if err!=nil{
+        return 0, errors.ErrInvalidRequestData
+    }
+    return id,nil
+}
+
+// MultipleConvertStringToInt returns the integer value of given string
+func MultipleConvertStringToInt(profileID string, id string) (int, int, error) {
+	profileIDInt, err := strconv.Atoi(profileID)
+	if err != nil {
+		return 0, 0, errors.ErrInvalidRequestData
+	}
+
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, 0, errors.ErrInvalidRequestData
+	}
+
+	return profileIDInt, idInt, nil
+}
+
+func GetParams(r *http.Request)(ID string, err error) {
+	vars := mux.Vars(r)
+	profileID, ok := vars["profile_id"]
+	if !ok {
+		return "", errors.ErrInvalidRequestData
+	}
+	return profileID, nil
+}
+
+func GetMultipleParams(r *http.Request) (string, string, error) {
+	vars := mux.Vars(r)
+
+	profileID, profileIDOk := vars["profile_id"]
+	id, idOk := vars["id"]
+
+	if !profileIDOk || !idOk {
+		return "", "", errors.ErrInvalidRequestData
+	}
+
+	return profileID, id, nil
 }

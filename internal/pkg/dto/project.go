@@ -25,6 +25,24 @@ type Project struct {
 	Duration         string `json:"duration"`
 }
 
+// ProjectResponse struct represents details of a project for response.
+type ProjectResponse struct {
+	ProfileID int `json:"profile_id"`
+	Name             string `json:"name"`
+	Description      string `json:"description"`
+	Role             string `json:"role"`
+	Responsibilities string `json:"responsibilities"`
+	Technologies     string `json:"technologies"`
+	TechWorkedOn     string `json:"tech_worked_on"`
+	WorkingStartDate string `json:"working_start_date"`
+	WorkingEndDate   string `json:"working_end_date"`
+	Duration         string `json:"duration"`
+}
+
+type ResponseProject struct {
+	Projects []ProjectResponse `json:"projects"`
+}
+
 // Validate func checks if the CreateProjectRequest is valid.
 func (req *CreateProjectRequest) Validate() error {
 

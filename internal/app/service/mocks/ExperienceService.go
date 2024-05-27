@@ -42,6 +42,36 @@ func (_m *ExperienceService) CreateExperience(ctx context.Context, expDetail dto
 	return r0, r1
 }
 
+// GetExperience provides a mock function with given fields: ctx, profileID
+func (_m *ExperienceService) GetExperience(ctx context.Context, profileID string) ([]dto.ExperienceResponse, error) {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetExperience")
+	}
+
+	var r0 []dto.ExperienceResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]dto.ExperienceResponse, error)); ok {
+		return rf(ctx, profileID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []dto.ExperienceResponse); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.ExperienceResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewExperienceService creates a new instance of ExperienceService. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewExperienceService(t interface {

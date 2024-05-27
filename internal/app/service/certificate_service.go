@@ -3,30 +3,17 @@ package service
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 )
 
-type certificateService struct {
-	CertificateRepo repository.CertificateStorer
-}
-
 type CertificateService interface {
 	CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (profileID int, err error)
 }
 
-func NewCertificateService(db *pgx.Conn) CertificateService {
-	certificateRepo := repository.NewCertificateRepo(db)
-
-	return &certificateService{
-		CertificateRepo: certificateRepo,
-	}
-}
-
 // CreateCerticate : Service layer function adds certicates details to a user profile.
-func (profileSvc *certificateService) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (profileID int, err error) {
+func (profileSvc *service) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (profileID int, err error) {
 	if len(cDetail.Certificates) == 0 {
 		return 0, errors.ErrEmptyPayload
 	}

@@ -42,9 +42,9 @@ func (_m *Service) CreateAchievement(ctx context.Context, cDetail dto.CreateAchi
 	return r0, r1
 }
 
-// CreateCertificate provides a mock function with given fields: ctx, expDetail
-func (_m *Service) CreateCertificate(ctx context.Context, expDetail dto.CreateCertificateRequest) (int, error) {
-	ret := _m.Called(ctx, expDetail)
+// CreateCertificate provides a mock function with given fields: ctx, cDetail
+func (_m *Service) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (int, error) {
+	ret := _m.Called(ctx, cDetail)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateCertificate")
@@ -53,16 +53,16 @@ func (_m *Service) CreateCertificate(ctx context.Context, expDetail dto.CreateCe
 	var r0 int
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest) (int, error)); ok {
-		return rf(ctx, expDetail)
+		return rf(ctx, cDetail)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest) int); ok {
-		r0 = rf(ctx, expDetail)
+		r0 = rf(ctx, cDetail)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateCertificateRequest) error); ok {
-		r1 = rf(ctx, expDetail)
+		r1 = rf(ctx, cDetail)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -98,9 +98,9 @@ func (_m *Service) CreateEducation(ctx context.Context, eduDetail dto.CreateEduc
 	return r0, r1
 }
 
-// CreateExperience provides a mock function with given fields: ctx, projDetail
-func (_m *Service) CreateExperience(ctx context.Context, projDetail dto.CreateExperienceRequest) (int, error) {
-	ret := _m.Called(ctx, projDetail)
+// CreateExperience provides a mock function with given fields: ctx, expDetail
+func (_m *Service) CreateExperience(ctx context.Context, expDetail dto.CreateExperienceRequest) (int, error) {
+	ret := _m.Called(ctx, expDetail)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateExperience")
@@ -109,16 +109,16 @@ func (_m *Service) CreateExperience(ctx context.Context, projDetail dto.CreateEx
 	var r0 int
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest) (int, error)); ok {
-		return rf(ctx, projDetail)
+		return rf(ctx, expDetail)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest) int); ok {
-		r0 = rf(ctx, projDetail)
+		r0 = rf(ctx, expDetail)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateExperienceRequest) error); ok {
-		r1 = rf(ctx, projDetail)
+		r1 = rf(ctx, expDetail)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -182,6 +182,124 @@ func (_m *Service) CreateProject(ctx context.Context, projDetail dto.CreateProje
 	return r0, r1
 }
 
+// GetEducation provides a mock function with given fields: ctx, profileID
+func (_m *Service) GetEducation(ctx context.Context, profileID string) ([]dto.EducationResponse, error) {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetEducation")
+	}
+
+	var r0 []dto.EducationResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]dto.EducationResponse, error)); ok {
+		return rf(ctx, profileID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []dto.EducationResponse); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.EducationResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetExperience provides a mock function with given fields: ctx, profileID
+func (_m *Service) GetExperience(ctx context.Context, profileID string) ([]dto.ExperienceResponse, error) {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetExperience")
+	}
+
+	var r0 []dto.ExperienceResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]dto.ExperienceResponse, error)); ok {
+		return rf(ctx, profileID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []dto.ExperienceResponse); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.ExperienceResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetProfile provides a mock function with given fields: ctx, profileID
+func (_m *Service) GetProfile(ctx context.Context, profileID string) (dto.ResponseProfile, error) {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetProfile")
+	}
+
+	var r0 dto.ResponseProfile
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (dto.ResponseProfile, error)); ok {
+		return rf(ctx, profileID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) dto.ResponseProfile); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		r0 = ret.Get(0).(dto.ResponseProfile)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetProject provides a mock function with given fields: ctx, profileID
+func (_m *Service) GetProject(ctx context.Context, profileID string) ([]dto.ProjectResponse, error) {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetProject")
+	}
+
+	var r0 []dto.ProjectResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]dto.ProjectResponse, error)); ok {
+		return rf(ctx, profileID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []dto.ProjectResponse); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.ProjectResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListProfiles provides a mock function with given fields: ctx
 func (_m *Service) ListProfiles(ctx context.Context) ([]dto.ListProfiles, error) {
 	ret := _m.Called(ctx)
@@ -205,6 +323,62 @@ func (_m *Service) ListProfiles(ctx context.Context) ([]dto.ListProfiles, error)
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateEducation provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *Service) UpdateEducation(ctx context.Context, profileID string, eduID string, req dto.UpdateEducationRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateEducation")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateEducationRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateEducationRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateEducationRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateProfile provides a mock function with given fields: ctx, profileID, profileDetail
+func (_m *Service) UpdateProfile(ctx context.Context, profileID string, profileDetail dto.UpdateProfileRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, profileDetail)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProfile")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, dto.UpdateProfileRequest) (int, error)); ok {
+		return rf(ctx, profileID, profileDetail)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, dto.UpdateProfileRequest) int); ok {
+		r0 = rf(ctx, profileID, profileDetail)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, dto.UpdateProfileRequest) error); ok {
+		r1 = rf(ctx, profileID, profileDetail)
 	} else {
 		r1 = ret.Error(1)
 	}

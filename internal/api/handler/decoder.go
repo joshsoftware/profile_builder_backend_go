@@ -19,6 +19,17 @@ func decodeCreateProfileRequest(r *http.Request) (dto.CreateProfileRequest, erro
 	return req, nil
 }
 
+// Decodes the Profile Updation object Request
+func decodeUpdateProfileRequest(r *http.Request) (dto.UpdateProfileRequest, error) {
+	var req dto.UpdateProfileRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return dto.UpdateProfileRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
 // Decodes the Profile Education object Request
 func decodeCreateEducationRequest(r *http.Request) (dto.CreateEducationRequest, error) {
 	var req dto.CreateEducationRequest
@@ -30,7 +41,18 @@ func decodeCreateEducationRequest(r *http.Request) (dto.CreateEducationRequest, 
 	return req, nil
 }
 
-// Decodes the Profile Profile object request
+// Decodes the Education Updation object Request
+func decodeUpdateEducationRequest(r *http.Request) (dto.UpdateEducationRequest, error) {
+	var req dto.UpdateEducationRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return dto.UpdateEducationRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
+// Decodes the Profile Project object request
 func decodeCreateProjectRequest(r *http.Request) (dto.CreateProjectRequest, error) {
 	var req dto.CreateProjectRequest
 	err := json.NewDecoder(r.Body).Decode(&req)

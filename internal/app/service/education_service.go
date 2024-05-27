@@ -3,30 +3,20 @@ package service
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 )
 
-type educationService struct {
-	EducationRepo repository.EducationStorer
-}
-
 type EducationService interface {
 	CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (profileID int, err error)
-}
-
-func NewEducationService(db *pgx.Conn) EducationService {
-	achievementRepo := repository.NewEducationRepo(db)
-
-	return &educationService{
-		EducationRepo: achievementRepo,
-	}
+	GetEducation(ctx context.Context, profileID string) (value []dto.EducationResponse, err error)
+	UpdateEducation(ctx context.Context, profileID string, eduID string, req dto.UpdateEducationRequest) (id int, err error)
 }
 
 // CreateEducation : Service layer function adds education details to a user profile.
-func (profileSvc *educationService) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (profileID int, err error) {
+func (profileSvc *service) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (profileID int, err error) {
 	if len(eduDetail.Educations) == 0 {
 		return 0, errors.ErrEmptyPayload
 	}
@@ -54,4 +44,32 @@ func (profileSvc *educationService) CreateEducation(ctx context.Context, eduDeta
 	}
 
 	return eduDetail.ProfileID, nil
+}
+
+// GetEducation in the service layer retrieves a education of specific profile.
+func (eduSvc *service) GetEducation(ctx context.Context, profileID string) (value []dto.EducationResponse, err error) {
+	id, err := helpers.ConvertStringToInt(profileID)
+	if err!= nil {
+        return []dto.EducationResponse{}, err
+    }
+
+	value, err = eduSvc.EducationRepo.GetEducation(ctx, id)
+	if err != nil {
+		return []dto.EducationResponse{}, err
+	}
+	return value, nil
+}
+
+// UpdateEducation in the service layer update a education of specific profile.
+func (eduSvc *service) UpdateEducation(ctx context.Context, profileID string, eduID string, req dto.UpdateEducationRequest) (id int, err error) {
+	pid, id, err := helpers.MultipleConvertStringToInt(profileID,eduID)
+	if err!= nil {
+        return 0, err
+    }
+
+	id, err = eduSvc.EducationRepo.UpdateEducation(ctx, pid, id, req)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }

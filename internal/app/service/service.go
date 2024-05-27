@@ -11,7 +11,21 @@ import (
 
 // service implements the Service interface.
 type service struct {
-	ProfileRepo    repository.ProfileStorer
+	ProfileRepo    repository.ProfileStorer	
+	EducationRepo    repository.EducationStorer	
+	ExperienceRepo repository.ExperienceStorer	
+	ProjectRepo repository.ProjectStorer
+	CertificateRepo repository.CertificateStorer
+	AchievementRepo repository.AchievementStorer
+}
+
+// Service interface provides methods to interact with user profiles.
+type Service interface {
+	CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) (int, error)
+	ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error)
+	GetProfile(ctx context.Context, profileID string) (value dto.ResponseProfile, err error)
+	UpdateProfile(ctx context.Context, profileID string, profileDetail dto.UpdateProfileRequest) (ID int, err error)
+
 	EducationService
 	ProjectService
 	ExperienceService
@@ -19,54 +33,23 @@ type service struct {
 	AchievementService
 }
 
-// Service interface provides methods to interact with user profiles.
-type Service interface {
-	CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) (int, error)
-	CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (profileID int, err error)
-	CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (profileID int, err error)
-	CreateExperience(ctx context.Context, projDetail dto.CreateExperienceRequest) (profileID int, err error)
-	CreateCertificate(ctx context.Context, expDetail dto.CreateCertificateRequest) (profileID int, err error)
-	CreateAchievement(ctx context.Context, cDetail dto.CreateAchievementRequest) (profileID int, err error)
-
-	ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error)
-}
-
 // NewServices creates a new instance of the Service.
 func NewServices(db *pgx.Conn) Service {
 	profileRepo := repository.NewProfileRepo(db)
-	educationService := NewEducationService(db)
-	projectSvc := NewProjectService(db)
-	experienceSvc := NewExperienceService(db)
-	certificateSvc := NewCertificateService(db)
-	achievementSvc := NewAchivementService(db)
-
+	educationRepo := repository.NewEducationRepo(db)
+	experienceRepo := repository.NewExperienceRepo(db)
+	projectRepo := repository.NewProjectRepo(db)
+	certificateRepo := repository.NewCertificateRepo(db)
+	achievementRepo := repository.NewAchievementRepo(db)
 	return &service{
 		ProfileRepo:        profileRepo,
-		EducationService:      educationService,
-		ProjectService:        projectSvc,
-		ExperienceService:     experienceSvc,
-		CertificateService:    certificateSvc,
-		AchievementService: achievementSvc,
+		EducationRepo: educationRepo,
+		ExperienceRepo: experienceRepo,
+		ProjectRepo: projectRepo,
+		CertificateRepo: certificateRepo,
+		AchievementRepo: achievementRepo,
 	}
 }
-
-// func NewServices(
-// 	profileRepo repository.ProfileStorer,
-// 	educationService EducationService,
-// 	projectService ProjectService,
-// 	experienceService ExperienceService,
-// 	certificateService CertificateService,
-// 	achievementService AchievementService,
-// ) Service {
-// 	return &service{
-// 		ProfileRepo:        profileRepo,
-// 		EducationService:   educationService,
-// 		ProjectService:     projectService,
-// 		ExperienceService:  experienceService,
-// 		CertificateService: certificateService,
-// 		AchievementService: achievementService,
-// 	}
-// }
 
 var today = helpers.GetTodaysDate()
 
@@ -86,4 +69,32 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []dto.ListP
 		return []dto.ListProfiles{}, err
 	}
 	return values, nil
+}
+
+// GetProfile in the service layer retrieves a list of user profiles.
+func (profileSvc *service) GetProfile(ctx context.Context, profileID string) (value dto.ResponseProfile, err error) {
+	id, err := helpers.ConvertStringToInt(profileID)
+	if err!= nil {
+        return dto.ResponseProfile{}, err
+    }
+
+	value, err = profileSvc.ProfileRepo.GetProfile(ctx, id)
+	if err != nil {
+		return dto.ResponseProfile{}, err
+	}
+	return value, nil
+}
+
+// UpdateProfile in the service layer updates user profile.
+func (profileSvc *service) UpdateProfile(ctx context.Context, profileID string, profileDetail dto.UpdateProfileRequest) (ID int, err error) {
+	id, err := helpers.ConvertStringToInt(profileID)
+	if err!= nil {
+        return 0, err
+    }
+
+	ID, err = profileSvc.ProfileRepo.UpdateProfile(ctx, id, profileDetail)
+	if err != nil {
+		return 0, err
+	}
+	return ID, nil
 }
