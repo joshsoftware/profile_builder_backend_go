@@ -13,6 +13,8 @@ import (
 func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	router := mux.NewRouter()
 
+	// user login router
+	router.HandleFunc("/login", handler.Login(ctx, svc)).Methods(http.MethodPost)
 	subrouter := router.PathPrefix("/profiles").Subrouter()
 
 	//POST APIs
