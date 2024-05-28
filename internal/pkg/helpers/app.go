@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	"context"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,6 +12,25 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
+
+func SendRequest(ctx context.Context, url, access_token string) ([]byte, error) {
+	serverRequest, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, errors.ErrInvalidRequestData
+	}
+
+	serverRequest.Header.Set("Authorization", "Bearer "+access_token)
+	resp, err := http.DefaultClient.Do(serverRequest)
+	if err != nil {
+		return nil, errors.ErrHTTPRequestFailed
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.ErrReadResponseBodyFailed
+	}
+	return body, nil
+}
 
 // IsDuplicateKeyError returns true if the given key is duplicate and false otherwise
 func IsDuplicateKeyError(err error) bool {
