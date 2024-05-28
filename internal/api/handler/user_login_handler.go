@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"os"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 	"go.uber.org/zap"
 )
@@ -24,33 +25,22 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 			return
 		}
 
-		serverRequest, err := http.NewRequest("GET", os.Getenv("GOOGLE_USER_INFO_URL"), nil)
+		body, err := helpers.SendRequest(ctx, os.Getenv("GOOGLE_USER_INFO_URL"), req.AccessToken)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
 			zap.S().Error(err)
-			return
-		}
-
-		serverRequest.Header.Set("Authorization", "Bearer "+req.AccessToken)
-
-		resp, err := http.DefaultClient.Do(serverRequest)
-		if err != nil {
-			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
-			zap.S().Error(err)
-			return
-		}
-		defer resp.Body.Close()
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
-			zap.S().Error("Unable to read response body : ", err)
 			return
 		}
 
 		if err := json.NewDecoder(bytes.NewReader(body)).Decode(&userInfo); err != nil {
 			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
 			zap.S().Error("Unable to decode response body : ", err)
+			return
+		}
+
+		if len(userInfo.Email) == 0 {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrEmailNotFound)
+			zap.S().Error("Invalid email")
 			return
 		}
 
