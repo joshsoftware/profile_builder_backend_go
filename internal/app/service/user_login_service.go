@@ -17,9 +17,9 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 	}
 
 	token, err := jwttoken.CreateToken(userId, email)
+
 	if err != nil {
 		return "", err
 	}
 	return token, nil
-
 }
