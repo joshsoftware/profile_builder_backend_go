@@ -1,5 +1,27 @@
 package repository
 
+// ProfileRepo represents a data access object for profile-related information.
+// This struct maps to a database table, where each field corresponds to a column
+// in the profile table.
+type ProfileRepo struct {
+	Name              string   `db:"name"`
+	Email             string   `db:"email"`
+	Gender            string   `db:"gender"`
+	Mobile            string   `db:"mobile"`
+	Designation       string   `db:"designation"`
+	Description       string   `db:"description"`
+	Title             string   `db:"title"`
+	YearsOfExperience float64  `db:"years_of_experience"`
+	PrimarySkills     []string `db:"primary_skills"`
+	SecondarySkills   []string `db:"secondary_skills"`
+	GithubLink        string   `db:"github_link"`
+	LinkedinLink      string   `db:"linkedin_link"`
+	CreatedAt         string   `db:"created_at"`
+	UpdatedAt         string   `db:"updated_at"`
+	CreatedByID       int64    `db:"created_by_id"`
+	UpdatedByID       int64    `db:"updated_by_id"`
+}
+
 // EducationDao represents a data access object for education-related information.
 // This struct maps to a database table, where each field corresponds to a column
 // in the educations table.

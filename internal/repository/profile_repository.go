@@ -19,7 +19,7 @@ type ProfileStore struct {
 
 // ProfileStorer defines methods to interact with user profile data.
 type ProfileStorer interface {
-	CreateProfile(ctx context.Context, pd dto.CreateProfileRequest) (int, error)
+	CreateProfile(ctx context.Context, pd ProfileRepo) (int, error)
 	ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error)
 	GetProfile(ctx context.Context, profileID int) (value dto.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, profileID int, pd dto.UpdateProfileRequest) (int, error)
@@ -33,13 +33,12 @@ func NewProfileRepo(db *pgx.Conn) ProfileStorer {
 }
 
 // CreateProfile inserts a new user profile into the database.
-func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd dto.CreateProfileRequest) (int, error) {
+func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileRepo) (int, error) {
 
 	values := []interface{}{
-		pd.Profile.Name, pd.Profile.Email, pd.Profile.Gender, pd.Profile.Mobile,
-		pd.Profile.Designation, pd.Profile.Description, pd.Profile.Title,
-		pd.Profile.YearsOfExperience, pd.Profile.PrimarySkills, pd.Profile.SecondarySkills,
-		pd.Profile.GithubLink, pd.Profile.LinkedinLink, 1, 1,
+		pd.Name, pd.Email, pd.Gender, pd.Mobile, pd.Designation, pd.Description, pd.Title,
+		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.GithubLink, pd.LinkedinLink,
+		1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID,
 	}
 
 	insertQuery, args, err := sq.Insert("profiles").

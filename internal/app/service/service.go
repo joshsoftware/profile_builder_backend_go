@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -34,21 +33,25 @@ type Service interface {
 	AchievementService
 }
 
+type RepoDeps struct {
+	ProfileDeps     repository.ProfileStorer
+	EducationDeps   repository.EducationStorer
+	ExperienceDeps  repository.ExperienceStorer
+	ProjectDeps     repository.ProjectStorer
+	CertificateDeps repository.CertificateStorer
+	AchievementDeps repository.AchievementStorer
+}
+
 // NewServices creates a new instance of the Service.
-func NewServices(db *pgx.Conn) Service {
-	profileRepo := repository.NewProfileRepo(db)
-	educationRepo := repository.NewEducationRepo(db)
-	experienceRepo := repository.NewExperienceRepo(db)
-	projectRepo := repository.NewProjectRepo(db)
-	certificateRepo := repository.NewCertificateRepo(db)
-	achievementRepo := repository.NewAchievementRepo(db)
+func NewServices(rp RepoDeps) Service {
+
 	return &service{
-		ProfileRepo:     profileRepo,
-		EducationRepo:   educationRepo,
-		ExperienceRepo:  experienceRepo,
-		ProjectRepo:     projectRepo,
-		CertificateRepo: certificateRepo,
-		AchievementRepo: achievementRepo,
+		ProfileRepo:     rp.ProfileDeps,
+		EducationRepo:   rp.EducationDeps,
+		ExperienceRepo:  rp.ExperienceDeps,
+		ProjectRepo:     rp.ProjectDeps,
+		CertificateRepo: rp.CertificateDeps,
+		AchievementRepo: rp.AchievementDeps,
 	}
 }
 
@@ -56,7 +59,25 @@ var today = helpers.GetTodaysDate()
 
 // CreateProfile : Service layer function creates a new user profile using the provided details.
 func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) (int, error) {
-	profileID, err := profileSvc.ProfileRepo.CreateProfile(ctx, profileDetail)
+	var profileRepo repository.ProfileRepo
+	profileRepo.Name = profileDetail.Profile.Name
+	profileRepo.Email = profileDetail.Profile.Email
+	profileRepo.Gender = profileDetail.Profile.Gender
+	profileRepo.Mobile = profileDetail.Profile.Mobile
+	profileRepo.Designation = profileDetail.Profile.Designation
+	profileRepo.Description = profileDetail.Profile.Description
+	profileRepo.Title = profileDetail.Profile.Title
+	profileRepo.YearsOfExperience = profileDetail.Profile.YearsOfExperience
+	profileRepo.PrimarySkills = profileDetail.Profile.PrimarySkills
+	profileRepo.SecondarySkills = profileDetail.Profile.SecondarySkills
+	profileRepo.GithubLink = profileDetail.Profile.GithubLink
+	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
+	profileRepo.CreatedAt = today
+	profileRepo.UpdatedAt = today
+	profileRepo.CreatedByID = 1
+	profileRepo.UpdatedByID = 1
+
+	profileID, err := profileSvc.ProfileRepo.CreateProfile(ctx, profileRepo)
 	if err != nil {
 		zap.S().Error("Unable to create profile : ", err, " for profile id : ", profileID)
 		return 0, err

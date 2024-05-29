@@ -44,8 +44,17 @@ func main() {
 	}
 	fmt.Println("Connected to Database!")
 
+	var repodeps = service.RepoDeps{
+		ProfileDeps:     repository.NewProfileRepo(db),
+		EducationDeps:   repository.NewEducationRepo(db),
+		ExperienceDeps:  repository.NewExperienceRepo(db),
+		ProjectDeps:     repository.NewProjectRepo(db),
+		CertificateDeps: repository.NewCertificateRepo(db),
+		AchievementDeps: repository.NewAchievementRepo(db),
+	}
+
 	//Initializing Services
-	services := service.NewServices(db)
+	services := service.NewServices(repodeps)
 
 	//Initializing Router
 	router := api.NewRouter(ctx, services)
