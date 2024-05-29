@@ -21,17 +21,16 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 		req, err := decodeUserLoginRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
-			zap.S().Error(err)
+			zap.S().Error("Unable to decode request : ", err)
 			return
 		}
 
 		body, err := helpers.SendRequest(ctx, os.Getenv("GOOGLE_USER_INFO_URL"), req.AccessToken)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
-			zap.S().Error(err)
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error("Unable to send request to google : ", err)
 			return
 		}
-
 		if err := json.NewDecoder(bytes.NewReader(body)).Decode(&userInfo); err != nil {
 			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
 			zap.S().Error("Unable to decode response body : ", err)
@@ -39,7 +38,7 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 		}
 
 		if len(userInfo.Email) == 0 {
-			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrEmailNotFound)
+			middleware.ErrorResponse(w, http.StatusNotFound, errors.ErrEmailNotFound)
 			zap.S().Error("Invalid email")
 			return
 		}
@@ -50,6 +49,7 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 			zap.S().Error("Unable to generate token : ", err)
 			return
 		}
+
 		w.Header().Set("Authorization", "Bearer "+token)
 
 		loginResp := dto.UserLoginResponse{
