@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -36,23 +35,26 @@ type Service interface {
 	AchievementService
 }
 
+type RepoDeps struct {
+	UserLoginDeps   repository.UserStorer
+	ProfileDeps     repository.ProfileStorer
+	EducationDeps   repository.EducationStorer
+	ExperienceDeps  repository.ExperienceStorer
+	ProjectDeps     repository.ProjectStorer
+	CertificateDeps repository.CertificateStorer
+	AchievementDeps repository.AchievementStorer
+}
+
 // NewServices creates a new instance of the Service.
-func NewServices(db *pgx.Conn) Service {
-	userLoginRepo := repository.NewUserLoginRepo(db)
-	profileRepo := repository.NewProfileRepo(db)
-	educationRepo := repository.NewEducationRepo(db)
-	experienceRepo := repository.NewExperienceRepo(db)
-	projectRepo := repository.NewProjectRepo(db)
-	certificateRepo := repository.NewCertificateRepo(db)
-	achievementRepo := repository.NewAchievementRepo(db)
+func NewServices(rp RepoDeps) Service {
 	return &service{
-		UserLoginRepo:   userLoginRepo,
-		ProfileRepo:     profileRepo,
-		EducationRepo:   educationRepo,
-		ExperienceRepo:  experienceRepo,
-		ProjectRepo:     projectRepo,
-		CertificateRepo: certificateRepo,
-		AchievementRepo: achievementRepo,
+		UserLoginRepo:   rp.UserLoginDeps,
+		ProfileRepo:     rp.ProfileDeps,
+		EducationRepo:   rp.EducationDeps,
+		ExperienceRepo:  rp.ExperienceDeps,
+		ProjectRepo:     rp.ProjectDeps,
+		CertificateRepo: rp.CertificateDeps,
+		AchievementRepo: rp.AchievementDeps,
 	}
 }
 
