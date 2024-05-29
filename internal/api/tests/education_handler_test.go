@@ -3,10 +3,12 @@ package test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
@@ -141,24 +143,24 @@ func TestGetEducationHandler(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusOK,
 		},
-		// {
-		// 	name:        "Fail as error in GetEducation",
-		// 	queryParams: "2",
-		// 	setup: func(mockSvc *mocks.Service) {
-		// 		mockSvc.On("GetEducation", mock.Anything, "2").Return(dto.ResponseEducation{}, errors.New("error")).Once()
-		// 	},
-		// 	expectedStatusCode: http.StatusBadGateway,
-		// },
+		{
+			name:        "Fail as error in GetEducation",
+			queryParams: "2",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("GetEducation", mock.Anything, "2").Return([]dto.EducationResponse{}, errors.New("error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(eduSvc)
-
 			req, err := http.NewRequest("GET", "profiles/"+test.queryParams+"/educations", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
+			req = mux.SetURLVars(req, map[string]string{"profile_id": test.queryParams})
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(getEducationHandler)

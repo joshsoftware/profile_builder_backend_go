@@ -3,12 +3,15 @@ package test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -106,6 +109,70 @@ func TestCreateProjectHandler(t *testing.T) {
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
 			}
+		})
+	}
+}
+
+func TestGetProjectHandler(t *testing.T) {
+	projSvc := mocks.NewService(t)
+	getProjectHandler := handler.GetProjectHandler(context.Background(), projSvc)
+
+	tests := []struct {
+		name               string
+		queryParams        string
+		setup              func(mock *mocks.Service)
+		expectedStatusCode int
+	}{
+		{
+			name:        "Success for getting projects",
+			queryParams: "1",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("GetProject", mock.Anything, "1").Return([]dto.ProjectResponse{
+					{
+						ProfileID:        1,
+						Name:             "Project Alpha",
+						Description:      "A sample project",
+						Role:             "Lead Developer",
+						Responsibilities: "Developing the core features",
+						Technologies:     "Go, React",
+						TechWorkedOn:     "Go, React, Docker",
+						WorkingStartDate: "2020-01-01",
+						WorkingEndDate:   "2021-01-01",
+						Duration:         "1 year",
+					},
+				}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:        "Fail as error in GetProject",
+			queryParams: "2",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("GetProject", mock.Anything, "2").Return([]dto.ProjectResponse{}, errors.New("error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(projSvc)
+
+			req, err := http.NewRequest("GET", "profiles/"+test.queryParams+"/projects", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req = mux.SetURLVars(req, map[string]string{"profile_id": test.queryParams})
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(getProjectHandler)
+			handler.ServeHTTP(rr, req)
+
+			if rr.Code != test.expectedStatusCode {
+				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Code)
+			}
+
+			projSvc.AssertExpectations(t)
 		})
 	}
 }
