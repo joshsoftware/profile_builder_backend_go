@@ -33,6 +33,7 @@ type Service interface {
 	AchievementService
 }
 
+// RepoDeps is used to intialize repo dependencies
 type RepoDeps struct {
 	ProfileDeps     repository.ProfileStorer
 	EducationDeps   repository.EducationStorer
