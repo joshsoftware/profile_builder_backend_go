@@ -1,7 +1,9 @@
 package jwttoken
 
 import (
+	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -15,21 +17,29 @@ func CreateToken(userId int64, email string) (string, error) {
 		return "", errors.ErrSecretKey
 	}
 
-	claims := createClaims(userId, email)
+	expirationHoursStr := os.Getenv("TOKEN_EXPIRATION_HOURS")
+	expirationHours, err := strconv.Atoi(expirationHoursStr)
+	if err != nil {
+		log.Fatalf("Error parsing TOKEN_EXPIRATION_HOURS: %v", err)
+		return "", err
+	}
+
+	claims := createClaims(userId, email, time.Duration(expirationHours)*time.Hour)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
+		log.Fatalf("Error in generating token: %v", err)
 		return "", err
 	}
 	return tokenString, nil
 }
 
-func createClaims(userId int64, email string) jwt.MapClaims {
+func createClaims(userId int64, email string, expiration time.Duration) jwt.MapClaims {
 	return jwt.MapClaims{
 		"authorised": true,
 		"userId":     userId,
 		"email":      email,
-		"exp":        time.Now().Add(time.Hour * 72).Unix(),
+		"exp":        time.Now().Add(expiration).Unix(),
 	}
 }
