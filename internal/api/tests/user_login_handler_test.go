@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -27,7 +28,7 @@ func TestUserLoginHandler(t *testing.T) {
 		Name               string
 		Email              string
 		AccessToken        string
-		MockSendRequest    func(context.Context, string, string) ([]byte, error)
+		MockSendRequest    func(context.Context, string, string, string, io.Reader, map[string]string) ([]byte, error)
 		MockSetup          func(*mocks.Service, string)
 		RequestBody        dto.UserLoginRequest
 		ExpectedStatusCode int
@@ -37,7 +38,7 @@ func TestUserLoginHandler(t *testing.T) {
 			Name:        "success",
 			Email:       "test@example.com",
 			AccessToken: "valid_access_token",
-			MockSendRequest: func(ctx context.Context, url string, accessToken string) ([]byte, error) {
+			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
 				userInfo := dto.UserInfo{Email: "test@example.com"}
 				return json.Marshal(userInfo)
 			},
@@ -60,7 +61,7 @@ func TestUserLoginHandler(t *testing.T) {
 			Name:        "send_request_error",
 			Email:       "test@example.com",
 			AccessToken: "invalid_access_token",
-			MockSendRequest: func(ctx context.Context, url string, accessToken string) ([]byte, error) {
+			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
 				return nil, errors.New("failed to perform HTTP request")
 			},
 			RequestBody:        dto.UserLoginRequest{AccessToken: "invalid_access_token"},
@@ -71,7 +72,7 @@ func TestUserLoginHandler(t *testing.T) {
 			Name:        "decode response error",
 			Email:       "test@example.com",
 			AccessToken: "valid_access_token",
-			MockSendRequest: func(ctx context.Context, url string, accessToken string) ([]byte, error) {
+			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
 				return []byte("invalid json"), nil
 			},
 			RequestBody:        dto.UserLoginRequest{AccessToken: "valid_access_token"},
@@ -82,7 +83,7 @@ func TestUserLoginHandler(t *testing.T) {
 			Name:        "invalid email error",
 			Email:       "",
 			AccessToken: "valid_access_token",
-			MockSendRequest: func(ctx context.Context, url string, accessToken string) ([]byte, error) {
+			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
 				userInfo := dto.UserInfo{Email: ""}
 				return json.Marshal(userInfo)
 			},
@@ -94,7 +95,7 @@ func TestUserLoginHandler(t *testing.T) {
 			Name:        "generate token error",
 			Email:       "test@example.com",
 			AccessToken: "valid_access_token",
-			MockSendRequest: func(ctx context.Context, url string, accessToken string) ([]byte, error) {
+			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
 				userInfo := dto.UserInfo{Email: "test@example.com"}
 				return json.Marshal(userInfo)
 			},
