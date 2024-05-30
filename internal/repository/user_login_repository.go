@@ -16,6 +16,10 @@ type UserStore struct {
 	db *pgx.Conn
 }
 
+var (
+	userTable = "users"
+)
+
 // interface
 type UserStorer interface {
 	GetUserIdByEmail(ctx context.Context, email string) (int64, error)
@@ -32,7 +36,7 @@ func (profileStore *UserStore) GetUserIdByEmail(ctx context.Context, email strin
 	var user UserDao
 
 	// used squirrel to build the query
-	selectBuilder := sq.Select("id").From("users").Where(sq.Eq{"email": email}).PlaceholderFormat(sq.Dollar)
+	selectBuilder := sq.Select("id").From(userTable).Where(sq.Eq{"email": email}).PlaceholderFormat(sq.Dollar)
 
 	// generate the query
 	selectQuery, args, err := selectBuilder.ToSql()

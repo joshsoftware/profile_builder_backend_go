@@ -10,7 +10,7 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
-func CreateToken(userId int64, email string) (string, error) {
+func CreateToken(userID int64, email string) (string, error) {
 	secretKey := os.Getenv("SECRET_KEY")
 
 	if secretKey == "" {
@@ -24,7 +24,7 @@ func CreateToken(userId int64, email string) (string, error) {
 		return "", err
 	}
 
-	claims := createClaims(userId, email, time.Duration(expirationHours)*time.Hour)
+	claims := createClaims(userID, email, time.Duration(expirationHours)*time.Hour)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, err := token.SignedString([]byte(secretKey))
@@ -35,10 +35,10 @@ func CreateToken(userId int64, email string) (string, error) {
 	return tokenString, nil
 }
 
-func createClaims(userId int64, email string, expiration time.Duration) jwt.MapClaims {
+func createClaims(userID int64, email string, expiration time.Duration) jwt.MapClaims {
 	return jwt.MapClaims{
 		"authorised": true,
-		"userId":     userId,
+		"userID":     userID,
 		"email":      email,
 		"exp":        time.Now().Add(expiration).Unix(),
 	}

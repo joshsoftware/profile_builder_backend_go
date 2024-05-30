@@ -15,6 +15,7 @@ var (
 	ErrDecodeResponse   = errors.New("Unable to decode response")
 	ErrInvalidEmail     = errors.New("invalid email")
 	ErrGenerateToken    = errors.New("Unable to generate token")
+	ErrEmptyAccessToken = errors.New("empty access token")
 )
 
 // Profile Related variables

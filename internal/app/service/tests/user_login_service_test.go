@@ -15,7 +15,9 @@ import (
 )
 
 var (
-	UserId1 = 1
+	userID0   = 0
+	UserID1   = 1
+	TestEmail = "test@example.com"
 )
 
 func TestUserLogin(t *testing.T) {
@@ -36,9 +38,9 @@ func TestUserLogin(t *testing.T) {
 	}{
 		{
 			Name:  "success",
-			Email: "test@example.com",
+			Email: TestEmail,
 			MockSetup: func(mockUserStorer *mocks.UserStorer, email string) {
-				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(1), nil).Once()
+				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(UserID1), nil).Once()
 			},
 			MockTokenFunc: func(id int64, email string) (string, error) {
 				return "valid_token", nil
@@ -48,9 +50,9 @@ func TestUserLogin(t *testing.T) {
 		},
 		{
 			Name:  "failed_GetUserIdByEmail",
-			Email: "test@example.com",
+			Email: TestEmail,
 			MockSetup: func(mockUserStorer *mocks.UserStorer, email string) {
-				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(0), errors.New("repository error")).Once()
+				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(userID0), errors.New("repository error")).Once()
 			},
 			MockTokenFunc: nil,
 			ExpectedToken: "",
@@ -58,9 +60,9 @@ func TestUserLogin(t *testing.T) {
 		},
 		{
 			Name:  "CreateToken error",
-			Email: "test@example.com",
+			Email: TestEmail,
 			MockSetup: func(mockUserStorer *mocks.UserStorer, email string) {
-				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(1), nil).Once()
+				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(UserID1), nil).Once()
 			},
 			MockTokenFunc: func(id int64, email string) (string, error) {
 				return "", errors.New("token creation error")

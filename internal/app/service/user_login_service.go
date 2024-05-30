@@ -11,12 +11,12 @@ type UserLoginServive interface {
 }
 
 func (userService *service) GenerateLoginToken(ctx context.Context, email string) (string, error) {
-	userId, err := userService.UserLoginRepo.GetUserIdByEmail(ctx, email)
-	if err != nil || userId == 0 {
+	userID, err := userService.UserLoginRepo.GetUserIdByEmail(ctx, email)
+	if err != nil || userID == 0 {
 		return "", err
 	}
 
-	token, err := jwttoken.CreateToken(userId, email)
+	token, err := jwttoken.CreateToken(userID, email)
 
 	if err != nil {
 		return "", err
