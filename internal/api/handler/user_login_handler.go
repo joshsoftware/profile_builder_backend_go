@@ -25,11 +25,17 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 			return
 		}
 
+		if req.AccessToken == "" {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrEmptyAccessToken)
+			zap.S().Error(errors.ErrEmptyAccessToken)
+			return
+		}
+
 		headers := map[string]string{
 			"Content-Type": "application/json",
 		}
 
-		body, err := helpers.SendRequest(ctx, "GET", os.Getenv("GOOGLE_USER_INFO_URL"), req.AccessToken, nil, headers)
+		body, err := helpers.SendRequest(ctx, http.MethodGet, os.Getenv("GOOGLE_USER_INFO_URL"), req.AccessToken, nil, headers)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(errors.ErrGoogleRequest, ": ", err)
