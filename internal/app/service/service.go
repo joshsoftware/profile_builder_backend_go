@@ -35,6 +35,7 @@ type Service interface {
 	AchievementService
 }
 
+// RepoDeps is used to intialize repo dependencies
 type RepoDeps struct {
 	UserLoginDeps   repository.UserStorer
 	ProfileDeps     repository.ProfileStorer
@@ -62,7 +63,25 @@ var today = helpers.GetTodaysDate()
 
 // CreateProfile : Service layer function creates a new user profile using the provided details.
 func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) (int, error) {
-	profileID, err := profileSvc.ProfileRepo.CreateProfile(ctx, profileDetail)
+	var profileRepo repository.ProfileRepo
+	profileRepo.Name = profileDetail.Profile.Name
+	profileRepo.Email = profileDetail.Profile.Email
+	profileRepo.Gender = profileDetail.Profile.Gender
+	profileRepo.Mobile = profileDetail.Profile.Mobile
+	profileRepo.Designation = profileDetail.Profile.Designation
+	profileRepo.Description = profileDetail.Profile.Description
+	profileRepo.Title = profileDetail.Profile.Title
+	profileRepo.YearsOfExperience = profileDetail.Profile.YearsOfExperience
+	profileRepo.PrimarySkills = profileDetail.Profile.PrimarySkills
+	profileRepo.SecondarySkills = profileDetail.Profile.SecondarySkills
+	profileRepo.GithubLink = profileDetail.Profile.GithubLink
+	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
+	profileRepo.CreatedAt = today
+	profileRepo.UpdatedAt = today
+	profileRepo.CreatedByID = 1
+	profileRepo.UpdatedByID = 1
+
+	profileID, err := profileSvc.ProfileRepo.CreateProfile(ctx, profileRepo)
 	if err != nil {
 		zap.S().Error("Unable to create profile : ", err, " for profile id : ", profileID)
 		return 0, err
