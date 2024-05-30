@@ -10,6 +10,11 @@ var (
 	ErrEmptyPayload     = errors.New("empty payload array")
 	ErrSecretKey        = errors.New("secret key not found")
 	ErrEmailNotFound    = errors.New("email not found")
+	ErrDecodeRequest    = errors.New("Unable to decode request")
+	ErrGoogleRequest    = errors.New("Unable to send request to google")
+	ErrDecodeResponse   = errors.New("Unable to decode response")
+	ErrInvalidEmail     = errors.New("invalid email")
+	ErrGenerateToken    = errors.New("Unable to generate token")
 )
 
 // Profile Related variables
