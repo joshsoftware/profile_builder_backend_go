@@ -4,11 +4,14 @@ go 1.21.6
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/joho/godotenv v1.5.1
 	github.com/rs/cors v1.11.0
 	github.com/stretchr/testify v1.8.1
+	github.com/undefinedlabs/go-mpatch v1.0.7
 	go.uber.org/zap v1.27.0
 )
 

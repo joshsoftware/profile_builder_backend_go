@@ -45,6 +45,7 @@ func main() {
 	fmt.Println("Connected to Database!")
 
 	var repodeps = service.RepoDeps{
+		UserLoginDeps:   repository.NewUserLoginRepo(db),
 		ProfileDeps:     repository.NewProfileRepo(db),
 		EducationDeps:   repository.NewEducationRepo(db),
 		ExperienceDeps:  repository.NewExperienceRepo(db),
