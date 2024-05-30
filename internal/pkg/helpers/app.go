@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,23 +14,33 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
-func SendRequest(ctx context.Context, url, access_token string) ([]byte, error) {
-	serverRequest, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+func SendRequest(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
+	serverRequest, err := http.NewRequestWithContext(ctx, methodType, url, body)
 	if err != nil {
-		return nil, errors.ErrInvalidRequestData
+		log.Fatalf("Error in creating request: %v", err)
+		return nil, err
 	}
 
-	serverRequest.Header.Set("Authorization", "Bearer "+access_token)
+	if accessToken != "" {
+		serverRequest.Header.Set("Authorization", "Bearer "+accessToken)
+	}
+
+	for key, value := range headers {
+		serverRequest.Header.Set(key, value)
+	}
+
 	resp, err := http.DefaultClient.Do(serverRequest)
 	if err != nil {
 		return nil, errors.ErrHTTPRequestFailed
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.ErrReadResponseBodyFailed
 	}
-	return body, nil
+
+	return respBody, nil
 }
 
 // IsDuplicateKeyError returns true if the given key is duplicate and false otherwise
