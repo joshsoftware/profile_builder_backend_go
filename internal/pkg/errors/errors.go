@@ -16,6 +16,11 @@ var (
 	ErrInvalidEmail     = errors.New("invalid email")
 	ErrGenerateToken    = errors.New("Unable to generate token")
 	ErrEmptyAccessToken = errors.New("empty access token")
+	ErrAuthToken        = errors.New("Authorization token not found")
+	ErrAuthHeader       = errors.New("invalid authorization header")
+	ErrSigningMethod    = errors.New("unexpected signing method")
+	ErrInvalidToken     = errors.New("invalid token")
+	ErrUserID           = errors.New("Error in parsing userID from claims")
 )
 
 // Profile Related variables
