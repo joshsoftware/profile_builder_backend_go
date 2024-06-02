@@ -17,7 +17,7 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	// user login router
 	router.HandleFunc("/login", handler.Login(ctx, svc)).Methods(http.MethodPost)
 
-	profileSubrouter := router.PathPrefix("").Subrouter()
+	profileSubrouter := router.PathPrefix("/api").Subrouter()
 	profileSubrouter.Use(middleware.AuthMiddleware)
 
 	//POST APIs
