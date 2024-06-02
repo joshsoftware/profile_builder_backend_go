@@ -2,10 +2,7 @@ package middleware
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -31,19 +28,17 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		tokenString := splitToken[1]
 		claims, err := VerifyJWTToken(tokenString)
 		if err != nil {
-			log.Fatalf("Error in verifying token: %v", err)
+			zap.S().Error("Error in verifying token: %v", err)
 			ErrorResponse(w, http.StatusUnauthorized, err)
 			return
 		}
 
-		fmt.Println("Claims: ", claims)
 		userID, ok := claims["userID"]
 		if !ok {
 			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalidToken)
 			zap.S().Error(errors.ErrUserID)
 			return
 		}
-		fmt.Println("type of userId is : ", reflect.TypeOf(userID))
 
 		ctx := context.WithValue(r.Context(), "userID", userID)
 
