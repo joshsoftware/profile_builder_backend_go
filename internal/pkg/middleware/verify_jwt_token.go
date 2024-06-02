@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/golang-jwt/jwt"
@@ -9,6 +9,9 @@ import (
 )
 
 func VerifyJWTToken(tokenString string) (jwt.MapClaims, error) {
+	if tokenString == "" {
+		return nil, errors.ErrTokenEmpty
+	}
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.ErrSigningMethod
@@ -17,18 +20,18 @@ func VerifyJWTToken(tokenString string) (jwt.MapClaims, error) {
 	})
 
 	if err != nil {
-		log.Fatalf("Error in parsing token: %v", err)
+		fmt.Println("Error in parsing token in verify token : ", err)
 		return nil, err
 	}
 
 	if !token.Valid {
-		log.Fatalf("Token is invalid")
+		fmt.Println("Token is invalid")
 		return nil, errors.ErrInvalidToken
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		log.Fatalf("Error in parsing claims")
+	if !ok || claims == nil {
+		fmt.Println("Error in parsing claims")
 		return nil, errors.ErrInvalidToken
 	}
 
