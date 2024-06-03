@@ -14,9 +14,9 @@ type Service struct {
 	mock.Mock
 }
 
-// CreateAchievement provides a mock function with given fields: ctx, cDetail
-func (_m *Service) CreateAchievement(ctx context.Context, cDetail dto.CreateAchievementRequest) (int, error) {
-	ret := _m.Called(ctx, cDetail)
+// CreateAchievement provides a mock function with given fields: ctx, cDetail, ID
+func (_m *Service) CreateAchievement(ctx context.Context, cDetail dto.CreateAchievementRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, cDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateAchievement")
@@ -24,17 +24,17 @@ func (_m *Service) CreateAchievement(ctx context.Context, cDetail dto.CreateAchi
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateAchievementRequest) (int, error)); ok {
-		return rf(ctx, cDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateAchievementRequest, string) (int, error)); ok {
+		return rf(ctx, cDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateAchievementRequest) int); ok {
-		r0 = rf(ctx, cDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateAchievementRequest, string) int); ok {
+		r0 = rf(ctx, cDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateAchievementRequest) error); ok {
-		r1 = rf(ctx, cDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateAchievementRequest, string) error); ok {
+		r1 = rf(ctx, cDetail, ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -42,9 +42,9 @@ func (_m *Service) CreateAchievement(ctx context.Context, cDetail dto.CreateAchi
 	return r0, r1
 }
 
-// CreateCertificate provides a mock function with given fields: ctx, cDetail
-func (_m *Service) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (int, error) {
-	ret := _m.Called(ctx, cDetail)
+// CreateCertificate provides a mock function with given fields: ctx, cDetail, ID
+func (_m *Service) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, cDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateCertificate")
@@ -52,17 +52,17 @@ func (_m *Service) CreateCertificate(ctx context.Context, cDetail dto.CreateCert
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest) (int, error)); ok {
-		return rf(ctx, cDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest, string) (int, error)); ok {
+		return rf(ctx, cDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest) int); ok {
-		r0 = rf(ctx, cDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest, string) int); ok {
+		r0 = rf(ctx, cDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateCertificateRequest) error); ok {
-		r1 = rf(ctx, cDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateCertificateRequest, string) error); ok {
+		r1 = rf(ctx, cDetail, ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -70,9 +70,9 @@ func (_m *Service) CreateCertificate(ctx context.Context, cDetail dto.CreateCert
 	return r0, r1
 }
 
-// CreateEducation provides a mock function with given fields: ctx, eduDetail
-func (_m *Service) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (int, error) {
-	ret := _m.Called(ctx, eduDetail)
+// CreateEducation provides a mock function with given fields: ctx, eduDetail, ID
+func (_m *Service) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, eduDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateEducation")
@@ -80,17 +80,17 @@ func (_m *Service) CreateEducation(ctx context.Context, eduDetail dto.CreateEduc
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateEducationRequest) (int, error)); ok {
-		return rf(ctx, eduDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateEducationRequest, string) (int, error)); ok {
+		return rf(ctx, eduDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateEducationRequest) int); ok {
-		r0 = rf(ctx, eduDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateEducationRequest, string) int); ok {
+		r0 = rf(ctx, eduDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateEducationRequest) error); ok {
-		r1 = rf(ctx, eduDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateEducationRequest, string) error); ok {
+		r1 = rf(ctx, eduDetail, ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -98,9 +98,9 @@ func (_m *Service) CreateEducation(ctx context.Context, eduDetail dto.CreateEduc
 	return r0, r1
 }
 
-// CreateExperience provides a mock function with given fields: ctx, expDetail
-func (_m *Service) CreateExperience(ctx context.Context, expDetail dto.CreateExperienceRequest) (int, error) {
-	ret := _m.Called(ctx, expDetail)
+// CreateExperience provides a mock function with given fields: ctx, expDetail, ID
+func (_m *Service) CreateExperience(ctx context.Context, expDetail dto.CreateExperienceRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, expDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateExperience")
@@ -108,17 +108,17 @@ func (_m *Service) CreateExperience(ctx context.Context, expDetail dto.CreateExp
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest) (int, error)); ok {
-		return rf(ctx, expDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest, string) (int, error)); ok {
+		return rf(ctx, expDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest) int); ok {
-		r0 = rf(ctx, expDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest, string) int); ok {
+		r0 = rf(ctx, expDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateExperienceRequest) error); ok {
-		r1 = rf(ctx, expDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateExperienceRequest, string) error); ok {
+		r1 = rf(ctx, expDetail, ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -154,9 +154,9 @@ func (_m *Service) CreateProfile(ctx context.Context, profileDetail dto.CreatePr
 	return r0, r1
 }
 
-// CreateProject provides a mock function with given fields: ctx, projDetail
-func (_m *Service) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (int, error) {
-	ret := _m.Called(ctx, projDetail)
+// CreateProject provides a mock function with given fields: ctx, projDetail, ID
+func (_m *Service) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, projDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateProject")
@@ -164,17 +164,17 @@ func (_m *Service) CreateProject(ctx context.Context, projDetail dto.CreateProje
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProjectRequest) (int, error)); ok {
-		return rf(ctx, projDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProjectRequest, string) (int, error)); ok {
+		return rf(ctx, projDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProjectRequest) int); ok {
-		r0 = rf(ctx, projDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProjectRequest, string) int); ok {
+		r0 = rf(ctx, projDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateProjectRequest) error); ok {
-		r1 = rf(ctx, projDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateProjectRequest, string) error); ok {
+		r1 = rf(ctx, projDetail, ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -330,6 +330,90 @@ func (_m *Service) ListProfiles(ctx context.Context) ([]dto.ListProfiles, error)
 	return r0, r1
 }
 
+// ListSkills provides a mock function with given fields: ctx
+func (_m *Service) ListSkills(ctx context.Context) (dto.ListSkills, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListSkills")
+	}
+
+	var r0 dto.ListSkills
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (dto.ListSkills, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) dto.ListSkills); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(dto.ListSkills)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateAchievement provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *Service) UpdateAchievement(ctx context.Context, profileID string, eduID string, req dto.UpdateAchievementRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateAchievement")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateAchievementRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateAchievementRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateAchievementRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateCertificate provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *Service) UpdateCertificate(ctx context.Context, profileID string, eduID string, req dto.UpdateCertificateRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCertificate")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateCertificateRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateCertificateRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateCertificateRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpdateEducation provides a mock function with given fields: ctx, profileID, eduID, req
 func (_m *Service) UpdateEducation(ctx context.Context, profileID string, eduID string, req dto.UpdateEducationRequest) (int, error) {
 	ret := _m.Called(ctx, profileID, eduID, req)
@@ -350,6 +434,34 @@ func (_m *Service) UpdateEducation(ctx context.Context, profileID string, eduID 
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateEducationRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateExperience provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *Service) UpdateExperience(ctx context.Context, profileID string, eduID string, req dto.UpdateExperienceRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateExperience")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateExperienceRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateExperienceRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateExperienceRequest) error); ok {
 		r1 = rf(ctx, profileID, eduID, req)
 	} else {
 		r1 = ret.Error(1)
@@ -379,6 +491,34 @@ func (_m *Service) UpdateProfile(ctx context.Context, profileID string, profileD
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, dto.UpdateProfileRequest) error); ok {
 		r1 = rf(ctx, profileID, profileDetail)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateProject provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *Service) UpdateProject(ctx context.Context, profileID string, eduID string, req dto.UpdateProjectRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProject")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateProjectRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateProjectRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateProjectRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
 	} else {
 		r1 = ret.Error(1)
 	}

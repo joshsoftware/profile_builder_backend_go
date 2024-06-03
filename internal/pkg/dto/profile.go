@@ -42,7 +42,12 @@ type ListProfiles struct {
 	Email             string   `json:"email"`
 	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
-	IsCurrentEmployee int64    `json:"is_current_employee"`
+	IsCurrentEmployee string   `json:"is_current_employee"`
+}
+
+// ListSkills struct represents details of skills for listing.
+type ListSkills struct {
+	Name []string `json:"skills"`
 }
 
 // ListProfilesResponse struct represents a response containing a list of user profiles.

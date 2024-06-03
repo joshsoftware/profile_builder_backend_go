@@ -6,6 +6,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"go.uber.org/zap"
 )
 
 // Decodes the Profile Creation object Request
@@ -63,12 +64,35 @@ func decodeCreateProjectRequest(r *http.Request) (dto.CreateProjectRequest, erro
 	return req, nil
 }
 
+// Decodes the Projects Updation object Request
+func decodeUpdateProjectRequest(r *http.Request) (dto.UpdateProjectRequest, error) {
+	var req dto.UpdateProjectRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		zap.S().Errorw("error decoding project request", err)
+		return dto.UpdateProjectRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
 // Decodes the Profile Experience object Request
 func decodeCreateExperinceRequest(r *http.Request) (dto.CreateExperienceRequest, error) {
 	var req dto.CreateExperienceRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return dto.CreateExperienceRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
+// Decodes the Experience Updation object Request
+func decodeUpdateExperienceRequest(r *http.Request) (dto.UpdateExperienceRequest, error) {
+	var req dto.UpdateExperienceRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return dto.UpdateExperienceRequest{}, errors.ErrInvalidBody
 	}
 
 	return req, nil
@@ -85,12 +109,34 @@ func decodeCreateCertificateRequest(r *http.Request) (dto.CreateCertificateReque
 	return req, nil
 }
 
+// Decodes the Certificates Updation object Request
+func decodeUpdateCertificateRequest(r *http.Request) (dto.UpdateCertificateRequest, error) {
+	var req dto.UpdateCertificateRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return dto.UpdateCertificateRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
 // Decodes the Profile Achievements object Request
 func decodeCreateAchievementRequest(r *http.Request) (dto.CreateAchievementRequest, error) {
 	var req dto.CreateAchievementRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return dto.CreateAchievementRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
+// Decodes the Achievement Updation object Request
+func decodeUpdateAchievementRequest(r *http.Request) (dto.UpdateAchievementRequest, error) {
+	var req dto.UpdateAchievementRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return dto.UpdateAchievementRequest{}, errors.ErrInvalidBody
 	}
 
 	return req, nil

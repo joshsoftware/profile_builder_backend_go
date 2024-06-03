@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
@@ -131,11 +132,11 @@ func TestCreateProfileHandler(t *testing.T) {
 var mockListProfile = []dto.ListProfiles{
 	{
 		ID:                1,
-		Name:              "Abhishek Dhondalkar",
-		Email:             "abhishek.dhondalkar@gmail.com",
+		Name:              "Example User",
+		Email:             "example@gmail.com",
 		YearsOfExperience: 1.0,
 		PrimarySkills:     []string{"Golang", "Python", "Java", "React"},
-		IsCurrentEmployee: 1,
+		IsCurrentEmployee: "YES",
 	},
 }
 
@@ -185,23 +186,70 @@ func TestGetProfileListHandler(t *testing.T) {
 	}
 }
 
+func TestSkillsListHandler(t *testing.T) {
+	profileSvc := mocks.NewService(t)
+	skillsListHandler := handler.SkillsListHandler(context.Background(), profileSvc)
+
+	tests := []struct {
+		name               string
+		setup              func(mock *mocks.Service)
+		expectedStatusCode int
+	}{
+		{
+			name: "Success for listing skills",
+			setup: func(mockSvc *mocks.Service) {
+				mockListSkills := dto.ListSkills{Name: []string{"GO", "RUBY", "C", "C++", "JAVA", "PYTHON", "JAVASCRIPT"}}
+				mockSvc.On("ListSkills", mock.Anything).Return(mockListSkills, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name: "Fail as error in ListSkills",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("ListSkills", mock.Anything).Return(dto.ListSkills{}, errors.New("error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(profileSvc)
+
+			req, err := http.NewRequest("GET", "/skills", nil)
+			if err != nil {
+				t.Fatal(err)
+				return
+			}
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(skillsListHandler)
+			handler.ServeHTTP(rr, req)
+
+			if rr.Result().StatusCode != test.expectedStatusCode {
+				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+		})
+	}
+}
+
 func TestGetProfileHandler(t *testing.T) {
 	profileSvc := mocks.NewService(t)
 	getProfileHandler := handler.GetProfileHandler(context.Background(), profileSvc)
 
 	tests := []struct {
 		name               string
-		queryParams        string
+		profileID          string
 		setup              func(mock *mocks.Service)
 		expectedStatusCode int
 	}{
 		{
-			name:        "Success for getting profile",
-			queryParams: "1",
+			name:      "Success for getting profile",
+			profileID: "1",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("GetProfile", mock.Anything, "1").Return(dto.ResponseProfile{
 					ProfileID:         1,
-					Name:              "Exaple User",
+					Name:              "Example User",
 					Email:             "example@example.com",
 					Gender:            "Male",
 					Mobile:            "1234567890",
@@ -218,8 +266,8 @@ func TestGetProfileHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:        "Fail as error in GetProfile",
-			queryParams: "2",
+			name:      "Fail as error in GetProfile",
+			profileID: "2",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("GetProfile", mock.Anything, "2").Return(dto.ResponseProfile{}, errors.New("error")).Once()
 			},
@@ -231,10 +279,12 @@ func TestGetProfileHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(profileSvc)
 
-			req, err := http.NewRequest("GET", "/profile?id="+test.queryParams, nil)
+			req, err := http.NewRequest("GET", "/profiles/"+test.profileID, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
+
+			req = mux.SetURLVars(req, map[string]string{"profile_id": test.profileID})
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(getProfileHandler)
@@ -242,6 +292,105 @@ func TestGetProfileHandler(t *testing.T) {
 
 			if rr.Code != test.expectedStatusCode {
 				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Code)
+			}
+		})
+	}
+}
+
+func TestUpdateProfileHandler(t *testing.T) {
+	profileSvc := new(mocks.Service)
+	updateProfileHandler := handler.UpdateProfileHandler(context.Background(), profileSvc)
+
+	tests := []struct {
+		name               string
+		url                string
+		input              string
+		setup              func(mockSvc *mocks.Service)
+		profileID          string
+		expectedStatusCode int
+	}{
+		{
+			name:      "Success for updating profile detail",
+			url:       "/profiles?id=1",
+			profileID: "1",
+			input: `{
+                "profile": {
+                    "id": 1,
+                    "name": "Updated Name",
+                    "email": "updated.email@example.com",
+                    "gender": "Male",
+                    "mobile": "9999999999",
+                    "designation": "Senior Software Engineer",
+                    "description": "Experienced software engineer with expertise in Golang",
+                    "title": "Golang Developer",
+                    "years_of_experience": 7,
+                    "primary_skills": ["Golang", "Python"],
+                    "secondary_skills": ["JavaScript", "SQL"],
+                    "github_link": "https://github.com/updated",
+                    "linkedin_link": "https://www.linkedin.com/in/updated"
+                }
+            }`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateProfile", context.Background(), "1", mock.AnythingOfType("dto.UpdateProfileRequest")).Return(1, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Fail for incorrect json",
+			url:                "/profiles?id=1",
+			profileID:          "1",
+			input:              "",
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:      "Fail for service error",
+			profileID: "1",
+			url:       "/profiles?id=1",
+			input: `{
+                "profile": {
+                    "id": 1,
+                    "name": "Updated Name",
+                    "email": "updated.email@example.com",
+                    "gender": "Male",
+                    "mobile": "9999999999",
+                    "designation": "Senior Software Engineer",
+                    "description": "Experienced software engineer with expertise in Golang",
+                    "title": "Golang Developer",
+                    "years_of_experience": 7,
+                    "primary_skills": ["Golang", "Python"],
+                    "secondary_skills": ["JavaScript", "SQL"],
+                    "github_link": "https://github.com/updated",
+                    "linkedin_link": "https://www.linkedin.com/in/updated"
+                }
+            }`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateProfile", context.Background(), "1", mock.AnythingOfType("dto.UpdateProfileRequest")).Return(0, errors.New("Service Error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(profileSvc)
+
+			req, err := http.NewRequest("PUT", test.url, bytes.NewBuffer([]byte(test.input)))
+			if err != nil {
+				t.Fatal(err)
+				return
+			}
+
+			if test.profileID != "" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": test.profileID})
+			}
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(updateProfileHandler)
+			handler.ServeHTTP(rr, req)
+
+			if rr.Result().StatusCode != test.expectedStatusCode {
+				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
 			}
 		})
 	}

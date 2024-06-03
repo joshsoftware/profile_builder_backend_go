@@ -19,9 +19,9 @@ type EducationStore struct {
 
 // EducationStorer defines methods to interact with user education related data.
 type EducationStorer interface {
-	CreateEducation(ctx context.Context, values []EducationDao) error
+	CreateEducation(ctx context.Context, values []EducationRepo) error
 	GetEducation(ctx context.Context, profileID int) (value []dto.EducationResponse, err error)
-	UpdateEducation(ctx context.Context, profileID int, eduID int, req dto.UpdateEducationRequest) (int, error)
+	UpdateEducation(ctx context.Context, profileID int, eduID int, req UpdateEducationRepo) (int, error)
 }
 
 // NewEducationRepo creates a new instance of EducationRepo.
@@ -32,7 +32,7 @@ func NewEducationRepo(db *pgx.Conn) EducationStorer {
 }
 
 // CreateEducation inserts education details into the database.
-func (eduStore *EducationStore) CreateEducation(ctx context.Context, values []EducationDao) error {
+func (eduStore *EducationStore) CreateEducation(ctx context.Context, values []EducationRepo) error {
 
 	insertBuilder := sq.Insert("educations").
 		Columns(constants.CreateEducationColumns...).
@@ -84,8 +84,7 @@ func (eduStore *EducationStore) GetEducation(ctx context.Context, profileID int)
 
 	for rows.Next() {
 		var value dto.EducationResponse
-		if err := rows.Scan(&value.ProfileID, &value.Degree, &value.UniversityName, &value.Place,
-			&value.PercentageOrCgpa, &value.PassingYear); err != nil {
+		if err := rows.Scan(&value.ProfileID, &value.ID, &value.Degree, &value.UniversityName, &value.Place, &value.PercentageOrCgpa, &value.PassingYear); err != nil {
 			zap.S().Error("Error scanning row: ", err)
 			return []dto.EducationResponse{}, err
 		}
@@ -101,13 +100,11 @@ func (eduStore *EducationStore) GetEducation(ctx context.Context, profileID int)
 }
 
 // UpdateEducation updates education details into the database.
-func (eduStore *EducationStore) UpdateEducation(ctx context.Context, profileID int, eduID int, req dto.UpdateEducationRequest) (int, error) {
-	updateQuery, args, err := sq.Update("educations").
-		Set("degree", req.Education.Degree).
-		Set("university_name", req.Education.UniversityName).
-		Set("place", req.Education.Place).
-		Set("percent_or_cgpa", req.Education.PercentageOrCgpa).
-		Set("passing_year", req.Education.PassingYear).
+func (eduStore *EducationStore) UpdateEducation(ctx context.Context, profileID int, eduID int, req UpdateEducationRepo) (int, error) {
+	updateQuery, args, err := sq.Update("educations").Set("degree", req.Degree).
+		Set("university_name", req.UniversityName).Set("place", req.Place).
+		Set("percent_or_cgpa", req.PercentageOrCgpa).Set("passing_year", req.PassingYear).
+		Set("updated_at", req.UpdatedAt).Set("updated_by_id", req.UpdatedByID).
 		Where(sq.Eq{"profile_id": profileID, "id": eduID}).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {

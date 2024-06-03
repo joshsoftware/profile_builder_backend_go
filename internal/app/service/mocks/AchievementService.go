@@ -14,9 +14,9 @@ type AchievementService struct {
 	mock.Mock
 }
 
-// CreateAchievement provides a mock function with given fields: ctx, cDetail
-func (_m *AchievementService) CreateAchievement(ctx context.Context, cDetail dto.CreateAchievementRequest) (int, error) {
-	ret := _m.Called(ctx, cDetail)
+// CreateAchievement provides a mock function with given fields: ctx, cDetail, ID
+func (_m *AchievementService) CreateAchievement(ctx context.Context, cDetail dto.CreateAchievementRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, cDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateAchievement")
@@ -24,17 +24,45 @@ func (_m *AchievementService) CreateAchievement(ctx context.Context, cDetail dto
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateAchievementRequest) (int, error)); ok {
-		return rf(ctx, cDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateAchievementRequest, string) (int, error)); ok {
+		return rf(ctx, cDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateAchievementRequest) int); ok {
-		r0 = rf(ctx, cDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateAchievementRequest, string) int); ok {
+		r0 = rf(ctx, cDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateAchievementRequest) error); ok {
-		r1 = rf(ctx, cDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateAchievementRequest, string) error); ok {
+		r1 = rf(ctx, cDetail, ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateAchievement provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *AchievementService) UpdateAchievement(ctx context.Context, profileID string, eduID string, req dto.UpdateAchievementRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateAchievement")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateAchievementRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateAchievementRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateAchievementRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -22,7 +22,8 @@ type ProfileStorer interface {
 	CreateProfile(ctx context.Context, pd ProfileRepo) (int, error)
 	ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error)
 	GetProfile(ctx context.Context, profileID int) (value dto.ResponseProfile, err error)
-	UpdateProfile(ctx context.Context, profileID int, pd dto.UpdateProfileRequest) (int, error)
+	UpdateProfile(ctx context.Context, profileID int, pd UpdateProfileRepo) (int, error)
+	ListSkills(ctx context.Context) (values dto.ListSkills, err error)
 }
 
 // NewProfileRepo creates a new instance of ProfileRepo.
@@ -77,15 +78,49 @@ func (profileStore *ProfileStore) ListProfiles(ctx context.Context) (values []dt
 	}
 	rows, err := profileStore.db.Query(ctx, sql, args...)
 	if err != nil {
-		zap.S().Error("error executing create project insert query:", err)
+		zap.S().Error("error executing list project insert query:", err)
 		return []dto.ListProfiles{}, err
 	}
 
 	for rows.Next() {
 		var value dto.ListProfiles
-		rows.Scan(&value.ID, &value.Name, &value.Email, &value.YearsOfExperience, &value.PrimarySkills, &value.IsCurrentEmployee)
+		var isCurrentEmployee int
+		err := rows.Scan(&value.ID, &value.Name, &value.Email, &value.YearsOfExperience, &value.PrimarySkills, &isCurrentEmployee)
+		if err != nil {
+			zap.S().Error("error scanning row:", err)
+			return []dto.ListProfiles{}, err
+		}
+
+		if isCurrentEmployee == 1 {
+			value.IsCurrentEmployee = "YES"
+		} else {
+			value.IsCurrentEmployee = "NO"
+		}
 
 		values = append(values, value)
+	}
+	defer rows.Close()
+
+	return values, nil
+}
+
+// ListSkills returns a list of all skills in the Database that are currently available
+func (profileStore *ProfileStore) ListSkills(ctx context.Context) (values dto.ListSkills, err error) {
+	sql, args, err := sq.Select("name").From("skills").ToSql()
+	if err != nil {
+		zap.S().Error("Error generating list skills select query: ", err)
+		return dto.ListSkills{}, err
+	}
+	rows, err := profileStore.db.Query(ctx, sql, args...)
+	if err != nil {
+		zap.S().Error("error executing list skills insert query:", err)
+		return dto.ListSkills{}, err
+	}
+
+	for rows.Next() {
+		var value string
+		rows.Scan(&value)
+		values.Name = append(values.Name, value)
 	}
 	defer rows.Close()
 
@@ -122,13 +157,10 @@ func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int)
 }
 
 // UpdateProfile updates an existing user profile in the database.
-func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID int, pd dto.UpdateProfileRequest) (int, error) {
+func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID int, pd UpdateProfileRepo) (int, error) {
 
 	updateQuery, args, err := sq.Update("profiles").
-		Set("name", pd.Profile.Name).Set("email", pd.Profile.Email).Set("gender", pd.Profile.Gender).
-		Set("mobile", pd.Profile.Mobile).Set("designation", pd.Profile.Designation).Set("description", pd.Profile.Description).Set("title", pd.Profile.Title).Set("years_of_experience", pd.Profile.YearsOfExperience).Set("primary_skills", pd.Profile.PrimarySkills).Set("secondary_skills", pd.Profile.SecondarySkills).Set("github_link", pd.Profile.GithubLink).
-		Set("linkedin_link", pd.Profile.LinkedinLink).Where(sq.Eq{"id": profileID}).
-		PlaceholderFormat(sq.Dollar).ToSql()
+		Set("name", pd.Name).Set("email", pd.Email).Set("gender", pd.Gender).Set("mobile", pd.Mobile).Set("designation", pd.Designation).Set("description", pd.Description).Set("title", pd.Title).Set("years_of_experience", pd.YearsOfExperience).Set("primary_skills", pd.PrimarySkills).Set("secondary_skills", pd.SecondarySkills).Set("github_link", pd.GithubLink).Set("linkedin_link", pd.LinkedinLink).Set("updated_at", pd.UpdatedAt).Set("updated_by_id", pd.UpdatedByID).Where(sq.Eq{"id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating profile update query: ", err)
 		return 0, err
@@ -136,6 +168,9 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 
 	res, err := profileStore.db.Exec(ctx, updateQuery, args...)
 	if err != nil {
+		if helpers.IsDuplicateKeyError(err) {
+			return 0, errors.ErrDuplicateKey
+		}
 		if helpers.IsInvalidProfileError(err) {
 			return 0, errors.ErrInvalidProfile
 		}

@@ -15,7 +15,7 @@ type CertificateStorer struct {
 }
 
 // CreateCertificate provides a mock function with given fields: ctx, values
-func (_m *CertificateStorer) CreateCertificate(ctx context.Context, values []repository.CertificateDao) error {
+func (_m *CertificateStorer) CreateCertificate(ctx context.Context, values []repository.CertificateRepo) error {
 	ret := _m.Called(ctx, values)
 
 	if len(ret) == 0 {
@@ -23,13 +23,41 @@ func (_m *CertificateStorer) CreateCertificate(ctx context.Context, values []rep
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []repository.CertificateDao) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []repository.CertificateRepo) error); ok {
 		r0 = rf(ctx, values)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
+}
+
+// UpdateCertificate provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *CertificateStorer) UpdateCertificate(ctx context.Context, profileID int, eduID int, req repository.UpdateCertificateRepo) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCertificate")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateCertificateRepo) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateCertificateRepo) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, repository.UpdateCertificateRepo) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // NewCertificateStorer creates a new instance of CertificateStorer. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

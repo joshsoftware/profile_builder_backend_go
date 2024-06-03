@@ -8,8 +8,7 @@ import (
 
 // CreateProjectRequest struct represents a request to create project details.
 type CreateProjectRequest struct {
-	ProfileID int       `json:"profile_id"`
-	Projects  []Project `json:"projects"`
+	Projects []Project `json:"projects"`
 }
 
 // Project struct represents details of a project.
@@ -27,6 +26,7 @@ type Project struct {
 
 // ProjectResponse struct represents details of a project for response.
 type ProjectResponse struct {
+	ID               int    `json:"id"`
 	ProfileID        int    `json:"profile_id"`
 	Name             string `json:"name"`
 	Description      string `json:"description"`
@@ -44,12 +44,14 @@ type ResponseProject struct {
 	Projects []ProjectResponse `json:"projects"`
 }
 
+// UpdateProjectRequest represents a request to update project details.
+type UpdateProjectRequest struct {
+	Project Project `json:"project"`
+}
+
 // Validate func checks if the CreateProjectRequest is valid.
 func (req *CreateProjectRequest) Validate() error {
 
-	if req.ProfileID <= 0 {
-		return errors.ErrInvalidID
-	}
 	if len(req.Projects) == 0 {
 		return fmt.Errorf("%s : projects ", errors.ErrEmptyPayload.Error())
 	}
@@ -90,6 +92,39 @@ func (p *Project) Validate() error {
 		return fmt.Errorf("%s : working end date ", errors.ErrParameterMissing.Error())
 	}
 	if p.Duration == "" {
+		return fmt.Errorf("%s : duration ", errors.ErrParameterMissing.Error())
+	}
+	return nil
+}
+
+// Validate func checks if the Project details are valid.
+func (p *UpdateProjectRequest) Validate() error {
+
+	if p.Project.Name == "" {
+		return fmt.Errorf("%s : name ", errors.ErrParameterMissing.Error())
+	}
+	if p.Project.Description == "" {
+		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
+	}
+	if p.Project.Role == "" {
+		return fmt.Errorf("%s : role ", errors.ErrParameterMissing.Error())
+	}
+	if p.Project.Responsibilities == "" {
+		return fmt.Errorf("%s : responsibilities ", errors.ErrParameterMissing.Error())
+	}
+	if p.Project.Technologies == "" {
+		return fmt.Errorf("%s : technologies ", errors.ErrParameterMissing.Error())
+	}
+	if p.Project.TechWorkedOn == "" {
+		return fmt.Errorf("%s : techonology worked on ", errors.ErrParameterMissing.Error())
+	}
+	if p.Project.WorkingStartDate == "" {
+		return fmt.Errorf("%s : working startv date ", errors.ErrParameterMissing.Error())
+	}
+	if p.Project.WorkingEndDate == "" {
+		return fmt.Errorf("%s : working end date ", errors.ErrParameterMissing.Error())
+	}
+	if p.Project.Duration == "" {
 		return fmt.Errorf("%s : duration ", errors.ErrParameterMissing.Error())
 	}
 	return nil

@@ -102,8 +102,36 @@ func (_m *ProfileStorer) ListProfiles(ctx context.Context) ([]dto.ListProfiles, 
 	return r0, r1
 }
 
+// ListSkills provides a mock function with given fields: ctx
+func (_m *ProfileStorer) ListSkills(ctx context.Context) (dto.ListSkills, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListSkills")
+	}
+
+	var r0 dto.ListSkills
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (dto.ListSkills, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) dto.ListSkills); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(dto.ListSkills)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpdateProfile provides a mock function with given fields: ctx, profileID, pd
-func (_m *ProfileStorer) UpdateProfile(ctx context.Context, profileID int, pd dto.UpdateProfileRequest) (int, error) {
+func (_m *ProfileStorer) UpdateProfile(ctx context.Context, profileID int, pd repository.UpdateProfileRepo) (int, error) {
 	ret := _m.Called(ctx, profileID, pd)
 
 	if len(ret) == 0 {
@@ -112,16 +140,16 @@ func (_m *ProfileStorer) UpdateProfile(ctx context.Context, profileID int, pd dt
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, dto.UpdateProfileRequest) (int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, repository.UpdateProfileRepo) (int, error)); ok {
 		return rf(ctx, profileID, pd)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, dto.UpdateProfileRequest) int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, repository.UpdateProfileRepo) int); ok {
 		r0 = rf(ctx, profileID, pd)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, dto.UpdateProfileRequest) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, int, repository.UpdateProfileRepo) error); ok {
 		r1 = rf(ctx, profileID, pd)
 	} else {
 		r1 = ret.Error(1)

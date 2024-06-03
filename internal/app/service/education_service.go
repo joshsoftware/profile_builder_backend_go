@@ -12,22 +12,28 @@ import (
 
 // EducationService represents a set of methods for accessing the education
 type EducationService interface {
-	CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (profileID int, err error)
+	CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest, ID string) (profileID int, err error)
 	GetEducation(ctx context.Context, profileID string) (value []dto.EducationResponse, err error)
 	UpdateEducation(ctx context.Context, profileID string, eduID string, req dto.UpdateEducationRequest) (id int, err error)
 }
 
 // CreateEducation : Service layer function adds education details to a user profile.
-func (eduSvc *service) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (profileID int, err error) {
+func (eduSvc *service) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest, ID string) (profileID int, err error) {
 	if len(eduDetail.Educations) == 0 {
 		zap.S().Error("educations payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 
-	var value []repository.EducationDao
+	id, err := helpers.ConvertStringToInt(ID)
+	if err != nil {
+		zap.S().Error("error to get achievement params : ", err, " for profile id : ", ID)
+		return 0, err
+	}
+
+	var value []repository.EducationRepo
 	for i := 0; i < len(eduDetail.Educations); i++ {
-		var val repository.EducationDao
-		val.ProfileID = eduDetail.ProfileID
+		var val repository.EducationRepo
+		val.ProfileID = id
 		val.Degree = eduDetail.Educations[i].Degree
 		val.UniversityName = eduDetail.Educations[i].UniversityName
 		val.Place = eduDetail.Educations[i].Place
@@ -47,7 +53,7 @@ func (eduSvc *service) CreateEducation(ctx context.Context, eduDetail dto.Create
 		return 0, err
 	}
 
-	return eduDetail.ProfileID, nil
+	return id, nil
 }
 
 // GetEducation in the service layer retrieves a education of specific profile.
@@ -74,7 +80,16 @@ func (eduSvc *service) UpdateEducation(ctx context.Context, profileID string, ed
 		return 0, err
 	}
 
-	id, err = eduSvc.EducationRepo.UpdateEducation(ctx, pid, id, req)
+	var value repository.UpdateEducationRepo
+	value.Degree = req.Education.Degree
+	value.UniversityName = req.Education.UniversityName
+	value.Place = req.Education.Place
+	value.PercentageOrCgpa = req.Education.PercentageOrCgpa
+	value.PassingYear = req.Education.PassingYear
+	value.UpdatedAt = today
+	value.UpdatedByID = 1
+
+	id, err = eduSvc.EducationRepo.UpdateEducation(ctx, pid, id, value)
 	if err != nil {
 		zap.S().Error("Unable to update education : ", err, " for profile id : ", profileID)
 		return 0, err

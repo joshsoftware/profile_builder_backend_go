@@ -5,27 +5,35 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
 )
 
 // CertificateService represents a set of methods for accessing the certificates.
 type CertificateService interface {
-	CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (profileID int, err error)
+	CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest, ID string) (profileID int, err error)
+	UpdateCertificate(ctx context.Context, profileID string, eduID string, req dto.UpdateCertificateRequest) (id int, err error)
 }
 
 // CreateCerticate : Service layer function adds certicates details to a user profile.
-func (profileSvc *service) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (profileID int, err error) {
+func (certificateSvc *service) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest, ID string) (profileID int, err error) {
 	if len(cDetail.Certificates) == 0 {
 		zap.S().Error("certificates payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 
-	var value []repository.CertificateDao
-	for i := 0; i < len(cDetail.Certificates); i++ {
-		var val repository.CertificateDao
+	id, err := helpers.ConvertStringToInt(ID)
+	if err != nil {
+		zap.S().Error("error to get achievement params : ", err, " for profile id : ", ID)
+		return 0, err
+	}
 
-		val.ProfileID = cDetail.ProfileID
+	var value []repository.CertificateRepo
+	for i := 0; i < len(cDetail.Certificates); i++ {
+		var val repository.CertificateRepo
+
+		val.ProfileID = id
 		val.Name = cDetail.Certificates[i].Name
 		val.OrganizationName = cDetail.Certificates[i].OrganizationName
 		val.Description = cDetail.Certificates[i].Description
@@ -40,11 +48,37 @@ func (profileSvc *service) CreateCertificate(ctx context.Context, cDetail dto.Cr
 		value = append(value, val)
 	}
 
-	err = profileSvc.CertificateRepo.CreateCertificate(ctx, value)
+	err = certificateSvc.CertificateRepo.CreateCertificate(ctx, value)
 	if err != nil {
 		zap.S().Error("Unable to create Certificate : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
 
-	return cDetail.ProfileID, nil
+	return id, nil
+}
+
+// UpdateCertificate in the service layer update a certificates of specific profile.
+func (certificateSvc *service) UpdateCertificate(ctx context.Context, profileID string, eduID string, req dto.UpdateCertificateRequest) (id int, err error) {
+	pid, id, err := helpers.MultipleConvertStringToInt(profileID, eduID)
+	if err != nil {
+		zap.S().Error("error to get certificate params : ", err, " for profile id : ", profileID)
+		return 0, err
+	}
+
+	var value repository.UpdateCertificateRepo
+	value.Name = req.Certificate.Name
+	value.OrganizationName = req.Certificate.OrganizationName
+	value.Description = req.Certificate.Description
+	value.IssuedDate = req.Certificate.IssuedDate
+	value.FromDate = req.Certificate.FromDate
+	value.ToDate = req.Certificate.ToDate
+	value.UpdatedAt = today
+	value.UpdatedByID = 1
+
+	id, err = certificateSvc.CertificateRepo.UpdateCertificate(ctx, pid, id, value)
+	if err != nil {
+		zap.S().Error("Unable to update education : ", err, " for profile id : ", profileID)
+		return 0, err
+	}
+	return id, nil
 }

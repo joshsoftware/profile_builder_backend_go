@@ -70,16 +70,15 @@ var ResponseProfileColumns = []string{
 
 // ResponseEducationColumns defines the columns required for returning a specific user education.
 var ResponseEducationColumns = []string{
-	"profile_id", "degree", "university_name", "place", "percent_or_cgpa", "passing_year",
+	"profile_id", "id", "degree", "university_name", "place", "percent_or_cgpa", "passing_year",
 }
 
 // ResponseProjectsColumns defines the columns required for returning a specific user projects.
 var ResponseProjectsColumns = []string{
-	"profile_id", "name", "description", "role", "responsibilities", "technologies", "tech_worked_on",
-	"duration", "working_start_date", "working_end_date",
+	"id", "profile_id", "name", "description", "role", "responsibilities", "technologies", "tech_worked_on", "duration", "working_start_date", "working_end_date",
 }
 
 // ResponseExperiencesColumns defines the columns required for returning a specific user projects.
 var ResponseExperiencesColumns = []string{
-	"profile_id", "designation", "company_name", "from_date", "to_date",
+	"id", "profile_id", "designation", "company_name", "from_date", "to_date",
 }

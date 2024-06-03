@@ -17,7 +17,7 @@ type ProjectStorer struct {
 }
 
 // CreateProject provides a mock function with given fields: ctx, values
-func (_m *ProjectStorer) CreateProject(ctx context.Context, values []repository.ProjectDao) error {
+func (_m *ProjectStorer) CreateProject(ctx context.Context, values []repository.ProjectRepo) error {
 	ret := _m.Called(ctx, values)
 
 	if len(ret) == 0 {
@@ -25,7 +25,7 @@ func (_m *ProjectStorer) CreateProject(ctx context.Context, values []repository.
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []repository.ProjectDao) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []repository.ProjectRepo) error); ok {
 		r0 = rf(ctx, values)
 	} else {
 		r0 = ret.Error(0)
@@ -57,6 +57,34 @@ func (_m *ProjectStorer) GetProjects(ctx context.Context, profileID int) ([]dto.
 
 	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
 		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateProject provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *ProjectStorer) UpdateProject(ctx context.Context, profileID int, eduID int, req repository.UpdateProjectRepo) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProject")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateProjectRepo) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateProjectRepo) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, repository.UpdateProjectRepo) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
 	} else {
 		r1 = ret.Error(1)
 	}

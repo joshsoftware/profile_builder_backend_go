@@ -19,8 +19,9 @@ type ExperienceStore struct {
 
 // ExperienceStorer defines methods to interact with user experience related data.
 type ExperienceStorer interface {
-	CreateExperience(ctx context.Context, values []ExperienceDao) error
+	CreateExperience(ctx context.Context, values []ExperienceRepo) error
 	GetExperiences(ctx context.Context, profileID int) (values []dto.ExperienceResponse, err error)
+	UpdateExperience(ctx context.Context, profileID int, eduID int, req UpdateExperienceRepo) (int, error)
 }
 
 // NewExperienceRepo creates a new instance of ExperienceRepo.
@@ -31,7 +32,7 @@ func NewExperienceRepo(db *pgx.Conn) ExperienceStorer {
 }
 
 // CreateExperience inserts experience details into the database.
-func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []ExperienceDao) error {
+func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []ExperienceRepo) error {
 
 	insertBuilder := sq.Insert("experiences").
 		Columns(constants.CreateExperienceColumns...).
@@ -82,7 +83,7 @@ func (expStore *ExperienceStore) GetExperiences(ctx context.Context, profileID i
 
 	for rows.Next() {
 		var value dto.ExperienceResponse
-		if err := rows.Scan(&value.ProfileID, &value.Designation, &value.CompanyName, &value.FromDate, &value.ToDate); err != nil {
+		if err := rows.Scan(&value.ID, &value.ProfileID, &value.Designation, &value.CompanyName, &value.FromDate, &value.ToDate); err != nil {
 			zap.S().Error("Error scanning row: ", err)
 			return []dto.ExperienceResponse{}, err
 		}
@@ -95,4 +96,32 @@ func (expStore *ExperienceStore) GetExperiences(ctx context.Context, profileID i
 	}
 
 	return values, nil
+}
+
+// UpdateExperience updates experience details into the database.
+func (expStore *ExperienceStore) UpdateExperience(ctx context.Context, profileID int, eduID int, req UpdateExperienceRepo) (int, error) {
+	updateQuery, args, err := sq.Update("experiences").Set("designation", req.Designation).
+		Set("company_name", req.CompanyName).Set("from_date", req.FromDate).
+		Set("to_date", req.ToDate).Set("updated_at", req.UpdatedAt).Set("updated_by_id", req.UpdatedByID).Where(sq.Eq{"profile_id": profileID, "id": eduID}).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		zap.S().Error("Error generating experience update query: ", err)
+		return 0, err
+	}
+
+	res, err := expStore.db.Exec(ctx, updateQuery, args...)
+	if err != nil {
+		if helpers.IsInvalidProfileError(err) {
+			return 0, errors.ErrInvalidProfile
+		}
+		zap.S().Error("Error executing experience update query: ", err)
+		return 0, err
+	}
+
+	if res.RowsAffected() == 0 {
+		zap.S().Warn("invalid request for update : experience")
+		return 0, errors.ErrInvalidRequestData
+	}
+
+	return profileID, nil
 }

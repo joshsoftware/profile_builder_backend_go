@@ -17,7 +17,7 @@ type EducationStorer struct {
 }
 
 // CreateEducation provides a mock function with given fields: ctx, values
-func (_m *EducationStorer) CreateEducation(ctx context.Context, values []repository.EducationDao) error {
+func (_m *EducationStorer) CreateEducation(ctx context.Context, values []repository.EducationRepo) error {
 	ret := _m.Called(ctx, values)
 
 	if len(ret) == 0 {
@@ -25,7 +25,7 @@ func (_m *EducationStorer) CreateEducation(ctx context.Context, values []reposit
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []repository.EducationDao) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []repository.EducationRepo) error); ok {
 		r0 = rf(ctx, values)
 	} else {
 		r0 = ret.Error(0)
@@ -65,7 +65,7 @@ func (_m *EducationStorer) GetEducation(ctx context.Context, profileID int) ([]d
 }
 
 // UpdateEducation provides a mock function with given fields: ctx, profileID, eduID, req
-func (_m *EducationStorer) UpdateEducation(ctx context.Context, profileID int, eduID int, req dto.UpdateEducationRequest) (int, error) {
+func (_m *EducationStorer) UpdateEducation(ctx context.Context, profileID int, eduID int, req repository.UpdateEducationRepo) (int, error) {
 	ret := _m.Called(ctx, profileID, eduID, req)
 
 	if len(ret) == 0 {
@@ -74,16 +74,16 @@ func (_m *EducationStorer) UpdateEducation(ctx context.Context, profileID int, e
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, int, dto.UpdateEducationRequest) (int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateEducationRepo) (int, error)); ok {
 		return rf(ctx, profileID, eduID, req)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, int, dto.UpdateEducationRequest) int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateEducationRepo) int); ok {
 		r0 = rf(ctx, profileID, eduID, req)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, int, dto.UpdateEducationRequest) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, repository.UpdateEducationRepo) error); ok {
 		r1 = rf(ctx, profileID, eduID, req)
 	} else {
 		r1 = ret.Error(1)

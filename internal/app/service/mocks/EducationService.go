@@ -14,9 +14,9 @@ type EducationService struct {
 	mock.Mock
 }
 
-// CreateEducation provides a mock function with given fields: ctx, eduDetail
-func (_m *EducationService) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest) (int, error) {
-	ret := _m.Called(ctx, eduDetail)
+// CreateEducation provides a mock function with given fields: ctx, eduDetail, ID
+func (_m *EducationService) CreateEducation(ctx context.Context, eduDetail dto.CreateEducationRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, eduDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateEducation")
@@ -24,17 +24,17 @@ func (_m *EducationService) CreateEducation(ctx context.Context, eduDetail dto.C
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateEducationRequest) (int, error)); ok {
-		return rf(ctx, eduDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateEducationRequest, string) (int, error)); ok {
+		return rf(ctx, eduDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateEducationRequest) int); ok {
-		r0 = rf(ctx, eduDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateEducationRequest, string) int); ok {
+		r0 = rf(ctx, eduDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateEducationRequest) error); ok {
-		r1 = rf(ctx, eduDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateEducationRequest, string) error); ok {
+		r1 = rf(ctx, eduDetail, ID)
 	} else {
 		r1 = ret.Error(1)
 	}

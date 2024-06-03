@@ -23,6 +23,7 @@ type service struct {
 type Service interface {
 	CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) (int, error)
 	ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error)
+	ListSkills(ctx context.Context) (values dto.ListSkills, err error)
 	GetProfile(ctx context.Context, profileID string) (value dto.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, profileID string, profileDetail dto.UpdateProfileRequest) (ID int, err error)
 
@@ -96,6 +97,16 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []dto.ListP
 	return values, nil
 }
 
+// ListSkills in the service layer retrieves a list of skills.
+func (profileSvc *service) ListSkills(ctx context.Context) (values dto.ListSkills, err error) {
+	values, err = profileSvc.ProfileRepo.ListSkills(ctx)
+	if err != nil {
+		zap.S().Error("Unable to list skills : ", err)
+		return dto.ListSkills{}, err
+	}
+	return values, nil
+}
+
 // GetProfile in the service layer retrieves a list of user profiles.
 func (profileSvc *service) GetProfile(ctx context.Context, profileID string) (value dto.ResponseProfile, err error) {
 	id, err := helpers.ConvertStringToInt(profileID)
@@ -120,7 +131,23 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID string, 
 		return 0, err
 	}
 
-	ID, err = profileSvc.ProfileRepo.UpdateProfile(ctx, id, profileDetail)
+	var profileRepo repository.UpdateProfileRepo
+	profileRepo.Name = profileDetail.Profile.Name
+	profileRepo.Email = profileDetail.Profile.Email
+	profileRepo.Gender = profileDetail.Profile.Gender
+	profileRepo.Mobile = profileDetail.Profile.Mobile
+	profileRepo.Designation = profileDetail.Profile.Designation
+	profileRepo.Description = profileDetail.Profile.Description
+	profileRepo.Title = profileDetail.Profile.Title
+	profileRepo.YearsOfExperience = profileDetail.Profile.YearsOfExperience
+	profileRepo.PrimarySkills = profileDetail.Profile.PrimarySkills
+	profileRepo.SecondarySkills = profileDetail.Profile.SecondarySkills
+	profileRepo.GithubLink = profileDetail.Profile.GithubLink
+	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
+	profileRepo.UpdatedAt = today
+	profileRepo.UpdatedByID = 1
+
+	ID, err = profileSvc.ProfileRepo.UpdateProfile(ctx, id, profileRepo)
 	if err != nil {
 		zap.S().Error("Unable to update profile : ", err, " for profile id : ", profileID)
 		return 0, err

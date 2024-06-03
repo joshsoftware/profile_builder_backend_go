@@ -12,3 +12,6 @@ test-cover: ## Run all unit tests in the project with test coverage
 
 html-cover: test-cover
 	go tool cover -html="coverage.out"
+
+migrate:
+	go run internal/db/migrate.go

@@ -14,6 +14,12 @@ import (
 // CreateEducationHandler handles HTTP requests to add education details to a user profile.
 func CreateEducationHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := helpers.GetParams(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
 		req, err := decodeCreateEducationRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -28,7 +34,7 @@ func CreateEducationHandler(ctx context.Context, profileSvc service.Service) fun
 			return
 		}
 
-		profileID, err := profileSvc.CreateEducation(ctx, req)
+		profileID, err := profileSvc.CreateEducation(ctx, req, id)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to create education : ", err, "for profile id : ", profileID)
@@ -96,7 +102,7 @@ func UpdateEducationHandler(ctx context.Context, eduSvc service.Service) func(ht
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusCreated, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusOK, dto.MessageResponseWithID{
 			Message:   "Education updated successfully",
 			ProfileID: value,
 		})

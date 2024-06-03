@@ -14,6 +14,13 @@ import (
 // CreateProjectHandler handles HTTP requests to add project details to a user profile.
 func CreateProjectHandler(ctx context.Context, projectSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := helpers.GetParams(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
+
 		req, err := decodeCreateProjectRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -28,7 +35,7 @@ func CreateProjectHandler(ctx context.Context, projectSvc service.Service) func(
 			return
 		}
 
-		profileID, err := projectSvc.CreateProject(ctx, req)
+		profileID, err := projectSvc.CreateProject(ctx, req, id)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
@@ -61,6 +68,44 @@ func GetProjectHandler(ctx context.Context, projSvc service.Service) func(http.R
 
 		middleware.SuccessResponse(w, http.StatusOK, dto.ResponseProject{
 			Projects: values,
+		})
+	}
+}
+
+// UpdateProjectHandler returns an HTTP handler that updates projects using profileSvc.
+func UpdateProjectHandler(ctx context.Context, projSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		profileID, eduID, err := helpers.GetMultipleParams(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
+
+		req, err := decodeUpdateProjectRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		err = req.Validate()
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		value, err := projSvc.UpdateProject(ctx, profileID, eduID, req)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error("Unable to update project : ", err, "for profile id : ", profileID)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, dto.MessageResponseWithID{
+			Message:   "Project updated successfully",
+			ProfileID: value,
 		})
 	}
 }

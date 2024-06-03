@@ -14,9 +14,9 @@ type ProjectService struct {
 	mock.Mock
 }
 
-// CreateProject provides a mock function with given fields: ctx, projDetail
-func (_m *ProjectService) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (int, error) {
-	ret := _m.Called(ctx, projDetail)
+// CreateProject provides a mock function with given fields: ctx, projDetail, ID
+func (_m *ProjectService) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, projDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateProject")
@@ -24,17 +24,17 @@ func (_m *ProjectService) CreateProject(ctx context.Context, projDetail dto.Crea
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProjectRequest) (int, error)); ok {
-		return rf(ctx, projDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProjectRequest, string) (int, error)); ok {
+		return rf(ctx, projDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProjectRequest) int); ok {
-		r0 = rf(ctx, projDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateProjectRequest, string) int); ok {
+		r0 = rf(ctx, projDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateProjectRequest) error); ok {
-		r1 = rf(ctx, projDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateProjectRequest, string) error); ok {
+		r1 = rf(ctx, projDetail, ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -65,6 +65,34 @@ func (_m *ProjectService) GetProject(ctx context.Context, profileID string) ([]d
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateProject provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *ProjectService) UpdateProject(ctx context.Context, profileID string, eduID string, req dto.UpdateProjectRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProject")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateProjectRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateProjectRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateProjectRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
 	} else {
 		r1 = ret.Error(1)
 	}

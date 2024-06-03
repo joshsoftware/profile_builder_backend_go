@@ -12,22 +12,29 @@ import (
 
 // ProjectService represents a set of methods for accessing the projects.
 type ProjectService interface {
-	CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (profileID int, err error)
+	CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest, ID string) (profileID int, err error)
 	GetProject(ctx context.Context, profileID string) (values []dto.ProjectResponse, err error)
+	UpdateProject(ctx context.Context, profileID string, eduID string, req dto.UpdateProjectRequest) (id int, err error)
 }
 
 // CreateProject : Service layer function adds project details to a user profile.
-func (projSvc *service) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest) (profileID int, err error) {
+func (projSvc *service) CreateProject(ctx context.Context, projDetail dto.CreateProjectRequest, ID string) (profileID int, err error) {
 	if len(projDetail.Projects) == 0 {
 		zap.S().Error("projects payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 
-	var value []repository.ProjectDao
-	for i := 0; i < len(projDetail.Projects); i++ {
-		var val repository.ProjectDao
+	id, err := helpers.ConvertStringToInt(ID)
+	if err != nil {
+		zap.S().Error("error to get achievement params : ", err, " for profile id : ", ID)
+		return 0, err
+	}
 
-		val.ProfileID = projDetail.ProfileID
+	var value []repository.ProjectRepo
+	for i := 0; i < len(projDetail.Projects); i++ {
+		var val repository.ProjectRepo
+
+		val.ProfileID = id
 		val.Name = projDetail.Projects[i].Name
 		val.Description = projDetail.Projects[i].Description
 		val.Role = projDetail.Projects[i].Role
@@ -49,7 +56,7 @@ func (projSvc *service) CreateProject(ctx context.Context, projDetail dto.Create
 		return 0, err
 	}
 
-	return projDetail.ProfileID, nil
+	return id, nil
 }
 
 // GetProject in the service layer retrieves a projects of specific profile.
@@ -66,4 +73,33 @@ func (projSvc *service) GetProject(ctx context.Context, profileID string) (value
 		return []dto.ProjectResponse{}, err
 	}
 	return values, nil
+}
+
+// UpdateProject in the service layer update a projects of specific profile.
+func (projSvc *service) UpdateProject(ctx context.Context, profileID string, eduID string, req dto.UpdateProjectRequest) (id int, err error) {
+	pid, id, err := helpers.MultipleConvertStringToInt(profileID, eduID)
+	if err != nil {
+		zap.S().Error("error to get project params : ", err, " for profile id : ", profileID)
+		return 0, err
+	}
+
+	var value repository.UpdateProjectRepo
+	value.Name = req.Project.Name
+	value.Description = req.Project.Description
+	value.Role = req.Project.Role
+	value.Responsibilities = req.Project.Responsibilities
+	value.Technologies = req.Project.Technologies
+	value.TechWorkedOn = req.Project.TechWorkedOn
+	value.WorkingStartDate = req.Project.WorkingStartDate
+	value.WorkingEndDate = req.Project.WorkingEndDate
+	value.Duration = req.Project.Duration
+	value.UpdatedAt = today
+	value.UpdatedByID = 1
+
+	id, err = projSvc.ProjectRepo.UpdateProject(ctx, pid, id, value)
+	if err != nil {
+		zap.S().Error("Unable to update project : ", err, " for profile id : ", profileID)
+		return 0, err
+	}
+	return id, nil
 }

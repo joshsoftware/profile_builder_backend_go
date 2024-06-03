@@ -14,9 +14,9 @@ type CertificateService struct {
 	mock.Mock
 }
 
-// CreateCertificate provides a mock function with given fields: ctx, cDetail
-func (_m *CertificateService) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (int, error) {
-	ret := _m.Called(ctx, cDetail)
+// CreateCertificate provides a mock function with given fields: ctx, cDetail, ID
+func (_m *CertificateService) CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, cDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateCertificate")
@@ -24,17 +24,45 @@ func (_m *CertificateService) CreateCertificate(ctx context.Context, cDetail dto
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest) (int, error)); ok {
-		return rf(ctx, cDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest, string) (int, error)); ok {
+		return rf(ctx, cDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest) int); ok {
-		r0 = rf(ctx, cDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateCertificateRequest, string) int); ok {
+		r0 = rf(ctx, cDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateCertificateRequest) error); ok {
-		r1 = rf(ctx, cDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateCertificateRequest, string) error); ok {
+		r1 = rf(ctx, cDetail, ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateCertificate provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *CertificateService) UpdateCertificate(ctx context.Context, profileID string, eduID string, req dto.UpdateCertificateRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCertificate")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateCertificateRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateCertificateRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateCertificateRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
 	} else {
 		r1 = ret.Error(1)
 	}

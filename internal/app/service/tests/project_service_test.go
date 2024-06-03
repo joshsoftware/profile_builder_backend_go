@@ -28,7 +28,6 @@ func TestCreateProject(t *testing.T) {
 		{
 			name: "Success for project details",
 			input: dto.CreateProjectRequest{
-				ProfileID: 1,
 				Projects: []dto.Project{
 					{
 						Name:             "Project X",
@@ -44,14 +43,13 @@ func TestCreateProject(t *testing.T) {
 				},
 			},
 			setup: func(projectMock *mocks.ProjectStorer) {
-				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectDao")).Return(nil).Once()
+				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectRepo")).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
 		{
 			name: "Failed because CreateProject",
 			input: dto.CreateProjectRequest{
-				ProfileID: 123,
 				Projects: []dto.Project{
 					{
 						Name:             "",
@@ -67,15 +65,14 @@ func TestCreateProject(t *testing.T) {
 				},
 			},
 			setup: func(projectMock *mocks.ProjectStorer) {
-				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectDao")).Return(errors.New("Error")).Once()
+				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectRepo")).Return(errors.New("Error")).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
 			name: "Failed because empty payload",
 			input: dto.CreateProjectRequest{
-				ProfileID: 123,
-				Projects:  []dto.Project{},
+				Projects: []dto.Project{},
 			},
 			setup:           func(projectMock *mocks.ProjectStorer) {},
 			isErrorExpected: true,
@@ -87,7 +84,7 @@ func TestCreateProject(t *testing.T) {
 			test.setup(mockProjectRepo)
 
 			// test service
-			_, err := profileService.CreateProject(context.TODO(), test.input)
+			_, err := profileService.CreateProject(context.TODO(), test.input, "1")
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
@@ -164,6 +161,122 @@ func TestGetProject(t *testing.T) {
 			assert.Equal(t, test.wantResponse, gotResp)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err)
+			}
+		})
+	}
+}
+
+func TestUpdateProject(t *testing.T) {
+	mockProjectRepo := new(mocks.ProjectStorer)
+	var repodeps = service.RepoDeps{
+		ProjectDeps: mockProjectRepo,
+	}
+	projService := service.NewServices(repodeps)
+
+	tests := []struct {
+		name            string
+		profileID       string
+		projectID       string
+		input           dto.UpdateProjectRequest
+		setup           func(projectMock *mocks.ProjectStorer)
+		isErrorExpected bool
+	}{
+		{
+			name:      "Success for updating project details",
+			profileID: "1",
+			projectID: "1",
+			input: dto.UpdateProjectRequest{
+				Project: dto.Project{
+					Name:             "Updated Project Name",
+					Description:      "Updated Description",
+					Role:             "Updated Role",
+					Responsibilities: "Updated Responsibilities",
+					Technologies:     "Updated Technologies",
+					TechWorkedOn:     "Updated TechWorkedOn",
+					WorkingStartDate: "2022-01-01",
+					WorkingEndDate:   "2023-01-01",
+					Duration:         "1 year",
+				},
+			},
+			setup: func(projectMock *mocks.ProjectStorer) {
+				projectMock.On("UpdateProject", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateProjectRepo")).Return(1, nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name:      "Failed because UpdateProject returns an error",
+			profileID: "100000000000000000",
+			projectID: "1",
+			input: dto.UpdateProjectRequest{
+				Project: dto.Project{
+					Name:             "Project B",
+					Description:      "Description B",
+					Role:             "Role B",
+					Responsibilities: "Responsibilities B",
+					Technologies:     "Technologies B",
+					TechWorkedOn:     "TechWorkedOn B",
+					WorkingStartDate: "2022-01-01",
+					WorkingEndDate:   "2023-01-01",
+					Duration:         "1 year",
+				},
+			},
+			setup: func(projectMock *mocks.ProjectStorer) {
+				projectMock.On("UpdateProject", mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateProjectRepo")).Return(0, errors.New("Error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:      "Failed because of missing project name",
+			profileID: "1",
+			projectID: "1",
+			input: dto.UpdateProjectRequest{
+				Project: dto.Project{
+					Name:             "",
+					Description:      "Description",
+					Role:             "Role",
+					Responsibilities: "Responsibilities",
+					Technologies:     "Technologies",
+					TechWorkedOn:     "TechWorkedOn",
+					WorkingStartDate: "2022-01-01",
+					WorkingEndDate:   "2023-01-01",
+					Duration:         "1 year",
+				},
+			},
+			setup: func(projectMock *mocks.ProjectStorer) {
+				projectMock.On("UpdateProject", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateProjectRepo")).Return(0, errors.New("Missing project name")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:      "Failed because of invalid profileID or projectID",
+			profileID: "invalid",
+			projectID: "1",
+			input: dto.UpdateProjectRequest{
+				Project: dto.Project{
+					Name:             "Valid Name",
+					Description:      "Valid Description",
+					Role:             "Valid Role",
+					Responsibilities: "Valid Responsibilities",
+					Technologies:     "Valid Technologies",
+					TechWorkedOn:     "Valid TechWorkedOn",
+					WorkingStartDate: "2022-01-01",
+					WorkingEndDate:   "2023-01-01",
+					Duration:         "1 year",
+				},
+			},
+			setup:           func(projectMock *mocks.ProjectStorer) {},
+			isErrorExpected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProjectRepo)
+
+			_, err := projService.UpdateProject(context.TODO(), test.profileID, test.projectID, test.input)
+
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
 		})
 	}

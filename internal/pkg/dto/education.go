@@ -8,7 +8,6 @@ import (
 
 // CreateEducationRequest represents a request to create education details.
 type CreateEducationRequest struct {
-	ProfileID  int         `json:"profile_id"`
 	Educations []Education `json:"educations"`
 }
 
@@ -28,6 +27,7 @@ type Education struct {
 
 // EducationResponse represents details of an educational qualification for specific id.
 type EducationResponse struct {
+	ID               int    `json:"id"`
 	ProfileID        int    `json:"profile_id"`
 	Degree           string `json:"degree"`
 	UniversityName   string `json:"university_name"`
@@ -43,9 +43,7 @@ type ResponseEducation struct {
 
 // Validate func checks if the CreateEducationRequest is valid.
 func (req *CreateEducationRequest) Validate() error {
-	if req.ProfileID == 0 {
-		return fmt.Errorf("%s : profile id ", errors.ErrParameterMissing.Error())
-	}
+
 	if len(req.Educations) == 0 {
 		return fmt.Errorf("%s : educations ", errors.ErrEmptyPayload.Error())
 	}

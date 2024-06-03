@@ -17,7 +17,7 @@ type ExperienceStorer struct {
 }
 
 // CreateExperience provides a mock function with given fields: ctx, values
-func (_m *ExperienceStorer) CreateExperience(ctx context.Context, values []repository.ExperienceDao) error {
+func (_m *ExperienceStorer) CreateExperience(ctx context.Context, values []repository.ExperienceRepo) error {
 	ret := _m.Called(ctx, values)
 
 	if len(ret) == 0 {
@@ -25,7 +25,7 @@ func (_m *ExperienceStorer) CreateExperience(ctx context.Context, values []repos
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []repository.ExperienceDao) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []repository.ExperienceRepo) error); ok {
 		r0 = rf(ctx, values)
 	} else {
 		r0 = ret.Error(0)
@@ -57,6 +57,34 @@ func (_m *ExperienceStorer) GetExperiences(ctx context.Context, profileID int) (
 
 	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
 		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateExperience provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *ExperienceStorer) UpdateExperience(ctx context.Context, profileID int, eduID int, req repository.UpdateExperienceRepo) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateExperience")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateExperienceRepo) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateExperienceRepo) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, repository.UpdateExperienceRepo) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
 	} else {
 		r1 = ret.Error(1)
 	}

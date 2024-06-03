@@ -19,7 +19,7 @@ var mockListProfile = []dto.ListProfiles{
 		Email:             "abhishek.dhondalkar@gmail.com",
 		YearsOfExperience: 1.0,
 		PrimarySkills:     []string{"Golang", "Python", "Java", "React"},
-		IsCurrentEmployee: 1,
+		IsCurrentEmployee: "YES",
 	},
 }
 
@@ -55,6 +55,8 @@ var mockResponseProfile = dto.ResponseProfile{
 	GithubLink:        "https://github.com/abhishek",
 	LinkedinLink:      "https://www.linkedin.com/in/abhsihek",
 }
+
+var mockListSkills = dto.ListSkills{Name: []string{"GO", "RUBY", "C", "C++", "JAVA", "PYTHON", "JAVASCRIPT"}}
 
 func TestListProfile(t *testing.T) {
 	mockProfileRepo := new(mocks.ProfileStorer)
@@ -93,6 +95,53 @@ func TestListProfile(t *testing.T) {
 
 			// Test service
 			gotResp, err := profileService.ListProfiles(context.Background())
+
+			assert.Equal(t, test.wantResponse, gotResp)
+
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+func TestListSkills(t *testing.T) {
+	mockProfileRepo := new(mocks.ProfileStorer)
+	var repodeps = service.RepoDeps{
+		ProfileDeps: mockProfileRepo,
+	}
+	profileService := service.NewServices(repodeps)
+
+	tests := []struct {
+		name            string
+		setup           func(userMock *mocks.ProfileStorer)
+		isErrorExpected bool
+		wantResponse    dto.ListSkills
+	}{
+		{
+			name: "Success get list of Skills",
+			setup: func(userMock *mocks.ProfileStorer) {
+				userMock.On("ListSkills", mock.Anything).Return(mockListSkills, nil).Once()
+			},
+			isErrorExpected: false,
+			wantResponse:    mockListSkills,
+		},
+		{
+			name: "Fail get list of Skills",
+			setup: func(userMock *mocks.ProfileStorer) {
+				userMock.On("ListSkills", mock.Anything).Return(dto.ListSkills{}, errors.New("error")).Once()
+			},
+			isErrorExpected: true,
+			wantResponse:    dto.ListSkills{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProfileRepo)
+
+			// Test service
+			gotResp, err := profileService.ListSkills(context.Background())
 
 			assert.Equal(t, test.wantResponse, gotResp)
 
@@ -201,6 +250,129 @@ func TestGetProfile(t *testing.T) {
 			assert.Equal(t, test.wantResponse, gotResp)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err)
+			}
+		})
+	}
+}
+
+func TestUpdateProfile(t *testing.T) {
+	mockProfileRepo := new(mocks.ProfileStorer)
+	var repodeps = service.RepoDeps{
+		ProfileDeps: mockProfileRepo,
+	}
+	profileService := service.NewServices(repodeps)
+
+	tests := []struct {
+		name            string
+		profileID       string
+		input           dto.UpdateProfileRequest
+		setup           func(profileMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name:      "Success for updating profile details",
+			profileID: "1",
+			input: dto.UpdateProfileRequest{
+				Profile: dto.Profile{
+					Name:              "Updated Name",
+					Email:             "updated.email@example.com",
+					Gender:            "Male",
+					Mobile:            "1234567890",
+					Designation:       "Updated Designation",
+					Description:       "Updated Description",
+					Title:             "Updated Title",
+					YearsOfExperience: 5,
+					PrimarySkills:     []string{"Golang", "Python"},
+					SecondarySkills:   []string{"JavaScript", "SQL"},
+					GithubLink:        "https://github.com/updated",
+					LinkedinLink:      "https://linkedin.com/in/updated",
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("UpdateProfile", mock.Anything, 1, mock.AnythingOfType("repository.UpdateProfileRepo")).Return(1, nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name:      "Failed because UpdateProfile returns an error",
+			profileID: "100000000000000000",
+			input: dto.UpdateProfileRequest{
+				Profile: dto.Profile{
+					Name:              "Name B",
+					Email:             "emailb@example.com",
+					Gender:            "Female",
+					Mobile:            "0987654321",
+					Designation:       "Designation B",
+					Description:       "Description B",
+					Title:             "Title B",
+					YearsOfExperience: 10,
+					PrimarySkills:     []string{"Java", "C++"},
+					SecondarySkills:   []string{"HTML", "CSS"},
+					GithubLink:        "https://github.com/userb",
+					LinkedinLink:      "https://linkedin.com/in/userb",
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("UpdateProfile", mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateProfileRepo")).Return(0, errors.New("Error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:      "Failed because of missing profile name",
+			profileID: "1",
+			input: dto.UpdateProfileRequest{
+				Profile: dto.Profile{
+					Name:              "",
+					Email:             "email@example.com",
+					Gender:            "Male",
+					Mobile:            "1234567890",
+					Designation:       "Designation",
+					Description:       "Description",
+					Title:             "Title",
+					YearsOfExperience: 3,
+					PrimarySkills:     []string{"Golang", "Python"},
+					SecondarySkills:   []string{"JavaScript", "SQL"},
+					GithubLink:        "https://github.com/user",
+					LinkedinLink:      "https://linkedin.com/in/user",
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("UpdateProfile", mock.Anything, 1, mock.AnythingOfType("repository.UpdateProfileRepo")).Return(0, errors.New("Missing profile name")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:      "Failed because of invalid profileID",
+			profileID: "invalid",
+			input: dto.UpdateProfileRequest{
+				Profile: dto.Profile{
+					Name:              "Valid Name",
+					Email:             "email@example.com",
+					Gender:            "Male",
+					Mobile:            "1234567890",
+					Designation:       "Designation",
+					Description:       "Description",
+					Title:             "Title",
+					YearsOfExperience: 3,
+					PrimarySkills:     []string{"Golang", "Python"},
+					SecondarySkills:   []string{"JavaScript", "SQL"},
+					GithubLink:        "https://github.com/user",
+					LinkedinLink:      "https://linkedin.com/in/user",
+				},
+			},
+			setup:           func(profileMock *mocks.ProfileStorer) {},
+			isErrorExpected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProfileRepo)
+
+			_, err := profileService.UpdateProfile(context.TODO(), test.profileID, test.input)
+
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
 		})
 	}

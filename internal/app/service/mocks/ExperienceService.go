@@ -14,9 +14,9 @@ type ExperienceService struct {
 	mock.Mock
 }
 
-// CreateExperience provides a mock function with given fields: ctx, expDetail
-func (_m *ExperienceService) CreateExperience(ctx context.Context, expDetail dto.CreateExperienceRequest) (int, error) {
-	ret := _m.Called(ctx, expDetail)
+// CreateExperience provides a mock function with given fields: ctx, expDetail, ID
+func (_m *ExperienceService) CreateExperience(ctx context.Context, expDetail dto.CreateExperienceRequest, ID string) (int, error) {
+	ret := _m.Called(ctx, expDetail, ID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateExperience")
@@ -24,17 +24,17 @@ func (_m *ExperienceService) CreateExperience(ctx context.Context, expDetail dto
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest) (int, error)); ok {
-		return rf(ctx, expDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest, string) (int, error)); ok {
+		return rf(ctx, expDetail, ID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest) int); ok {
-		r0 = rf(ctx, expDetail)
+	if rf, ok := ret.Get(0).(func(context.Context, dto.CreateExperienceRequest, string) int); ok {
+		r0 = rf(ctx, expDetail, ID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateExperienceRequest) error); ok {
-		r1 = rf(ctx, expDetail)
+	if rf, ok := ret.Get(1).(func(context.Context, dto.CreateExperienceRequest, string) error); ok {
+		r1 = rf(ctx, expDetail, ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -65,6 +65,34 @@ func (_m *ExperienceService) GetExperience(ctx context.Context, profileID string
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateExperience provides a mock function with given fields: ctx, profileID, eduID, req
+func (_m *ExperienceService) UpdateExperience(ctx context.Context, profileID string, eduID string, req dto.UpdateExperienceRequest) (int, error) {
+	ret := _m.Called(ctx, profileID, eduID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateExperience")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateExperienceRequest) (int, error)); ok {
+		return rf(ctx, profileID, eduID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, dto.UpdateExperienceRequest) int); ok {
+		r0 = rf(ctx, profileID, eduID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, dto.UpdateExperienceRequest) error); ok {
+		r1 = rf(ctx, profileID, eduID, req)
 	} else {
 		r1 = ret.Error(1)
 	}

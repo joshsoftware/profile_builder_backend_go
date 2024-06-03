@@ -6,6 +6,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 	"go.uber.org/zap"
 )
@@ -57,10 +58,29 @@ func ProfileListHandler(ctx context.Context, profileSvc service.Service) func(ht
 	}
 }
 
+// SkillsListHandler returns an HTTP handler that lists skills using profileSvc.
+func SkillsListHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		values, err := profileSvc.ListSkills(ctx)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error("Unable to list skills : ", err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, values)
+	}
+}
+
 // GetProfileHandler returns an HTTP handler that fetches particular profile using profileSvc.
 func GetProfileHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID := r.URL.Query().Get("id")
+		profileID, err := helpers.GetParams(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
 
 		value, err := profileSvc.GetProfile(ctx, profileID)
 		if err != nil {
@@ -78,8 +98,12 @@ func GetProfileHandler(ctx context.Context, profileSvc service.Service) func(htt
 // UpdateProfileHandler returns an HTTP handler that updates profile using profileSvc.
 func UpdateProfileHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID := r.URL.Query().Get("id")
-
+		profileID, err := helpers.GetParams(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
 		req, err := decodeUpdateProfileRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -101,7 +125,7 @@ func UpdateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusCreated, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusOK, dto.MessageResponseWithID{
 			Message:   "Basic info updated successfully",
 			ProfileID: ID,
 		})

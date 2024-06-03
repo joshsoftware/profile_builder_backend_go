@@ -25,11 +25,12 @@ func NewAchievementRepo(db *pgx.Conn) AchievementStorer {
 
 // AchievementStorer defines methods to interact with user achievement related data.
 type AchievementStorer interface {
-	CreateAchievement(ctx context.Context, values []AchievementDao) error
+	CreateAchievement(ctx context.Context, values []AchievementRepo) error
+	UpdateAchievement(ctx context.Context, profileID int, achID int, req UpdateAchievementRepo) (int, error)
 }
 
 // CreateAchievement inserts achievements details into the database.
-func (profileStore *AchievementStore) CreateAchievement(ctx context.Context, values []AchievementDao) error {
+func (achStore *AchievementStore) CreateAchievement(ctx context.Context, values []AchievementRepo) error {
 
 	insertBuilder := sq.Insert("achievements").
 		Columns(constants.CreateAchievementColumns...).
@@ -47,7 +48,7 @@ func (profileStore *AchievementStore) CreateAchievement(ctx context.Context, val
 		zap.S().Error("Error generating achievement insert query: ", err)
 		return err
 	}
-	_, err = profileStore.db.Exec(ctx, insertQuery, args...)
+	_, err = achStore.db.Exec(ctx, insertQuery, args...)
 	if err != nil {
 		if helpers.IsDuplicateKeyError(err) {
 			return errors.ErrDuplicateKey
@@ -60,4 +61,29 @@ func (profileStore *AchievementStore) CreateAchievement(ctx context.Context, val
 	}
 
 	return nil
+}
+
+// UpdateAchievement updates achievements details into the database.
+func (achStore *AchievementStore) UpdateAchievement(ctx context.Context, profileID int, achID int, req UpdateAchievementRepo) (int, error) {
+	updateQuery, args, err := sq.Update("achievements").Set("name", req.Name).Set("description", req.Description).Set("updated_at", req.UpdatedAt).Set("updated_by_id", req.UpdatedByID).Where(sq.Eq{"profile_id": profileID, "id": achID}).PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		zap.S().Error("Error generating achievement update query: ", err)
+		return 0, err
+	}
+
+	res, err := achStore.db.Exec(ctx, updateQuery, args...)
+	if err != nil {
+		if helpers.IsInvalidProfileError(err) {
+			return 0, errors.ErrInvalidProfile
+		}
+		zap.S().Error("Error executing achievement update query: ", err)
+		return 0, err
+	}
+
+	if res.RowsAffected() == 0 {
+		zap.S().Warn("invalid request for update : achievement")
+		return 0, errors.ErrInvalidRequestData
+	}
+
+	return profileID, nil
 }

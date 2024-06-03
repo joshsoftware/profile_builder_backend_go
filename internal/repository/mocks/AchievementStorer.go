@@ -15,7 +15,7 @@ type AchievementStorer struct {
 }
 
 // CreateAchievement provides a mock function with given fields: ctx, values
-func (_m *AchievementStorer) CreateAchievement(ctx context.Context, values []repository.AchievementDao) error {
+func (_m *AchievementStorer) CreateAchievement(ctx context.Context, values []repository.AchievementRepo) error {
 	ret := _m.Called(ctx, values)
 
 	if len(ret) == 0 {
@@ -23,13 +23,41 @@ func (_m *AchievementStorer) CreateAchievement(ctx context.Context, values []rep
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []repository.AchievementDao) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []repository.AchievementRepo) error); ok {
 		r0 = rf(ctx, values)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
+}
+
+// UpdateAchievement provides a mock function with given fields: ctx, profileID, achID, req
+func (_m *AchievementStorer) UpdateAchievement(ctx context.Context, profileID int, achID int, req repository.UpdateAchievementRepo) (int, error) {
+	ret := _m.Called(ctx, profileID, achID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateAchievement")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateAchievementRepo) (int, error)); ok {
+		return rf(ctx, profileID, achID, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, repository.UpdateAchievementRepo) int); ok {
+		r0 = rf(ctx, profileID, achID, req)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, repository.UpdateAchievementRepo) error); ok {
+		r1 = rf(ctx, profileID, achID, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // NewAchievementStorer creates a new instance of AchievementStorer. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

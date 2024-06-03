@@ -29,7 +29,6 @@ func TestCreateEducation(t *testing.T) {
 		{
 			name: "Success for education details",
 			input: dto.CreateEducationRequest{
-				ProfileID: 1,
 				Educations: []dto.Education{
 					{
 						Degree:           "B.Tech in Computer Science",
@@ -49,7 +48,6 @@ func TestCreateEducation(t *testing.T) {
 		{
 			name: "Failed because of error",
 			input: dto.CreateEducationRequest{
-				ProfileID: 456,
 				Educations: []dto.Education{
 					{
 						Degree:           "",
@@ -69,7 +67,6 @@ func TestCreateEducation(t *testing.T) {
 		{
 			name: "Failed because of empty payload",
 			input: dto.CreateEducationRequest{
-				ProfileID:  456,
 				Educations: []dto.Education{},
 			},
 			setup:             func(educationMock *mocks.EducationStorer) {},
@@ -82,7 +79,7 @@ func TestCreateEducation(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockEducationRepo)
 
-			profileID, err := eduService.CreateEducation(context.Background(), test.input)
+			profileID, err := eduService.CreateEducation(context.Background(), test.input, "1")
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
@@ -159,6 +156,106 @@ func TestGetEducation(t *testing.T) {
 			assert.Equal(t, test.wantResponse, gotResp)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err)
+			}
+		})
+	}
+}
+
+func TestUpdateEducation(t *testing.T) {
+	mockEducationRepo := new(mocks.EducationStorer)
+	var repodeps = service.RepoDeps{
+		EducationDeps: mockEducationRepo,
+	}
+	eduService := service.NewServices(repodeps)
+
+	tests := []struct {
+		name            string
+		profileID       string
+		educationID     string
+		input           dto.UpdateEducationRequest
+		setup           func(educationMock *mocks.EducationStorer)
+		isErrorExpected bool
+	}{
+		{
+			name:        "Success for updating education details",
+			profileID:   "1",
+			educationID: "1",
+			input: dto.UpdateEducationRequest{
+				Education: dto.Education{
+					Degree:           "Updated Degree",
+					UniversityName:   "Updated University",
+					Place:            "Updated Place",
+					PercentageOrCgpa: "4.0",
+					PassingYear:      "2023",
+				},
+			},
+			setup: func(educationMock *mocks.EducationStorer) {
+				educationMock.On("UpdateEducation", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(1, nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name:        "Failed because UpdateEducation returns an error",
+			profileID:   "100000000000000000",
+			educationID: "1",
+			input: dto.UpdateEducationRequest{
+				Education: dto.Education{
+					Degree:           "Degree B",
+					UniversityName:   "University B",
+					Place:            "Place B",
+					PercentageOrCgpa: "3.5",
+					PassingYear:      "2022",
+				},
+			},
+			setup: func(educationMock *mocks.EducationStorer) {
+				educationMock.On("UpdateEducation", mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(0, errors.New("Error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:        "Failed because of missing education degree",
+			profileID:   "1",
+			educationID: "1",
+			input: dto.UpdateEducationRequest{
+				Education: dto.Education{
+					Degree:           "",
+					UniversityName:   "University",
+					Place:            "Place",
+					PercentageOrCgpa: "3.8",
+					PassingYear:      "2023",
+				},
+			},
+			setup: func(educationMock *mocks.EducationStorer) {
+				educationMock.On("UpdateEducation", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(0, errors.New("Missing education degree")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:        "Failed because of invalid profileID or educationID",
+			profileID:   "invalid",
+			educationID: "1",
+			input: dto.UpdateEducationRequest{
+				Education: dto.Education{
+					Degree:           "Valid Degree",
+					UniversityName:   "Valid University",
+					Place:            "Valid Place",
+					PercentageOrCgpa: "3.9",
+					PassingYear:      "2023",
+				},
+			},
+			setup:           func(educationMock *mocks.EducationStorer) {},
+			isErrorExpected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockEducationRepo)
+
+			_, err := eduService.UpdateEducation(context.TODO(), test.profileID, test.educationID, test.input)
+
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
 		})
 	}

@@ -26,19 +26,18 @@ func TestCreateEducationHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for education Detail",
+			name: "Success for education detail",
 			input: `{
-				"profile_id": 1,
 				"educations":[{
-					  "degree": "BSc in Data Science",
-					  "university_name": "Shivaji University",
-					  "place": "Kolhapur",
-					  "percent_or_cgpa": "90.50%",
-					  "passing_year": "2020"
+					"degree": "BSc in Data Science",
+					"university_name": "Shivaji University",
+					"place": "Kolhapur",
+					"percent_or_cgpa": "90.50%",
+					"passing_year": "2020"
 				}]
-				}`,
+			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateEducation", context.Background(), mock.AnythingOfType("dto.CreateEducationRequest")).Return(1, nil)
+				mockSvc.On("CreateEducation", mock.Anything, mock.AnythingOfType("dto.CreateEducationRequest"), mock.AnythingOfType("string")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
 		},
@@ -51,45 +50,28 @@ func TestCreateEducationHandler(t *testing.T) {
 		{
 			name: "Fail for missing degree field",
 			input: `{
-				"profile_id": 1,
 				"educations":[{
-					  "degree": "",
-					  "university_name": "Shivaji University",
-					  "place": "Kolhapur",
-					  "percent_or_cgpa": "90.50%",
-					  "passing_year": "2020"
+					"degree": "",
+					"university_name": "Shivaji University",
+					"place": "Kolhapur",
+					"percent_or_cgpa": "90.50%",
+					"passing_year": "2020"
 				}]
-				}`,
-			setup:              func(mockSvc *mocks.Service) {},
-			expectedStatusCode: http.StatusBadRequest,
-		},
-		{
-			name: "Fail for missing profile_id field",
-			input: `{
-				"profile_id": 0,
-				"educations":[{
-					  "degree": "BSc in Data Science",
-					  "university_name": "Shivaji University",
-					  "place": "Kolhapur",
-					  "percent_or_cgpa": "90.50%",
-					  "passing_year": "2020"
-				}]
-				}`,
+			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
 			name: "Fail for missing passing_year field",
 			input: `{
-				"profile_id": 1,
 				"educations":[{
-					  "degree": "",
-					  "university_name": "Shivaji University",
-					  "place": "Kolhapur",
-					  "percent_or_cgpa": "90.50%",
-					  "passing_year": ""
+					"degree": "BSc in Data Science",
+					"university_name": "Shivaji University",
+					"place": "Kolhapur",
+					"percent_or_cgpa": "90.50%",
+					"passing_year": ""
 				}]
-				}`,
+			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
@@ -104,6 +86,7 @@ func TestCreateEducationHandler(t *testing.T) {
 				t.Fatal(err)
 				return
 			}
+			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createEducationHandler)
@@ -168,6 +151,107 @@ func TestGetEducationHandler(t *testing.T) {
 
 			if rr.Code != test.expectedStatusCode {
 				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Code)
+			}
+		})
+	}
+}
+
+func TestUpdateEducationHandler(t *testing.T) {
+	eduSvc := new(mocks.Service)
+	updateEducationHandler := handler.UpdateEducationHandler(context.Background(), eduSvc)
+
+	tests := []struct {
+		name               string
+		input              string
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+	}{
+		{
+			name: "Success for updating education detail",
+			input: `{
+				"education":{
+					  "degree": "MS in CS",
+					  "university_name": "Cambridge University",
+					  "place": "London",
+					  "percent_or_cgpa": "87.50%",
+					  "passing_year": "2005"
+				}
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateEducation", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateEducationRequest")).Return(1, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Fail for incorrect json",
+			input:              "",
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "Fail for missing degree field",
+			input: `{
+				"education": {
+					"degree": "",
+					"university_name": "Updated University",
+					"place": "Updated Place",
+					"percentage_or_cgpa": "Updated CGPA",
+					"passing_year": 2024
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "Fail for missing university_name field",
+			input: `{
+				"education": {
+					"degree": "Updated Degree",
+					"university_name": "",
+					"place": "Updated Place",
+					"percentage_or_cgpa": "Updated CGPA",
+					"passing_year": 2024
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "Fail for service error",
+			input: `{
+				"education":{
+					  "degree": "MS in CS",
+					  "university_name": "Cambridge University",
+					  "place": "London",
+					  "percent_or_cgpa": "87.50%",
+					  "passing_year": "2005"
+				}
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateEducation", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateEducationRequest")).Return(0, errors.New("Service Error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(eduSvc)
+
+			req, err := http.NewRequest("PUT", "/profiles/1/education/1", bytes.NewBuffer([]byte(test.input)))
+			if err != nil {
+				t.Fatal(err)
+				return
+			}
+
+			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "id": "1"})
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(updateEducationHandler)
+			handler.ServeHTTP(rr, req)
+
+			if rr.Result().StatusCode != test.expectedStatusCode {
+				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
 			}
 		})
 	}
