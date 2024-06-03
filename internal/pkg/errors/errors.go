@@ -16,7 +16,7 @@ var (
 	ErrInvalidEmail         = errors.New("invalid email")
 	ErrGenerateToken        = errors.New("Unable to generate token")
 	ErrEmptyAccessToken     = errors.New("empty access token")
-	ErrAuthToken            = errors.New("Authorization token not found")
+	ErrAuthToken            = errors.New("Unauthorized access")
 	ErrAuthHeader           = errors.New("invalid authorization header")
 	ErrSigningMethod        = errors.New("unexpected signing method")
 	ErrInvalidToken         = errors.New("invalid token")
