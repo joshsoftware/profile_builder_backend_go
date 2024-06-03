@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"go.uber.org/zap"
 )
 
 func VerifyJWTToken(tokenString string) (jwt.MapClaims, error) {
@@ -20,12 +21,12 @@ func VerifyJWTToken(tokenString string) (jwt.MapClaims, error) {
 	})
 
 	if err != nil {
-		fmt.Println("Error in parsing token in verify token : ", err)
-		return nil, err
+		zap.S().Error("Error in parsing token: %v", err)
+		return nil, errors.ErrInvalidToken
 	}
 
 	if !token.Valid {
-		fmt.Println("Token is invalid")
+		zap.S().Error("Token is not valid")
 		return nil, errors.ErrInvalidToken
 	}
 
