@@ -210,6 +210,66 @@ func (_m *Service) GenerateLoginToken(ctx context.Context, email string) (string
 	return r0, r1
 }
 
+// GetAchievements provides a mock function with given fields: ctx, profileID
+func (_m *Service) GetAchievements(ctx context.Context, profileID string) ([]dto.AchievementResponse, error) {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAchievements")
+	}
+
+	var r0 []dto.AchievementResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]dto.AchievementResponse, error)); ok {
+		return rf(ctx, profileID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []dto.AchievementResponse); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.AchievementResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCertificates provides a mock function with given fields: ctx, profileID
+func (_m *Service) GetCertificates(ctx context.Context, profileID string) ([]dto.CertificateResponse, error) {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCertificates")
+	}
+
+	var r0 []dto.CertificateResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]dto.CertificateResponse, error)); ok {
+		return rf(ctx, profileID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) []dto.CertificateResponse); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.CertificateResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, profileID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetEducation provides a mock function with given fields: ctx, profileID
 func (_m *Service) GetEducation(ctx context.Context, profileID string) ([]dto.EducationResponse, error) {
 	ret := _m.Called(ctx, profileID)
