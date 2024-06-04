@@ -6,6 +6,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"go.uber.org/zap"
@@ -26,6 +27,7 @@ func NewAchievementRepo(db *pgx.Conn) AchievementStorer {
 // AchievementStorer defines methods to interact with user achievement related data.
 type AchievementStorer interface {
 	CreateAchievement(ctx context.Context, values []AchievementDao) error
+	GetAchievements(ctx context.Context, profileID int) ([]dto.AchievementResponse, error)
 }
 
 // CreateAchievement inserts achievements details into the database.
@@ -60,4 +62,36 @@ func (profileStore *AchievementStore) CreateAchievement(ctx context.Context, val
 	}
 
 	return nil
+}
+
+func (achStore *AchievementStore) GetAchievements(ctx context.Context, profileID int) (values []dto.AchievementResponse, err error) {
+	sql, args, err := sq.Select(constants.ResponseAchievementsColumns...).From("achievements").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		zap.S().Error("Error generating get achievements query: ", err)
+		return []dto.AchievementResponse{}, err
+	}
+
+	rows, err := achStore.db.Query(ctx, sql, args...)
+	if err != nil {
+		zap.S().Error("Error executing get achievements query: ", err)
+		return []dto.AchievementResponse{}, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var val dto.AchievementResponse
+		err = rows.Scan(&val.ProfileID, &val.Name, &val.Description)
+		if err != nil {
+			zap.S().Error("Error scanning achievements rows: ", err)
+			return []dto.AchievementResponse{}, err
+		}
+		values = append(values, val)
+	}
+
+	if len(values) == 0 {
+		zap.S().Info("No achievements found for profileID: ", profileID)
+		return []dto.AchievementResponse{}, errors.ErrNoRecordFound
+	}
+
+	return values, nil
 }
