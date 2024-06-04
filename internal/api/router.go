@@ -31,6 +31,8 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	subrouter.HandleFunc("/{profile_id}/educations", handler.GetEducationHandler(ctx, svc)).Methods(http.MethodGet)
 	subrouter.HandleFunc("/{profile_id}/projects", handler.GetProjectHandler(ctx, svc)).Methods(http.MethodGet)
 	subrouter.HandleFunc("/{profile_id}/experiences", handler.GetExperienceHandler(ctx, svc)).Methods(http.MethodGet)
+	subrouter.HandleFunc("/{profile_id}/achievements", handler.GetAchievementsHandler(ctx, svc)).Methods(http.MethodGet)
+	subrouter.HandleFunc("/{profile_id}/certificates", handler.GetCertificatesHandler(ctx, svc)).Methods(http.MethodGet)
 
 	//PUT APIs
 	router.HandleFunc("/profiles", handler.UpdateProfileHandler(ctx, svc)).Methods(http.MethodPut)
