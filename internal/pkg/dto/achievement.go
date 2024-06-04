@@ -18,6 +18,16 @@ type Achievement struct {
 	Description string `json:"description"`
 }
 
+type AchievementResponse struct {
+	ProfileID   int    `json:"profile_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type ResponseAchievement struct {
+	Achievements []AchievementResponse `json:"achievements"`
+}
+
 // Validate func checks if the CreateAchievementRequest is valid.
 func (req *CreateAchievementRequest) Validate() error {
 	if req.ProfileID == 0 {
