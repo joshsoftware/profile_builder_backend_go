@@ -5,6 +5,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
 )
@@ -12,6 +13,7 @@ import (
 // AchievementService represents a set of methods for accessing the achievements
 type AchievementService interface {
 	CreateAchievement(ctx context.Context, cDetail dto.CreateAchievementRequest) (profileID int, err error)
+	GetAchievements(ctx context.Context, profileID string) (value []dto.AchievementResponse, err error)
 }
 
 // CreateAchievement : Service layer function adds certicates details to a user profile.
@@ -42,4 +44,20 @@ func (achSvc *service) CreateAchievement(ctx context.Context, cDetail dto.Create
 	}
 
 	return cDetail.ProfileID, nil
+}
+
+func (achSvc *service) GetAchievements(ctx context.Context, profileID string) (value []dto.AchievementResponse, err error) {
+	ID, err := helpers.ConvertStringToInt(profileID)
+	if err != nil {
+		zap.S().Error("error to get achievement : ", err, " for profile id : ", profileID)
+		return []dto.AchievementResponse{}, err
+	}
+
+	value, err = achSvc.AchievementRepo.GetAchievements(ctx, ID)
+	if err != nil {
+		zap.S().Error("error to get achievement : ", err, " for profile id : ", profileID)
+		return []dto.AchievementResponse{}, err
+	}
+
+	return value, nil
 }
