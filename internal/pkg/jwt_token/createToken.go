@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"go.uber.org/zap"
 )
 
 func CreateToken(userID int64, email string) (string, error) {
@@ -18,6 +19,10 @@ func CreateToken(userID int64, email string) (string, error) {
 	}
 
 	expirationHoursStr := os.Getenv("TOKEN_EXPIRATION_HOURS")
+	if expirationHoursStr == "" {
+		zap.S().Fatal("TOKEN_EXPIRATION_HOURS is not set")
+		return "", errors.ErrTokenExpirationHours
+	}
 	expirationHours, err := strconv.Atoi(expirationHoursStr)
 	if err != nil {
 		log.Fatalf("Error parsing TOKEN_EXPIRATION_HOURS: %v", err)
