@@ -5,7 +5,6 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
 )
@@ -13,7 +12,7 @@ import (
 // CertificateService represents a set of methods for accessing the certificates.
 type CertificateService interface {
 	CreateCertificate(ctx context.Context, cDetail dto.CreateCertificateRequest) (profileID int, err error)
-	GetCertificates(ctx context.Context, profileID string) (value []dto.CertificateResponse, err error)
+	ListCertificates(ctx context.Context, profileID int) (value []dto.CertificateResponse, err error)
 }
 
 // CreateCerticate : Service layer function adds certicates details to a user profile.
@@ -51,14 +50,8 @@ func (profileSvc *service) CreateCertificate(ctx context.Context, cDetail dto.Cr
 	return cDetail.ProfileID, nil
 }
 
-func (certificateSvc *service) GetCertificates(ctx context.Context, profileID string) (value []dto.CertificateResponse, err error) {
-	id, err := helpers.ConvertStringToInt(profileID)
-	if err != nil {
-		zap.S().Error("error to get education : ", err, " for profile id : ", profileID)
-		return []dto.CertificateResponse{}, err
-	}
-
-	value, err = certificateSvc.CertificateRepo.GetCertificatesList(ctx, id)
+func (certificateSvc *service) ListCertificates(ctx context.Context, profileID int) (value []dto.CertificateResponse, err error) {
+	value, err = certificateSvc.CertificateRepo.ListCertificates(ctx, profileID)
 	if err != nil {
 		zap.S().Error("error to get certificate : ", err, " for profile id : ", profileID)
 		return []dto.CertificateResponse{}, err

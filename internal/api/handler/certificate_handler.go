@@ -43,7 +43,7 @@ func CreateCertificateHandler(ctx context.Context, profileSvc service.Service) f
 }
 
 // GetCertificatesHandler handles HTTP requests to get certificates details of a user profile.
-func GetCertificatesHandler(ctx context.Context, certificateSvc service.Service) func(http.ResponseWriter, *http.Request) {
+func ListCertificatesHandler(ctx context.Context, certificateSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		profileID, err := helpers.GetParams(r)
 		if err != nil {
@@ -52,7 +52,13 @@ func GetCertificatesHandler(ctx context.Context, certificateSvc service.Service)
 			return
 		}
 
-		values, err := certificateSvc.GetCertificates(ctx, profileID)
+		id, err := helpers.ConvertStringToInt(profileID)
+		if err != nil {
+			zap.S().Error("error to get education : ", err, " for profile id : ", profileID)
+			return
+		}
+
+		values, err := certificateSvc.ListCertificates(ctx, id)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to fetch certificate : ", err, "for profile id : ", profileID)

@@ -42,7 +42,7 @@ func CreateAchievementHandler(ctx context.Context, profileSvc service.Service) f
 	}
 }
 
-func GetAchievementsHandler(ctx context.Context, achSvc service.Service) func(http.ResponseWriter, *http.Request) {
+func ListAchievementsHandler(ctx context.Context, achSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		profileID, err := helpers.GetParams(r)
 		if err != nil {
@@ -51,7 +51,13 @@ func GetAchievementsHandler(ctx context.Context, achSvc service.Service) func(ht
 			return
 		}
 
-		values, err := achSvc.GetAchievements(ctx, profileID)
+		ID, err := helpers.ConvertStringToInt(profileID)
+		if err != nil {
+			zap.S().Error("error to get achievement : ", err, " for profile id : ", profileID)
+			return
+		}
+
+		achivementsResp, err := achSvc.ListAchievements(ctx, ID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to fetch achievement : ", err, "for profile id : ", profileID)
@@ -59,7 +65,7 @@ func GetAchievementsHandler(ctx context.Context, achSvc service.Service) func(ht
 		}
 
 		middleware.SuccessResponse(w, http.StatusOK, dto.ResponseAchievement{
-			Achievements: values,
+			Achievements: achivementsResp,
 		})
 	}
 }
