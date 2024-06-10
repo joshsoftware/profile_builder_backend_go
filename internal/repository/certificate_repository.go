@@ -20,7 +20,7 @@ type CertificateStore struct {
 // CertificateStorer defines methods to interact with user certificate ralated data.
 type CertificateStorer interface {
 	CreateCertificate(ctx context.Context, values []CertificateDao) error
-	GetCertificatesList(ctx context.Context, profileID int) ([]dto.CertificateResponse, error)
+	ListCertificates(ctx context.Context, profileID int) ([]dto.CertificateResponse, error)
 }
 
 // NewCertificateRepo creates a new instance of CertificateRepo.
@@ -66,7 +66,7 @@ func (profileStore *CertificateStore) CreateCertificate(ctx context.Context, val
 }
 
 // GetCertificates fetches certificates details from the database.
-func (certificateStore *CertificateStore) GetCertificatesList(ctx context.Context, profileID int) (values []dto.CertificateResponse, err error) {
+func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, profileID int) (values []dto.CertificateResponse, err error) {
 	sql, args, err := sq.Select(constants.ResponseCertificatesColumns...).From("certificates").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating get certificates query: ", err)

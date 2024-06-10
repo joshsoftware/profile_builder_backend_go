@@ -27,7 +27,7 @@ func NewAchievementRepo(db *pgx.Conn) AchievementStorer {
 // AchievementStorer defines methods to interact with user achievement related data.
 type AchievementStorer interface {
 	CreateAchievement(ctx context.Context, values []AchievementDao) error
-	GetAchievements(ctx context.Context, profileID int) ([]dto.AchievementResponse, error)
+	ListAchievements(ctx context.Context, profileID int) ([]dto.AchievementResponse, error)
 }
 
 // CreateAchievement inserts achievements details into the database.
@@ -64,7 +64,7 @@ func (profileStore *AchievementStore) CreateAchievement(ctx context.Context, val
 	return nil
 }
 
-func (achStore *AchievementStore) GetAchievements(ctx context.Context, profileID int) (values []dto.AchievementResponse, err error) {
+func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileID int) (values []dto.AchievementResponse, err error) {
 	sql, args, err := sq.Select(constants.ResponseAchievementsColumns...).From("achievements").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating get achievements query: ", err)
