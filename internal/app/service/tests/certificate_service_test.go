@@ -111,14 +111,14 @@ func TestCreateCertificate(t *testing.T) {
 	}
 }
 
-func TestGetCertificates(t *testing.T) {
+func TestListCertificates(t *testing.T) {
 	mockCertificateRepo := new(mocks.CertificateStorer)
 	var repodeps = service.RepoDeps{
 		CertificateDeps: mockCertificateRepo,
 	}
 	certificateService := service.NewServices(repodeps)
 
-	mockProfileId := profileID
+	mockProfileId := strconv.Itoa(profileID)
 	mockResponseCertificate := []dto.CertificateResponse{
 		{
 			ProfileID:        123,
@@ -134,45 +134,42 @@ func TestGetCertificates(t *testing.T) {
 	tests := []struct {
 		Name            string
 		ProfileID       string
-		MockSetup       func(*mocks.CertificateStorer, string)
+		MockSetup       func(*mocks.CertificateStorer, int)
 		isErrorExpected bool
 		wantResponse    []dto.CertificateResponse
 	}{
 		{
-			Name:      "Success",
+			Name:      "success_list_certificates",
 			ProfileID: mockProfileId,
-			MockSetup: func(mockCertificateStorer *mocks.CertificateStorer, profileID string) {
-				profileIDInt, _ := strconv.Atoi(profileID)
-				mockCertificateStorer.On("GetCertificatesList", mock.Anything, profileIDInt).Return(mockResponseCertificate, nil).Once()
+			MockSetup: func(mockCertificateStorer *mocks.CertificateStorer, profileID int) {
+				mockCertificateStorer.On("ListCertificates", mock.Anything, profileID).Return(mockResponseCertificate, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseCertificate,
 		},
 		{
-			Name:      "Fail get certificate",
+			Name:      "fail_get_certificates",
 			ProfileID: mockProfileID,
-			MockSetup: func(certMock *mocks.CertificateStorer, profileID string) {
-				profileIDInt, _ := strconv.Atoi(profileID)
-				certMock.On("GetCertificatesList", mock.Anything, profileIDInt).Return([]dto.CertificateResponse{}, errors.New("error")).Once()
+			MockSetup: func(certMock *mocks.CertificateStorer, profileID int) {
+				certMock.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []dto.CertificateResponse{},
 		},
 		{
-			Name:      "Success but no certificates",
+			Name:      "sucess_with_empty_resultset",
 			ProfileID: mockProfileID,
-			MockSetup: func(certMock *mocks.CertificateStorer, profileID string) {
-				profileIDInt, _ := strconv.Atoi(profileID)
-				certMock.On("GetCertificatesList", mock.Anything, profileIDInt).Return([]dto.CertificateResponse{}, nil).Once()
+			MockSetup: func(certMock *mocks.CertificateStorer, profileID int) {
+				certMock.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    []dto.CertificateResponse{},
 		},
 		{
-			Name:      "Invalid ProfileID",
+			Name:      "invalid_profile_id",
 			ProfileID: "invalid",
-			MockSetup: func(certMock *mocks.CertificateStorer, profileID string) {
-				certMock.On("GetCertificatesList", mock.Anything, mock.Anything).Return([]dto.CertificateResponse{}, errors.New("invalid profile ID")).Once()
+			MockSetup: func(certMock *mocks.CertificateStorer, profileID int) {
+				certMock.On("ListCertificates", mock.Anything, mock.Anything).Return([]dto.CertificateResponse{}, errors.New("invalid profile ID")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []dto.CertificateResponse{},
@@ -181,8 +178,9 @@ func TestGetCertificates(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			tt.MockSetup(mockCertificateRepo, tt.ProfileID)
-			gotResponse, err := certificateService.GetCertificates(context.Background(), tt.ProfileID)
+			profileIDInt, _ := strconv.Atoi(tt.ProfileID)
+			tt.MockSetup(mockCertificateRepo, profileIDInt)
+			gotResponse, err := certificateService.ListCertificates(context.Background(), profileIDInt)
 			assert.Equal(t, tt.wantResponse, gotResponse)
 			if (err != nil) != tt.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", tt.Name, tt.isErrorExpected, err != nil)

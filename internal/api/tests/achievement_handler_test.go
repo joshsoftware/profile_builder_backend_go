@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -105,25 +106,25 @@ func TestCreateAchievementHandler(t *testing.T) {
 }
 
 var (
-	profileID  = "1"
-	profileID0 = ""
+	profileID  = 1
+	profileID0 = 0
 )
 
-func TestGetAchievementsHandler(t *testing.T) {
+func TestListAchievementsHandler(t *testing.T) {
 	achSvc := new(mocks.Service)
-	getAchievementHandler := handler.GetAchievementsHandler(context.Background(), achSvc)
+	getAchievementHandler := handler.ListAchievementsHandler(context.Background(), achSvc)
 
 	tests := []struct {
 		name               string
-		queryParams        string
+		queryParams        int
 		MockSvc            func(mockSvc *mocks.Service)
 		expectedStatusCode int
 	}{
 		{
-			name:        "Success for fetching achievements",
+			name:        "success_achievement",
 			queryParams: profileID,
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{
+				mockSvc.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{
 					{
 						ProfileID:   1,
 						Name:        "Client Appreciation",
@@ -134,10 +135,10 @@ func TestGetAchievementsHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:        "Success for fetching multiple achievements",
+			name:        "success_achievements",
 			queryParams: profileID,
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{
+				mockSvc.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{
 					{
 						ProfileID:   1,
 						Name:        "Client Appreciation",
@@ -153,27 +154,27 @@ func TestGetAchievementsHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:        "Fail as error in GetAchievements",
+			name:        "fail_to_fetch_achievements",
 			queryParams: profileID,
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, errors.New("some error")).Once()
+				mockSvc.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, errors.New("some error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
 		{
-			name:        "Success for fetching no achievements",
+			name:        "sucess_with_empty_resultset",
 			queryParams: profileID,
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, nil).Once()
+				mockSvc.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
 		{
 
-			name:        "Fail as error in GetParams",
+			name:        "fail_to_fetch_achievements_with_invalid_profile_id",
 			queryParams: profileID0,
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetAchievements", mock.Anything, profileID0).Return(nil, errors.New("invalid profile id")).Once()
+				mockSvc.On("ListAchievements", mock.Anything, profileID0).Return(nil, errors.New("invalid profile id")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -182,13 +183,13 @@ func TestGetAchievementsHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.MockSvc(achSvc)
-			req, err := http.NewRequest("GET", "/profiles/"+tt.queryParams+"/achievements", nil)
+			req, err := http.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.queryParams)+"/achievements", nil)
 			if err != nil {
 				t.Fatal(err)
 				return
 			}
 
-			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.queryParams})
+			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.queryParams)})
 
 			resp := httptest.NewRecorder()
 

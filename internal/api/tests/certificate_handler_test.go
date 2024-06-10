@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -120,21 +121,21 @@ func TestCreateCertificateHandler(t *testing.T) {
 	}
 }
 
-func TestGetCertificatesHandler(t *testing.T) {
+func TestListCertificatesHandler(t *testing.T) {
 	certficateSvc := new(mocks.Service)
-	getCertificateHandler := handler.GetCertificatesHandler(context.Background(), certficateSvc)
+	getCertificateHandler := handler.ListCertificatesHandler(context.Background(), certficateSvc)
 
 	tests := []struct {
 		name               string
-		queryParams        string
+		queryParams        int
 		mockSvcSetup       func(mockSvc *mocks.Service)
 		expectedStatusCode int
 	}{
 		{
-			name:        "Success for fetching certificate details",
+			name:        "Success_for_fetching_single_certificate",
 			queryParams: profileID,
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{
+				mockSvc.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{
 					{
 						ProfileID:        1,
 						Name:             "Golang Master Class",
@@ -149,10 +150,10 @@ func TestGetCertificatesHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:        "Success for fetching multiple certificates",
+			name:        "success_for_fetching_multiple_certificates",
 			queryParams: profileID,
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{
+				mockSvc.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{
 					{
 						ProfileID:   1,
 						Name:        "Certificate 1",
@@ -169,26 +170,26 @@ func TestGetCertificatesHandler(t *testing.T) {
 		},
 
 		{
-			name:        "Fail as error in GetCertificates",
+			name:        "fail_to_fetch_certificates",
 			queryParams: profileID,
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, errors.New("some error")).Once()
+				mockSvc.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, errors.New("some error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
 		{
-			name:        "Success for fetching no certificates",
+			name:        "sucess_with_empty_resultset",
 			queryParams: profileID,
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, nil).Once()
+				mockSvc.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:        "Fail as error in GetParams",
+			name:        "fail_to_fetch_certificates_with_invalid_profile_id",
 			queryParams: profileID0,
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetCertificates", mock.Anything, profileID0).Return(nil, errors.New("invalid profile id")).Once()
+				mockSvc.On("ListCertificates", mock.Anything, profileID0).Return(nil, errors.New("invalid profile id")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -198,12 +199,12 @@ func TestGetCertificatesHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSvcSetup(certficateSvc)
 
-			req, err := http.NewRequest("GET", "/profiles/"+tt.queryParams+"/certificates", nil)
+			req, err := http.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.queryParams)+"/certificates", nil)
 			if err != nil {
 				t.Fatal(err)
 				return
 			}
-			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.queryParams})
+			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.queryParams)})
 
 			resp := httptest.NewRecorder()
 			handler := http.HandlerFunc(getCertificateHandler)

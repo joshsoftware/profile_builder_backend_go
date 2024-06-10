@@ -99,10 +99,10 @@ func TestCreateAchievement(t *testing.T) {
 }
 
 var (
-	profileID = "123"
+	profileID = 123
 )
 
-func TestGetAchievements(t *testing.T) {
+func TestListAchievements(t *testing.T) {
 	mockAchievementRepo := new(mocks.AchievementStorer)
 	var repodeps = service.RepoDeps{
 		AchievementDeps: mockAchievementRepo,
@@ -122,45 +122,42 @@ func TestGetAchievements(t *testing.T) {
 	tests := []struct {
 		Name            string
 		ProfileID       string
-		MockSetup       func(*mocks.AchievementStorer, string)
+		MockSetup       func(*mocks.AchievementStorer, int)
 		isErrorExpected bool
 		wantResponse    []dto.AchievementResponse
 	}{
 		{
-			Name:      "Success",
-			ProfileID: mockProfileId,
-			MockSetup: func(mockAchievementStorer *mocks.AchievementStorer, profileID string) {
-				profileIDInt, _ := strconv.Atoi(profileID)
-				mockAchievementStorer.On("GetAchievements", mock.Anything, profileIDInt).Return(mockResponseAchievement, nil).Once()
+			Name:      "success_get_achievement",
+			ProfileID: strconv.Itoa(mockProfileId),
+			MockSetup: func(mockAchievementStorer *mocks.AchievementStorer, profileID int) {
+				mockAchievementStorer.On("ListAchievements", mock.Anything, profileID).Return(mockResponseAchievement, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseAchievement,
 		},
 		{
-			Name:      "Fail get achievement",
+			Name:      "fail_get_achievement",
 			ProfileID: mockProfileID,
-			MockSetup: func(achMock *mocks.AchievementStorer, profileID string) {
-				profileIDInt, _ := strconv.Atoi(profileID)
-				achMock.On("GetAchievements", mock.Anything, profileIDInt).Return([]dto.AchievementResponse{}, errors.New("error")).Once()
+			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
+				achMock.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []dto.AchievementResponse{},
 		},
 		{
-			Name:      "Success but no achievements",
+			Name:      "sucess_with_empty_resultset",
 			ProfileID: mockProfileID,
-			MockSetup: func(achMock *mocks.AchievementStorer, profileID string) {
-				profileIDInt, _ := strconv.Atoi(profileID)
-				achMock.On("GetAchievements", mock.Anything, profileIDInt).Return([]dto.AchievementResponse{}, nil).Once()
+			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
+				achMock.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    []dto.AchievementResponse{},
 		},
 		{
-			Name:      "Invalid ProfileID",
+			Name:      "invalid_profile_id",
 			ProfileID: "invalid",
-			MockSetup: func(achMock *mocks.AchievementStorer, profileID string) {
-				achMock.On("GetAchievements", mock.Anything, mock.Anything).Return([]dto.AchievementResponse{}, errors.New("invalid profile ID")).Once()
+			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
+				achMock.On("ListAchievements", mock.Anything, mock.Anything).Return([]dto.AchievementResponse{}, errors.New("invalid profile ID")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []dto.AchievementResponse{},
@@ -169,8 +166,9 @@ func TestGetAchievements(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			tt.MockSetup(mockAchievementRepo, tt.ProfileID)
-			gotResponse, err := achService.GetAchievements(context.Background(), tt.ProfileID)
+			profileIDInt, _ := strconv.Atoi(tt.ProfileID)
+			tt.MockSetup(mockAchievementRepo, profileIDInt)
+			gotResponse, err := achService.ListAchievements(context.Background(), profileIDInt)
 
 			assert.Equal(t, tt.wantResponse, gotResponse)
 			if (err != nil) != tt.isErrorExpected {
