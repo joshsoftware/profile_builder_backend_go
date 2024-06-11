@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"go.uber.org/zap"
 )
 
 // CreateAchievementHandler handles HTTP requests to add achievements details to a user profile.
 func CreateAchievementHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ID, err := helpers.GetParams(r)
+		ID, err := helpers.GetParamsByID(r, "profile_id")
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
@@ -42,7 +42,7 @@ func CreateAchievementHandler(ctx context.Context, profileSvc service.Service) f
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusCreated, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusCreated, specs.MessageResponseWithID{
 			Message:   "Achievement(s) added successfully",
 			ProfileID: profileID,
 		})
@@ -73,16 +73,16 @@ func UpdateAchievementHandler(ctx context.Context, achSvc service.Service) func(
 			return
 		}
 
-		value, err := achSvc.UpdateAchievement(ctx, profileID, eduID, req)
+		updatedResp, err := achSvc.UpdateAchievement(ctx, profileID, eduID, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to update achievement : ", err, "for profile id : ", profileID)
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusOK, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponseWithID{
 			Message:   "Achievement updated successfully",
-			ProfileID: value,
+			ProfileID: updatedResp,
 		})
 	}
 }

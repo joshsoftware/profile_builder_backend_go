@@ -1,4 +1,4 @@
-package dto
+package specs
 
 import (
 	"fmt"
@@ -100,32 +100,23 @@ func (p *Project) Validate() error {
 // Validate func checks if the Project details are valid.
 func (p *UpdateProjectRequest) Validate() error {
 
-	if p.Project.Name == "" {
-		return fmt.Errorf("%s : name ", errors.ErrParameterMissing.Error())
+	fields := map[string]string{
+		"name":                 p.Project.Name,
+		"description":          p.Project.Description,
+		"role":                 p.Project.Role,
+		"responsibilities":     p.Project.Responsibilities,
+		"technologies":         p.Project.Technologies,
+		"technology worked on": p.Project.TechWorkedOn,
+		"working start date":   p.Project.WorkingStartDate,
+		"working end date":     p.Project.WorkingEndDate,
+		"duration":             p.Project.Duration,
 	}
-	if p.Project.Description == "" {
-		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
+
+	for fieldName, fieldValue := range fields {
+		if fieldValue == "" {
+			return fmt.Errorf("%s : %s", errors.ErrParameterMissing.Error(), fieldName)
+		}
 	}
-	if p.Project.Role == "" {
-		return fmt.Errorf("%s : role ", errors.ErrParameterMissing.Error())
-	}
-	if p.Project.Responsibilities == "" {
-		return fmt.Errorf("%s : responsibilities ", errors.ErrParameterMissing.Error())
-	}
-	if p.Project.Technologies == "" {
-		return fmt.Errorf("%s : technologies ", errors.ErrParameterMissing.Error())
-	}
-	if p.Project.TechWorkedOn == "" {
-		return fmt.Errorf("%s : techonology worked on ", errors.ErrParameterMissing.Error())
-	}
-	if p.Project.WorkingStartDate == "" {
-		return fmt.Errorf("%s : working startv date ", errors.ErrParameterMissing.Error())
-	}
-	if p.Project.WorkingEndDate == "" {
-		return fmt.Errorf("%s : working end date ", errors.ErrParameterMissing.Error())
-	}
-	if p.Project.Duration == "" {
-		return fmt.Errorf("%s : duration ", errors.ErrParameterMissing.Error())
-	}
+
 	return nil
 }

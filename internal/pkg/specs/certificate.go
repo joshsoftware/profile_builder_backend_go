@@ -1,4 +1,4 @@
-package dto
+package specs
 
 import (
 	"fmt"
@@ -65,28 +65,19 @@ func (req *CreateCertificateRequest) Validate() error {
 // Validate func checks if the UpdateCertificateRequest is valid.
 func (req *UpdateCertificateRequest) Validate() error {
 
-	if req.Certificate.Name == "" {
-		return fmt.Errorf("%s : certificate name", errors.ErrParameterMissing.Error())
+	fields := map[string]string{
+		"name":              req.Certificate.Name,
+		"organization name": req.Certificate.OrganizationName,
+		"decsription":       req.Certificate.Description,
+		"issued date":       req.Certificate.IssuedDate,
+		"from date":         req.Certificate.FromDate,
+		"to date":           req.Certificate.ToDate,
 	}
 
-	if req.Certificate.OrganizationName == "" {
-		return fmt.Errorf("%s : organization name", errors.ErrParameterMissing.Error())
-	}
-
-	if req.Certificate.Description == "" {
-		return fmt.Errorf("%s : decsription", errors.ErrParameterMissing.Error())
-	}
-
-	if req.Certificate.IssuedDate == "" {
-		return fmt.Errorf("%s : issued date", errors.ErrParameterMissing.Error())
-	}
-
-	if req.Certificate.FromDate == "" {
-		return fmt.Errorf("%s : from date", errors.ErrParameterMissing.Error())
-	}
-
-	if req.Certificate.ToDate == "" {
-		return fmt.Errorf("%s : to date", errors.ErrParameterMissing.Error())
+	for fieldName, fieldValue := range fields {
+		if fieldValue == "" {
+			return fmt.Errorf("%s : %s", errors.ErrParameterMissing.Error(), fieldName)
+		}
 	}
 
 	return nil

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
 	"github.com/stretchr/testify/mock"
 )
@@ -20,14 +20,14 @@ func TestCreateCertificate(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		input           dto.CreateCertificateRequest
+		input           specs.CreateCertificateRequest
 		setup           func(certificateMock *mocks.CertificateStorer)
 		isErrorExpected bool
 	}{
 		{
 			name: "Success for certificate details",
-			input: dto.CreateCertificateRequest{
-				Certificates: []dto.Certificate{
+			input: specs.CreateCertificateRequest{
+				Certificates: []specs.Certificate{
 					{
 						Name:             "Full Stack GO Certificate",
 						OrganizationName: "Josh Software",
@@ -45,8 +45,8 @@ func TestCreateCertificate(t *testing.T) {
 		},
 		{
 			name: "Failed because CreateCertificate returns an error",
-			input: dto.CreateCertificateRequest{
-				Certificates: []dto.Certificate{
+			input: specs.CreateCertificateRequest{
+				Certificates: []specs.Certificate{
 					{
 						Name:             "Full Stack Data Science Certificate",
 						OrganizationName: "Balambika Team",
@@ -64,8 +64,8 @@ func TestCreateCertificate(t *testing.T) {
 		},
 		{
 			name: "Failed because of missing certificate name",
-			input: dto.CreateCertificateRequest{
-				Certificates: []dto.Certificate{
+			input: specs.CreateCertificateRequest{
+				Certificates: []specs.Certificate{
 					{
 						Name:             "",
 						OrganizationName: "Org C",
@@ -83,8 +83,8 @@ func TestCreateCertificate(t *testing.T) {
 		},
 		{
 			name: "Failed because of empty payload",
-			input: dto.CreateCertificateRequest{
-				Certificates: []dto.Certificate{},
+			input: specs.CreateCertificateRequest{
+				Certificates: []specs.Certificate{},
 			},
 			setup:           func(certificateMock *mocks.CertificateStorer) {},
 			isErrorExpected: true,
@@ -96,7 +96,7 @@ func TestCreateCertificate(t *testing.T) {
 			test.setup(mockCertificateRepo)
 
 			// Test the service
-			_, err := certificateService.CreateCertificate(context.TODO(), test.input, "1")
+			_, err := certificateService.CreateCertificate(context.TODO(), test.input, 1)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
@@ -116,7 +116,7 @@ func TestUpdateCertificate(t *testing.T) {
 		name            string
 		profileID       string
 		certificateID   string
-		input           dto.UpdateCertificateRequest
+		input           specs.UpdateCertificateRequest
 		setup           func(certificateMock *mocks.CertificateStorer)
 		isErrorExpected bool
 	}{
@@ -124,8 +124,8 @@ func TestUpdateCertificate(t *testing.T) {
 			name:          "Success for updating certificate details",
 			profileID:     "1",
 			certificateID: "1",
-			input: dto.UpdateCertificateRequest{
-				Certificate: dto.Certificate{
+			input: specs.UpdateCertificateRequest{
+				Certificate: specs.Certificate{
 					Name:             "Updated Certificate Name",
 					OrganizationName: "Updated Organization",
 					Description:      "Updated Description",
@@ -143,8 +143,8 @@ func TestUpdateCertificate(t *testing.T) {
 			name:          "Failed because UpdateCertificate returns an error",
 			profileID:     "100000000000000000",
 			certificateID: "1",
-			input: dto.UpdateCertificateRequest{
-				Certificate: dto.Certificate{
+			input: specs.UpdateCertificateRequest{
+				Certificate: specs.Certificate{
 					Name:             "Certificate B",
 					OrganizationName: "Organization B",
 					Description:      "Description B",
@@ -162,8 +162,8 @@ func TestUpdateCertificate(t *testing.T) {
 			name:          "Failed because of missing certificate name",
 			profileID:     "1",
 			certificateID: "1",
-			input: dto.UpdateCertificateRequest{
-				Certificate: dto.Certificate{
+			input: specs.UpdateCertificateRequest{
+				Certificate: specs.Certificate{
 					Name:             "",
 					OrganizationName: "Organization",
 					Description:      "Description",
@@ -181,8 +181,8 @@ func TestUpdateCertificate(t *testing.T) {
 			name:          "Failed because of invalid profileID or certificateID",
 			profileID:     "invalid",
 			certificateID: "1",
-			input: dto.UpdateCertificateRequest{
-				Certificate: dto.Certificate{
+			input: specs.UpdateCertificateRequest{
+				Certificate: specs.Certificate{
 					Name:             "Valid Name",
 					OrganizationName: "Valid Organization",
 					Description:      "Valid Description",

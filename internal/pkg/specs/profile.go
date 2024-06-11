@@ -1,4 +1,4 @@
-package dto
+package specs
 
 import (
 	"fmt"
@@ -42,6 +42,16 @@ type ListProfiles struct {
 	Email             string   `json:"email"`
 	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
+	IsCurrentEmployee int      `json:"is_current_employee"`
+}
+
+// ResponseListProfiles struct represents response of user profiles for listing.
+type ResponseListProfiles struct {
+	ID                int      `json:"id"`
+	Name              string   `json:"name"`
+	Email             string   `json:"email"`
+	YearsOfExperience float64  `json:"years_of_experience"`
+	PrimarySkills     []string `json:"primary_skills"`
 	IsCurrentEmployee string   `json:"is_current_employee"`
 }
 
@@ -52,7 +62,7 @@ type ListSkills struct {
 
 // ListProfilesResponse struct represents a response containing a list of user profiles.
 type ListProfilesResponse struct {
-	Profiles []ListProfiles `json:"profiles"`
+	Profiles []ResponseListProfiles `json:"profiles"`
 }
 
 // ProfileResponse struct represents a response containing profile of specific user.

@@ -1,4 +1,4 @@
-package dto
+package specs
 
 import (
 	"fmt"

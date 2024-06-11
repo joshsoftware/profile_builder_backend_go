@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -21,14 +21,14 @@ func TestCreateProject(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		input           dto.CreateProjectRequest
+		input           specs.CreateProjectRequest
 		setup           func(projectMock *mocks.ProjectStorer)
 		isErrorExpected bool
 	}{
 		{
 			name: "Success for project details",
-			input: dto.CreateProjectRequest{
-				Projects: []dto.Project{
+			input: specs.CreateProjectRequest{
+				Projects: []specs.Project{
 					{
 						Name:             "Project X",
 						Description:      "Description of Project X",
@@ -49,8 +49,8 @@ func TestCreateProject(t *testing.T) {
 		},
 		{
 			name: "Failed because CreateProject",
-			input: dto.CreateProjectRequest{
-				Projects: []dto.Project{
+			input: specs.CreateProjectRequest{
+				Projects: []specs.Project{
 					{
 						Name:             "",
 						Description:      "Description of Project Y",
@@ -71,8 +71,8 @@ func TestCreateProject(t *testing.T) {
 		},
 		{
 			name: "Failed because empty payload",
-			input: dto.CreateProjectRequest{
-				Projects: []dto.Project{},
+			input: specs.CreateProjectRequest{
+				Projects: []specs.Project{},
 			},
 			setup:           func(projectMock *mocks.ProjectStorer) {},
 			isErrorExpected: true,
@@ -84,7 +84,7 @@ func TestCreateProject(t *testing.T) {
 			test.setup(mockProjectRepo)
 
 			// test service
-			_, err := profileService.CreateProject(context.TODO(), test.input, "1")
+			_, err := profileService.CreateProject(context.TODO(), test.input, 1)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
@@ -101,11 +101,9 @@ func TestGetProject(t *testing.T) {
 	}
 	projectService := service.NewServices(repodeps)
 
-	// Define mock data
-	mockProfileID := "123"
-	mockResponseProject := []dto.ProjectResponse{
+	mockResponseProject := []specs.ProjectResponse{
 		{
-			ProfileID:        123,
+			ProfileID:        mockProfileID,
 			Name:             "Project Alpha",
 			Description:      "A project about something",
 			Role:             "Lead Developer",
@@ -121,10 +119,10 @@ func TestGetProject(t *testing.T) {
 	// Define test cases
 	tests := []struct {
 		name            string
-		profileID       string
+		profileID       int
 		setup           func(projMock *mocks.ProjectStorer)
 		isErrorExpected bool
-		wantResponse    []dto.ProjectResponse
+		wantResponse    []specs.ProjectResponse
 	}{
 		{
 			name:      "Success get project",
@@ -141,10 +139,10 @@ func TestGetProject(t *testing.T) {
 			profileID: mockProfileID,
 			setup: func(projMock *mocks.ProjectStorer) {
 				// Mock retrieval failure
-				projMock.On("GetProjects", mock.Anything, mock.Anything).Return([]dto.ProjectResponse{}, errors.New("error")).Once()
+				projMock.On("GetProjects", mock.Anything, mock.Anything).Return([]specs.ProjectResponse{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
-			wantResponse:    []dto.ProjectResponse{},
+			wantResponse:    []specs.ProjectResponse{},
 		},
 	}
 
@@ -177,7 +175,7 @@ func TestUpdateProject(t *testing.T) {
 		name            string
 		profileID       string
 		projectID       string
-		input           dto.UpdateProjectRequest
+		input           specs.UpdateProjectRequest
 		setup           func(projectMock *mocks.ProjectStorer)
 		isErrorExpected bool
 	}{
@@ -185,8 +183,8 @@ func TestUpdateProject(t *testing.T) {
 			name:      "Success for updating project details",
 			profileID: "1",
 			projectID: "1",
-			input: dto.UpdateProjectRequest{
-				Project: dto.Project{
+			input: specs.UpdateProjectRequest{
+				Project: specs.Project{
 					Name:             "Updated Project Name",
 					Description:      "Updated Description",
 					Role:             "Updated Role",
@@ -207,8 +205,8 @@ func TestUpdateProject(t *testing.T) {
 			name:      "Failed because UpdateProject returns an error",
 			profileID: "100000000000000000",
 			projectID: "1",
-			input: dto.UpdateProjectRequest{
-				Project: dto.Project{
+			input: specs.UpdateProjectRequest{
+				Project: specs.Project{
 					Name:             "Project B",
 					Description:      "Description B",
 					Role:             "Role B",
@@ -229,8 +227,8 @@ func TestUpdateProject(t *testing.T) {
 			name:      "Failed because of missing project name",
 			profileID: "1",
 			projectID: "1",
-			input: dto.UpdateProjectRequest{
-				Project: dto.Project{
+			input: specs.UpdateProjectRequest{
+				Project: specs.Project{
 					Name:             "",
 					Description:      "Description",
 					Role:             "Role",
@@ -251,8 +249,8 @@ func TestUpdateProject(t *testing.T) {
 			name:      "Failed because of invalid profileID or projectID",
 			profileID: "invalid",
 			projectID: "1",
-			input: dto.UpdateProjectRequest{
-				Project: dto.Project{
+			input: specs.UpdateProjectRequest{
+				Project: specs.Project{
 					Name:             "Valid Name",
 					Description:      "Valid Description",
 					Role:             "Valid Role",

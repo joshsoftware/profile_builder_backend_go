@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -84,9 +84,9 @@ func TestCreateExperienceHandler(t *testing.T) {
 	}
 }
 
-func TestGetExperienceHandler(t *testing.T) {
+func TestListExperienceHandler(t *testing.T) {
 	expSvc := mocks.NewService(t)
-	getExperienceHandler := handler.GetExperienceHandler(context.Background(), expSvc)
+	getExperienceHandler := handler.ListExperienceHandler(context.Background(), expSvc)
 
 	tests := []struct {
 		name               string
@@ -98,7 +98,7 @@ func TestGetExperienceHandler(t *testing.T) {
 			name:        "Success for getting experiences",
 			queryParams: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetExperience", mock.Anything, "1").Return([]dto.ExperienceResponse{
+				mockSvc.On("GetExperience", mock.Anything, "1").Return([]specs.ExperienceResponse{
 					{
 						ProfileID:   1,
 						Designation: "Software Engineer",
@@ -114,7 +114,7 @@ func TestGetExperienceHandler(t *testing.T) {
 			name:        "Fail as error in GetExperience",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetExperience", mock.Anything, "2").Return([]dto.ExperienceResponse{}, errors.New("error")).Once()
+				mockSvc.On("GetExperience", mock.Anything, "2").Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},

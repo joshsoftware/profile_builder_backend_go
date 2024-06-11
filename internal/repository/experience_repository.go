@@ -6,9 +6,9 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"go.uber.org/zap"
 )
 
@@ -20,7 +20,7 @@ type ExperienceStore struct {
 // ExperienceStorer defines methods to interact with user experience related data.
 type ExperienceStorer interface {
 	CreateExperience(ctx context.Context, values []ExperienceRepo) error
-	GetExperiences(ctx context.Context, profileID int) (values []dto.ExperienceResponse, err error)
+	GetExperiences(ctx context.Context, profileID int) (values []specs.ExperienceResponse, err error)
 	UpdateExperience(ctx context.Context, profileID int, eduID int, req UpdateExperienceRepo) (int, error)
 }
 
@@ -34,9 +34,8 @@ func NewExperienceRepo(db *pgx.Conn) ExperienceStorer {
 // CreateExperience inserts experience details into the database.
 func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []ExperienceRepo) error {
 
-	insertBuilder := sq.Insert("experiences").
-		Columns(constants.CreateExperienceColumns...).
-		PlaceholderFormat(sq.Dollar)
+	insertBuilder := psql.Insert("experiences").
+		Columns(constants.CreateExperienceColumns...)
 
 	for _, value := range values {
 		insertBuilder = insertBuilder.Values(
@@ -66,33 +65,33 @@ func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []
 }
 
 // GetExperiences returns a details experiences in the Database that are currently available for perticular ID
-func (expStore *ExperienceStore) GetExperiences(ctx context.Context, profileID int) (values []dto.ExperienceResponse, err error) {
-	sql, args, err := sq.Select(constants.ResponseExperiencesColumns...).From("experiences").
-		Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
+func (expStore *ExperienceStore) GetExperiences(ctx context.Context, profileID int) (values []specs.ExperienceResponse, err error) {
+	sql, args, err := psql.Select(constants.ResponseExperiencesColumns...).From("experiences").
+		Where(sq.Eq{"profile_id": profileID}).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating get experiences select query: ", err)
-		return []dto.ExperienceResponse{}, err
+		return []specs.ExperienceResponse{}, err
 	}
 
 	rows, err := expStore.db.Query(ctx, sql, args...)
 	if err != nil {
 		zap.S().Error("Error executing get experiences query: ", err)
-		return []dto.ExperienceResponse{}, err
+		return []specs.ExperienceResponse{}, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var value dto.ExperienceResponse
+		var value specs.ExperienceResponse
 		if err := rows.Scan(&value.ID, &value.ProfileID, &value.Designation, &value.CompanyName, &value.FromDate, &value.ToDate); err != nil {
 			zap.S().Error("Error scanning row: ", err)
-			return []dto.ExperienceResponse{}, err
+			return []specs.ExperienceResponse{}, err
 		}
 		values = append(values, value)
 	}
 
 	if len(values) == 0 {
 		zap.S().Info("No experience found for profileID: ", profileID)
-		return []dto.ExperienceResponse{}, errors.ErrNoRecordFound
+		return []specs.ExperienceResponse{}, errors.ErrNoRecordFound
 	}
 
 	return values, nil
@@ -100,10 +99,12 @@ func (expStore *ExperienceStore) GetExperiences(ctx context.Context, profileID i
 
 // UpdateExperience updates experience details into the database.
 func (expStore *ExperienceStore) UpdateExperience(ctx context.Context, profileID int, eduID int, req UpdateExperienceRepo) (int, error) {
-	updateQuery, args, err := sq.Update("experiences").Set("designation", req.Designation).
-		Set("company_name", req.CompanyName).Set("from_date", req.FromDate).
-		Set("to_date", req.ToDate).Set("updated_at", req.UpdatedAt).Set("updated_by_id", req.UpdatedByID).Where(sq.Eq{"profile_id": profileID, "id": eduID}).
-		PlaceholderFormat(sq.Dollar).ToSql()
+	updateQuery, args, err := psql.Update("experiences").
+		SetMap(map[string]interface{}{
+			"designation": req.Designation, "company_name": req.CompanyName,
+			"from_date": req.FromDate, "to_date": req.ToDate,
+			"updated_at": req.UpdatedAt, "updated_by_id": req.UpdatedByID,
+		}).Where(sq.Eq{"profile_id": profileID, "id": eduID}).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating experience update query: ", err)
 		return 0, err

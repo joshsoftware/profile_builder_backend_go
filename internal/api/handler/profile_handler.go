@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +35,7 @@ func CreateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusCreated, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusCreated, specs.MessageResponseWithID{
 			Message:   "Basic info added successfully",
 			ProfileID: profileID,
 		})
@@ -52,7 +52,7 @@ func ProfileListHandler(ctx context.Context, profileSvc service.Service) func(ht
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusOK, dto.ListProfilesResponse{
+		middleware.SuccessResponse(w, http.StatusOK, specs.ListProfilesResponse{
 			Profiles: values,
 		})
 	}
@@ -75,7 +75,7 @@ func SkillsListHandler(ctx context.Context, profileSvc service.Service) func(htt
 // GetProfileHandler returns an HTTP handler that fetches particular profile using profileSvc.
 func GetProfileHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, err := helpers.GetParams(r)
+		profileID, err := helpers.GetParamsByID(r, "profile_id")
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
@@ -89,7 +89,7 @@ func GetProfileHandler(ctx context.Context, profileSvc service.Service) func(htt
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusOK, dto.ProfileResponse{
+		middleware.SuccessResponse(w, http.StatusOK, specs.ProfileResponse{
 			Profile: value,
 		})
 	}
@@ -98,7 +98,7 @@ func GetProfileHandler(ctx context.Context, profileSvc service.Service) func(htt
 // UpdateProfileHandler returns an HTTP handler that updates profile using profileSvc.
 func UpdateProfileHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, err := helpers.GetParams(r)
+		profileID, err := helpers.GetParamsByID(r, "profile_id")
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
@@ -118,16 +118,16 @@ func UpdateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 			return
 		}
 
-		ID, err := profileSvc.UpdateProfile(ctx, profileID, req)
+		updatedResp, err := profileSvc.UpdateProfile(ctx, profileID, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to update profile : ", err, "for profile id : ", profileID)
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusOK, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponseWithID{
 			Message:   "Basic info updated successfully",
-			ProfileID: ID,
+			ProfileID: updatedResp,
 		})
 	}
 }

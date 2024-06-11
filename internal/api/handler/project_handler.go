@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"go.uber.org/zap"
 )
 
 // CreateProjectHandler handles HTTP requests to add project details to a user profile.
 func CreateProjectHandler(ctx context.Context, projectSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := helpers.GetParams(r)
+		id, err := helpers.GetParamsByID(r, "profile_id")
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
@@ -42,17 +42,17 @@ func CreateProjectHandler(ctx context.Context, projectSvc service.Service) func(
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusCreated, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusCreated, specs.MessageResponseWithID{
 			Message:   "Project(s) added successfully",
 			ProfileID: profileID,
 		})
 	}
 }
 
-// GetProjectHandler returns an HTTP handler that particular projects using profileSvc.
-func GetProjectHandler(ctx context.Context, projSvc service.Service) func(http.ResponseWriter, *http.Request) {
+// ListProjectHandler returns an HTTP handler that particular projects using profileSvc.
+func ListProjectHandler(ctx context.Context, projSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, err := helpers.GetParams(r)
+		profileID, err := helpers.GetParamsByID(r, "profile_id")
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
@@ -66,7 +66,7 @@ func GetProjectHandler(ctx context.Context, projSvc service.Service) func(http.R
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusOK, dto.ResponseProject{
+		middleware.SuccessResponse(w, http.StatusOK, specs.ResponseProject{
 			Projects: values,
 		})
 	}
@@ -96,16 +96,16 @@ func UpdateProjectHandler(ctx context.Context, projSvc service.Service) func(htt
 			return
 		}
 
-		value, err := projSvc.UpdateProject(ctx, profileID, eduID, req)
+		updatedResp, err := projSvc.UpdateProject(ctx, profileID, eduID, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to update project : ", err, "for profile id : ", profileID)
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusOK, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponseWithID{
 			Message:   "Project updated successfully",
-			ProfileID: value,
+			ProfileID: updatedResp,
 		})
 	}
 }

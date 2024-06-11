@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -93,9 +93,9 @@ func TestCreateProjectHandler(t *testing.T) {
 	}
 }
 
-func TestGetProjectHandler(t *testing.T) {
+func TestListProjectHandler(t *testing.T) {
 	projSvc := mocks.NewService(t)
-	getProjectHandler := handler.GetProjectHandler(context.Background(), projSvc)
+	getProjectHandler := handler.ListProjectHandler(context.Background(), projSvc)
 
 	tests := []struct {
 		name               string
@@ -107,7 +107,7 @@ func TestGetProjectHandler(t *testing.T) {
 			name:        "Success for getting projects",
 			queryParams: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProject", mock.Anything, "1").Return([]dto.ProjectResponse{
+				mockSvc.On("GetProject", mock.Anything, "1").Return([]specs.ProjectResponse{
 					{
 						ProfileID:        1,
 						Name:             "Project Alpha",
@@ -128,7 +128,7 @@ func TestGetProjectHandler(t *testing.T) {
 			name:        "Fail as error in GetProject",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProject", mock.Anything, "2").Return([]dto.ProjectResponse{}, errors.New("error")).Once()
+				mockSvc.On("GetProject", mock.Anything, "2").Return([]specs.ProjectResponse{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},

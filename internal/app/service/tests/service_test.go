@@ -6,24 +6,24 @@ import (
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-var mockListProfile = []dto.ListProfiles{
+var mockListProfile = []specs.ListProfiles{
 	{
 		ID:                1,
 		Name:              "Abhishek Dhondalkar",
 		Email:             "abhishek.dhondalkar@gmail.com",
 		YearsOfExperience: 1.0,
 		PrimarySkills:     []string{"Golang", "Python", "Java", "React"},
-		IsCurrentEmployee: "YES",
+		IsCurrentEmployee: 1,
 	},
 }
 
-var mockProfile = dto.Profile{
+var mockProfile = specs.Profile{
 	Name:              "Example User",
 	Email:             "example.user@gmail.com",
 	Gender:            "Male",
@@ -38,9 +38,9 @@ var mockProfile = dto.Profile{
 	LinkedinLink:      "https://www.linkedin.com/in/abhsihek",
 }
 
-var mockProfileID = "123"
+var mockProfileID = 123
 
-var mockResponseProfile = dto.ResponseProfile{
+var mockResponseProfile = specs.ResponseProfile{
 	ProfileID:         123,
 	Name:              "Example User",
 	Email:             "example.user@gmail.com",
@@ -53,10 +53,10 @@ var mockResponseProfile = dto.ResponseProfile{
 	PrimarySkills:     []string{"Golang", "Python"},
 	SecondarySkills:   []string{"JavaScript", "SQL"},
 	GithubLink:        "https://github.com/abhishek",
-	LinkedinLink:      "https://www.linkedin.com/in/abhsihek",
+	LinkedinLink:      "https://www.linkedin.com/in/abhishek",
 }
 
-var mockListSkills = dto.ListSkills{Name: []string{"GO", "RUBY", "C", "C++", "JAVA", "PYTHON", "JAVASCRIPT"}}
+var mockListSkills = specs.ListSkills{Name: []string{"GO", "RUBY", "C", "C++", "JAVA", "PYTHON", "JAVASCRIPT"}}
 
 func TestListProfile(t *testing.T) {
 	mockProfileRepo := new(mocks.ProfileStorer)
@@ -69,10 +69,10 @@ func TestListProfile(t *testing.T) {
 		name            string
 		setup           func(userMock *mocks.ProfileStorer)
 		isErrorExpected bool
-		wantResponse    []dto.ListProfiles
+		wantResponse    []specs.ListProfiles
 	}{
 		{
-			name: "Success get list of Profiles",
+			name: "Success_get_list_of_Profiles",
 			setup: func(userMock *mocks.ProfileStorer) {
 				userMock.On("ListProfiles", mock.Anything).Return(mockListProfile, nil).Once()
 			},
@@ -80,12 +80,12 @@ func TestListProfile(t *testing.T) {
 			wantResponse:    mockListProfile,
 		},
 		{
-			name: "Fail get list of Profiles",
+			name: "Fail_get_list_of_Profiles",
 			setup: func(userMock *mocks.ProfileStorer) {
-				userMock.On("ListProfiles", mock.Anything).Return([]dto.ListProfiles{}, errors.New("error")).Once()
+				userMock.On("ListProfiles", mock.Anything).Return([]specs.ListProfiles{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
-			wantResponse:    []dto.ListProfiles{},
+			wantResponse:    []specs.ListProfiles{},
 		},
 	}
 
@@ -116,10 +116,10 @@ func TestListSkills(t *testing.T) {
 		name            string
 		setup           func(userMock *mocks.ProfileStorer)
 		isErrorExpected bool
-		wantResponse    dto.ListSkills
+		wantResponse    specs.ListSkills
 	}{
 		{
-			name: "Success get list of Skills",
+			name: "Success_get_list_of_Skills",
 			setup: func(userMock *mocks.ProfileStorer) {
 				userMock.On("ListSkills", mock.Anything).Return(mockListSkills, nil).Once()
 			},
@@ -127,12 +127,12 @@ func TestListSkills(t *testing.T) {
 			wantResponse:    mockListSkills,
 		},
 		{
-			name: "Fail get list of Skills",
+			name: "Fail_get_list_of_Skills",
 			setup: func(userMock *mocks.ProfileStorer) {
-				userMock.On("ListSkills", mock.Anything).Return(dto.ListSkills{}, errors.New("error")).Once()
+				userMock.On("ListSkills", mock.Anything).Return(specs.ListSkills{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
-			wantResponse:    dto.ListSkills{},
+			wantResponse:    specs.ListSkills{},
 		},
 	}
 
@@ -161,13 +161,13 @@ func TestCreateProfile(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		input           dto.CreateProfileRequest
+		input           specs.CreateProfileRequest
 		setup           func(profileMock *mocks.ProfileStorer)
 		isErrorExpected bool
 	}{
 		{
-			name: "Success for user Detail",
-			input: dto.CreateProfileRequest{
+			name: "Success_for_user_Detail",
+			input: specs.CreateProfileRequest{
 				Profile: mockProfile,
 			},
 			setup: func(profileMock *mocks.ProfileStorer) {
@@ -176,8 +176,8 @@ func TestCreateProfile(t *testing.T) {
 			isErrorExpected: false,
 		},
 		{
-			name: "Failed to create profile",
-			input: dto.CreateProfileRequest{
+			name: "Failed_to_create_profile",
+			input: specs.CreateProfileRequest{
 				Profile: mockProfile,
 			},
 			setup: func(profileMock *mocks.ProfileStorer) {
@@ -210,13 +210,13 @@ func TestGetProfile(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		profileID       string
+		profileID       int
 		setup           func(profileMock *mocks.ProfileStorer)
 		isErrorExpected bool
-		wantResponse    dto.ResponseProfile
+		wantResponse    specs.ResponseProfile
 	}{
 		{
-			name:      "Success get profile",
+			name:      "Success_get_profile",
 			profileID: mockProfileID,
 			setup: func(profileMock *mocks.ProfileStorer) {
 				// Mock successful retrieval
@@ -226,14 +226,14 @@ func TestGetProfile(t *testing.T) {
 			wantResponse:    mockResponseProfile,
 		},
 		{
-			name:      "Fail get profile",
+			name:      "Fail_get_profile",
 			profileID: mockProfileID,
 			setup: func(profileMock *mocks.ProfileStorer) {
 				// Mock retrieval failure
-				profileMock.On("GetProfile", mock.Anything, mock.Anything).Return(dto.ResponseProfile{}, errors.New("error")).Once()
+				profileMock.On("GetProfile", mock.Anything, mock.Anything).Return(specs.ResponseProfile{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
-			wantResponse:    dto.ResponseProfile{},
+			wantResponse:    specs.ResponseProfile{},
 		},
 	}
 
@@ -264,16 +264,16 @@ func TestUpdateProfile(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		profileID       string
-		input           dto.UpdateProfileRequest
+		profileID       int
+		input           specs.UpdateProfileRequest
 		setup           func(profileMock *mocks.ProfileStorer)
 		isErrorExpected bool
 	}{
 		{
-			name:      "Success for updating profile details",
-			profileID: "1",
-			input: dto.UpdateProfileRequest{
-				Profile: dto.Profile{
+			name:      "Success_for_updating_profile_details",
+			profileID: 1,
+			input: specs.UpdateProfileRequest{
+				Profile: specs.Profile{
 					Name:              "Updated Name",
 					Email:             "updated.email@example.com",
 					Gender:            "Male",
@@ -294,10 +294,10 @@ func TestUpdateProfile(t *testing.T) {
 			isErrorExpected: false,
 		},
 		{
-			name:      "Failed because UpdateProfile returns an error",
-			profileID: "100000000000000000",
-			input: dto.UpdateProfileRequest{
-				Profile: dto.Profile{
+			name:      "Failed_because_UpdateProfile_returns_an_error",
+			profileID: 100000000000000000,
+			input: specs.UpdateProfileRequest{
+				Profile: specs.Profile{
 					Name:              "Name B",
 					Email:             "emailb@example.com",
 					Gender:            "Female",
@@ -318,10 +318,10 @@ func TestUpdateProfile(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name:      "Failed because of missing profile name",
-			profileID: "1",
-			input: dto.UpdateProfileRequest{
-				Profile: dto.Profile{
+			name:      "Failed_because_of_missing_profile_name",
+			profileID: 1,
+			input: specs.UpdateProfileRequest{
+				Profile: specs.Profile{
 					Name:              "",
 					Email:             "email@example.com",
 					Gender:            "Male",
@@ -339,28 +339,6 @@ func TestUpdateProfile(t *testing.T) {
 			setup: func(profileMock *mocks.ProfileStorer) {
 				profileMock.On("UpdateProfile", mock.Anything, 1, mock.AnythingOfType("repository.UpdateProfileRepo")).Return(0, errors.New("Missing profile name")).Once()
 			},
-			isErrorExpected: true,
-		},
-		{
-			name:      "Failed because of invalid profileID",
-			profileID: "invalid",
-			input: dto.UpdateProfileRequest{
-				Profile: dto.Profile{
-					Name:              "Valid Name",
-					Email:             "email@example.com",
-					Gender:            "Male",
-					Mobile:            "1234567890",
-					Designation:       "Designation",
-					Description:       "Description",
-					Title:             "Title",
-					YearsOfExperience: 3,
-					PrimarySkills:     []string{"Golang", "Python"},
-					SecondarySkills:   []string{"JavaScript", "SQL"},
-					GithubLink:        "https://github.com/user",
-					LinkedinLink:      "https://linkedin.com/in/user",
-				},
-			},
-			setup:           func(profileMock *mocks.ProfileStorer) {},
 			isErrorExpected: true,
 		},
 	}

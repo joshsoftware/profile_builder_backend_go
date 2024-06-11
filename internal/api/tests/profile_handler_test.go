@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -129,7 +129,7 @@ func TestCreateProfileHandler(t *testing.T) {
 	}
 }
 
-var mockListProfile = []dto.ListProfiles{
+var mockListProfile = []specs.ResponseListProfiles{
 	{
 		ID:                1,
 		Name:              "Example User",
@@ -139,6 +139,8 @@ var mockListProfile = []dto.ListProfiles{
 		IsCurrentEmployee: "YES",
 	},
 }
+
+var MockSkills = []string{"GO", "RUBY", "C", "C++", "JAVA", "PYTHON", "JAVASCRIPT"}
 
 func TestGetProfileListHandler(t *testing.T) {
 	profileSvc := mocks.NewService(t)
@@ -169,7 +171,7 @@ func TestGetProfileListHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(profileSvc)
 
-			req, err := http.NewRequest("GET", "/list_profiles", nil)
+			req, err := http.NewRequest("GET", "/profiles", nil)
 			if err != nil {
 				t.Fatal(err)
 				return
@@ -198,7 +200,7 @@ func TestSkillsListHandler(t *testing.T) {
 		{
 			name: "Success for listing skills",
 			setup: func(mockSvc *mocks.Service) {
-				mockListSkills := dto.ListSkills{Name: []string{"GO", "RUBY", "C", "C++", "JAVA", "PYTHON", "JAVASCRIPT"}}
+				mockListSkills := specs.ListSkills{Name: MockSkills}
 				mockSvc.On("ListSkills", mock.Anything).Return(mockListSkills, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
@@ -206,7 +208,7 @@ func TestSkillsListHandler(t *testing.T) {
 		{
 			name: "Fail as error in ListSkills",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListSkills", mock.Anything).Return(dto.ListSkills{}, errors.New("error")).Once()
+				mockSvc.On("ListSkills", mock.Anything).Return(specs.ListSkills{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -247,7 +249,7 @@ func TestGetProfileHandler(t *testing.T) {
 			name:      "Success for getting profile",
 			profileID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProfile", mock.Anything, "1").Return(dto.ResponseProfile{
+				mockSvc.On("GetProfile", mock.Anything, "1").Return(specs.ResponseProfile{
 					ProfileID:         1,
 					Name:              "Example User",
 					Email:             "example@example.com",
@@ -269,7 +271,7 @@ func TestGetProfileHandler(t *testing.T) {
 			name:      "Fail as error in GetProfile",
 			profileID: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProfile", mock.Anything, "2").Return(dto.ResponseProfile{}, errors.New("error")).Once()
+				mockSvc.On("GetProfile", mock.Anything, "2").Return(specs.ResponseProfile{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},

@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -99,9 +99,9 @@ func TestCreateEducationHandler(t *testing.T) {
 	}
 }
 
-func TestGetEducationHandler(t *testing.T) {
+func TestListEducationHandler(t *testing.T) {
 	eduSvc := mocks.NewService(t)
-	getEducationHandler := handler.GetEducationHandler(context.Background(), eduSvc)
+	getEducationHandler := handler.ListEducationHandler(context.Background(), eduSvc)
 
 	tests := []struct {
 		name               string
@@ -113,7 +113,7 @@ func TestGetEducationHandler(t *testing.T) {
 			name:        "Success for getting education",
 			queryParams: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetEducation", mock.Anything, "1").Return([]dto.EducationResponse{
+				mockSvc.On("GetEducation", mock.Anything, "1").Return([]specs.EducationResponse{
 					{
 						ProfileID:        1,
 						Degree:           "BSc Computer Science",
@@ -130,7 +130,7 @@ func TestGetEducationHandler(t *testing.T) {
 			name:        "Fail as error in GetEducation",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetEducation", mock.Anything, "2").Return([]dto.EducationResponse{}, errors.New("error")).Once()
+				mockSvc.On("GetEducation", mock.Anything, "2").Return([]specs.EducationResponse{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},

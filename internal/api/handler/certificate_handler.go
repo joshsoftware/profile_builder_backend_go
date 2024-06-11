@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"go.uber.org/zap"
 )
 
 // CreateCertificateHandler handles HTTP requests to add certificates details to a user profile.
 func CreateCertificateHandler(ctx context.Context, certificateSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := helpers.GetParams(r)
+		id, err := helpers.GetParamsByID(r, "profile_id")
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
@@ -42,7 +42,7 @@ func CreateCertificateHandler(ctx context.Context, certificateSvc service.Servic
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusOK, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponseWithID{
 			Message:   "Certificate(s) added successfully",
 			ProfileID: profileID,
 		})
@@ -73,16 +73,16 @@ func UpdateCertificateHandler(ctx context.Context, certificateSvc service.Servic
 			return
 		}
 
-		value, err := certificateSvc.UpdateCertificate(ctx, profileID, eduID, req)
+		updatedResp, err := certificateSvc.UpdateCertificate(ctx, profileID, eduID, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to update certificate : ", err, "for profile id : ", profileID)
 			return
 		}
 
-		middleware.SuccessResponse(w, http.StatusOK, dto.MessageResponseWithID{
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponseWithID{
 			Message:   "Certificate updated successfully",
-			ProfileID: value,
+			ProfileID: updatedResp,
 		})
 	}
 }

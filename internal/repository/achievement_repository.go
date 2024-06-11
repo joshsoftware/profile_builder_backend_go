@@ -32,9 +32,8 @@ type AchievementStorer interface {
 // CreateAchievement inserts achievements details into the database.
 func (achStore *AchievementStore) CreateAchievement(ctx context.Context, values []AchievementRepo) error {
 
-	insertBuilder := sq.Insert("achievements").
-		Columns(constants.CreateAchievementColumns...).
-		PlaceholderFormat(sq.Dollar)
+	insertBuilder := psql.Insert("achievements").
+		Columns(constants.CreateAchievementColumns...)
 
 	for _, value := range values {
 		insertBuilder = insertBuilder.Values(
@@ -65,7 +64,11 @@ func (achStore *AchievementStore) CreateAchievement(ctx context.Context, values 
 
 // UpdateAchievement updates achievements details into the database.
 func (achStore *AchievementStore) UpdateAchievement(ctx context.Context, profileID int, achID int, req UpdateAchievementRepo) (int, error) {
-	updateQuery, args, err := sq.Update("achievements").Set("name", req.Name).Set("description", req.Description).Set("updated_at", req.UpdatedAt).Set("updated_by_id", req.UpdatedByID).Where(sq.Eq{"profile_id": profileID, "id": achID}).PlaceholderFormat(sq.Dollar).ToSql()
+	updateQuery, args, err := psql.Update("achievements").
+		SetMap(map[string]interface{}{
+			"name": req.Name, "description": req.Description,
+			"updated_at": req.UpdatedAt, "updated_by_id": req.UpdatedByID,
+		}).Where(sq.Eq{"profile_id": profileID, "id": achID}).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating achievement update query: ", err)
 		return 0, err

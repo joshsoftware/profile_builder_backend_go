@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-var mockResponseExperience = []dto.ExperienceResponse{
+var mockResponseExperience = []specs.ExperienceResponse{
 	{
 		ProfileID:   123,
 		Designation: "Software Engineer",
@@ -31,14 +31,14 @@ func TestCreateExperience(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		input           dto.CreateExperienceRequest
+		input           specs.CreateExperienceRequest
 		setup           func(experienceMock *mocks.ExperienceStorer)
 		isErrorExpected bool
 	}{
 		{
 			name: "Success for experience details",
-			input: dto.CreateExperienceRequest{
-				Experiences: []dto.Experience{
+			input: specs.CreateExperienceRequest{
+				Experiences: []specs.Experience{
 					{
 						Designation: "Software Engineer",
 						CompanyName: "Josh Software Pvt.Ltd.",
@@ -54,8 +54,8 @@ func TestCreateExperience(t *testing.T) {
 		},
 		{
 			name: "Failed because CreateExperience returns an error",
-			input: dto.CreateExperienceRequest{
-				Experiences: []dto.Experience{
+			input: specs.CreateExperienceRequest{
+				Experiences: []specs.Experience{
 					{
 						Designation: "Software Engineer",
 						CompanyName: "Tech Corp",
@@ -71,8 +71,8 @@ func TestCreateExperience(t *testing.T) {
 		},
 		{
 			name: "Failed because of missing designation",
-			input: dto.CreateExperienceRequest{
-				Experiences: []dto.Experience{
+			input: specs.CreateExperienceRequest{
+				Experiences: []specs.Experience{
 					{
 						Designation: "",
 						CompanyName: "Tech Corp",
@@ -88,8 +88,8 @@ func TestCreateExperience(t *testing.T) {
 		},
 		{
 			name: "Failed because of empty payload",
-			input: dto.CreateExperienceRequest{
-				Experiences: []dto.Experience{},
+			input: specs.CreateExperienceRequest{
+				Experiences: []specs.Experience{},
 			},
 			setup:           func(experienceMock *mocks.ExperienceStorer) {},
 			isErrorExpected: true,
@@ -101,7 +101,7 @@ func TestCreateExperience(t *testing.T) {
 			test.setup(mockExperienceRepo)
 
 			// Test the service
-			_, err := experienceService.CreateExperience(context.TODO(), test.input, "1")
+			_, err := experienceService.CreateExperience(context.TODO(), test.input, 1)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
@@ -120,10 +120,10 @@ func TestGetExperience(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		profileID       string
+		profileID       int
 		setup           func(expMock *mocks.ExperienceStorer)
 		isErrorExpected bool
-		wantResponse    []dto.ExperienceResponse
+		wantResponse    []specs.ExperienceResponse
 	}{
 		{
 			name:      "Success get experience",
@@ -140,10 +140,10 @@ func TestGetExperience(t *testing.T) {
 			profileID: mockProfileID,
 			setup: func(expMock *mocks.ExperienceStorer) {
 				// Mock retrieval failure
-				expMock.On("GetExperiences", mock.Anything, mock.Anything).Return([]dto.ExperienceResponse{}, errors.New("error")).Once()
+				expMock.On("GetExperiences", mock.Anything, mock.Anything).Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
-			wantResponse:    []dto.ExperienceResponse{},
+			wantResponse:    []specs.ExperienceResponse{},
 		},
 	}
 
@@ -176,7 +176,7 @@ func TestUpdateExperience(t *testing.T) {
 		name            string
 		profileID       string
 		experienceID    string
-		input           dto.UpdateExperienceRequest
+		input           specs.UpdateExperienceRequest
 		setup           func(experienceMock *mocks.ExperienceStorer)
 		isErrorExpected bool
 	}{
@@ -184,8 +184,8 @@ func TestUpdateExperience(t *testing.T) {
 			name:         "Success for updating experience details",
 			profileID:    "1",
 			experienceID: "1",
-			input: dto.UpdateExperienceRequest{
-				Experience: dto.Experience{
+			input: specs.UpdateExperienceRequest{
+				Experience: specs.Experience{
 					Designation: "Updated Designation",
 					CompanyName: "Updated Company",
 					FromDate:    "2022-01-01",
@@ -201,8 +201,8 @@ func TestUpdateExperience(t *testing.T) {
 			name:         "Failed because UpdateExperience returns an error",
 			profileID:    "100000000000000000",
 			experienceID: "1",
-			input: dto.UpdateExperienceRequest{
-				Experience: dto.Experience{
+			input: specs.UpdateExperienceRequest{
+				Experience: specs.Experience{
 					Designation: "Designation B",
 					CompanyName: "Company B",
 					FromDate:    "2022-01-01",
@@ -218,8 +218,8 @@ func TestUpdateExperience(t *testing.T) {
 			name:         "Failed because of missing experience designation",
 			profileID:    "1",
 			experienceID: "1",
-			input: dto.UpdateExperienceRequest{
-				Experience: dto.Experience{
+			input: specs.UpdateExperienceRequest{
+				Experience: specs.Experience{
 					Designation: "",
 					CompanyName: "Company",
 					FromDate:    "2022-01-01",
@@ -235,8 +235,8 @@ func TestUpdateExperience(t *testing.T) {
 			name:         "Failed because of invalid profileID or experienceID",
 			profileID:    "invalid",
 			experienceID: "1",
-			input: dto.UpdateExperienceRequest{
-				Experience: dto.Experience{
+			input: specs.UpdateExperienceRequest{
+				Experience: specs.Experience{
 					Designation: "Valid Designation",
 					CompanyName: "Valid Company",
 					FromDate:    "2022-01-01",

@@ -32,9 +32,8 @@ func NewCertificateRepo(db *pgx.Conn) CertificateStorer {
 // CreateCertificate inserts certificate details into the database.
 func (certificateStore *CertificateStore) CreateCertificate(ctx context.Context, values []CertificateRepo) error {
 
-	insertBuilder := sq.Insert("certificates").
-		Columns(constants.CreateCertificateColumns...).
-		PlaceholderFormat(sq.Dollar)
+	insertBuilder := psql.Insert("certificates").
+		Columns(constants.CreateCertificateColumns...)
 
 	for _, value := range values {
 		insertBuilder = insertBuilder.Values(
@@ -66,8 +65,13 @@ func (certificateStore *CertificateStore) CreateCertificate(ctx context.Context,
 
 // UpdateCertificate updates certificates details into the database.
 func (certificateStore *CertificateStore) UpdateCertificate(ctx context.Context, profileID int, eduID int, req UpdateCertificateRepo) (int, error) {
-	updateQuery, args, err := sq.Update("certificates").Set("name", req.Name).Set("organization_name", req.OrganizationName).Set("description", req.Description).Set("issued_date", req.IssuedDate).
-		Set("from_date", req.FromDate).Set("to_date", req.ToDate).Set("updated_at", req.UpdatedAt).Set("updated_by_id", req.UpdatedByID).Where(sq.Eq{"profile_id": profileID, "id": eduID}).PlaceholderFormat(sq.Dollar).ToSql()
+	updateQuery, args, err := psql.Update("certificates").
+		SetMap(map[string]interface{}{
+			"name": req.Name, "organization_name": req.OrganizationName,
+			"description": req.Description, "issued_date": req.IssuedDate,
+			"from_date": req.FromDate, "to_date": req.ToDate,
+			"updated_at": req.UpdatedAt, "updated_by_id": req.UpdatedByID,
+		}).Where(sq.Eq{"profile_id": profileID, "id": eduID}).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating certificates update query: ", err)
 		return 0, err

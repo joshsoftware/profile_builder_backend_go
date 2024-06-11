@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
 )
@@ -21,11 +21,11 @@ type service struct {
 
 // Service interface provides methods to interact with user profiles.
 type Service interface {
-	CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) (int, error)
-	ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error)
-	ListSkills(ctx context.Context) (values dto.ListSkills, err error)
-	GetProfile(ctx context.Context, profileID string) (value dto.ResponseProfile, err error)
-	UpdateProfile(ctx context.Context, profileID string, profileDetail dto.UpdateProfileRequest) (ID int, err error)
+	CreateProfile(ctx context.Context, profileDetail specs.CreateProfileRequest) (int, error)
+	ListProfiles(ctx context.Context) (values []specs.ResponseListProfiles, err error)
+	ListSkills(ctx context.Context) (values specs.ListSkills, err error)
+	GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error)
+	UpdateProfile(ctx context.Context, id int, profileDetail specs.UpdateProfileRequest) (ID int, err error)
 
 	EducationService
 	ProjectService
@@ -60,7 +60,7 @@ func NewServices(rp RepoDeps) Service {
 var today = helpers.GetTodaysDate()
 
 // CreateProfile : Service layer function creates a new user profile using the provided details.
-func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail dto.CreateProfileRequest) (int, error) {
+func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail specs.CreateProfileRequest) (int, error) {
 	var profileRepo repository.ProfileRepo
 	profileRepo.Name = profileDetail.Profile.Name
 	profileRepo.Email = profileDetail.Profile.Email
@@ -84,52 +84,61 @@ func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail dto.
 		zap.S().Error("Unable to create profile : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
+	zap.S().Info("profile created with profile id : ", profileID)
+
 	return profileID, nil
 }
 
 // ListProfiles in the service layer retrieves a list of user profiles.
-func (profileSvc *service) ListProfiles(ctx context.Context) (values []dto.ListProfiles, err error) {
-	values, err = profileSvc.ProfileRepo.ListProfiles(ctx)
+func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.ResponseListProfiles, err error) {
+	profiles, err := profileSvc.ProfileRepo.ListProfiles(ctx)
 	if err != nil {
 		zap.S().Error("Unable to list profile : ", err)
-		return []dto.ListProfiles{}, err
+		return []specs.ResponseListProfiles{}, err
 	}
+
+	for _, profile := range profiles {
+		isCurrentEmployee := "No"
+		if profile.IsCurrentEmployee == 1 {
+			isCurrentEmployee = "YES"
+		}
+
+		values = append(values, specs.ResponseListProfiles{
+			ID:                profile.ID,
+			Name:              profile.Name,
+			Email:             profile.Email,
+			YearsOfExperience: profile.YearsOfExperience,
+			PrimarySkills:     profile.PrimarySkills,
+			IsCurrentEmployee: isCurrentEmployee,
+		})
+	}
+
 	return values, nil
 }
 
 // ListSkills in the service layer retrieves a list of skills.
-func (profileSvc *service) ListSkills(ctx context.Context) (values dto.ListSkills, err error) {
+func (profileSvc *service) ListSkills(ctx context.Context) (values specs.ListSkills, err error) {
 	values, err = profileSvc.ProfileRepo.ListSkills(ctx)
 	if err != nil {
 		zap.S().Error("Unable to list skills : ", err)
-		return dto.ListSkills{}, err
+		return specs.ListSkills{}, err
 	}
 	return values, nil
 }
 
 // GetProfile in the service layer retrieves a list of user profiles.
-func (profileSvc *service) GetProfile(ctx context.Context, profileID string) (value dto.ResponseProfile, err error) {
-	id, err := helpers.ConvertStringToInt(profileID)
-	if err != nil {
-		zap.S().Error("Unable to get profile params : ", err, " for profile id : ", profileID)
-		return dto.ResponseProfile{}, err
-	}
+func (profileSvc *service) GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error) {
 
 	value, err = profileSvc.ProfileRepo.GetProfile(ctx, id)
 	if err != nil {
-		zap.S().Error("Unable to get profile : ", err, " for profile id : ", profileID)
-		return dto.ResponseProfile{}, err
+		zap.S().Error("Unable to get profile : ", err, " for profile id : ", id)
+		return specs.ResponseProfile{}, err
 	}
 	return value, nil
 }
 
 // UpdateProfile in the service layer updates user profile.
-func (profileSvc *service) UpdateProfile(ctx context.Context, profileID string, profileDetail dto.UpdateProfileRequest) (ID int, err error) {
-	id, err := helpers.ConvertStringToInt(profileID)
-	if err != nil {
-		zap.S().Error("error to get profile params : ", err, " for profile id : ", profileID)
-		return 0, err
-	}
+func (profileSvc *service) UpdateProfile(ctx context.Context, id int, profileDetail specs.UpdateProfileRequest) (ID int, err error) {
 
 	var profileRepo repository.UpdateProfileRepo
 	profileRepo.Name = profileDetail.Profile.Name
@@ -149,8 +158,10 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID string, 
 
 	ID, err = profileSvc.ProfileRepo.UpdateProfile(ctx, id, profileRepo)
 	if err != nil {
-		zap.S().Error("Unable to update profile : ", err, " for profile id : ", profileID)
+		zap.S().Error("Unable to update profile : ", err, " for profile id : ", id)
 		return 0, err
 	}
+	zap.S().Info("profile update with profile id : ", ID)
+
 	return ID, nil
 }

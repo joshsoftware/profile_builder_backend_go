@@ -58,14 +58,19 @@ func MultipleConvertStringToInt(profileID string, id string) (int, int, error) {
 	return profileIDInt, idInt, nil
 }
 
-// GetParams returns the profileID which is coming from the query parameters
-func GetParams(r *http.Request) (ID string, err error) {
+// GetParamsByID returns the url params which is coming from the query parameters
+func GetParamsByID(r *http.Request, id string) (ID int, err error) {
 	vars := mux.Vars(r)
-	profileID, ok := vars["profile_id"]
+	id, ok := vars[id]
 	if !ok {
-		return "", errors.ErrInvalidRequestData
+		return 0, errors.ErrInvalidRequestData
 	}
-	return profileID, nil
+
+	ID, err = strconv.Atoi(id)
+	if err != nil {
+		return 0, errors.ErrInvalidRequestData
+	}
+	return ID, nil
 }
 
 // GetMultipleParams returns the multiple IDs which is coming from the query parameters
