@@ -35,6 +35,7 @@ func (eduSvc *service) CreateEducation(ctx context.Context, eduDetail specs.Crea
 		val.PassingYear = eduDetail.Educations[i].PassingYear
 		val.CreatedAt = today
 		val.UpdatedAt = today
+		//TODO by context
 		val.CreatedByID = 1
 		val.UpdatedByID = 1
 
@@ -77,6 +78,7 @@ func (eduSvc *service) UpdateEducation(ctx context.Context, profileID string, ed
 	value.PercentageOrCgpa = req.Education.PercentageOrCgpa
 	value.PassingYear = req.Education.PassingYear
 	value.UpdatedAt = today
+	//TODO by context
 	value.UpdatedByID = 1
 
 	id, err = eduSvc.EducationRepo.UpdateEducation(ctx, pid, id, value)

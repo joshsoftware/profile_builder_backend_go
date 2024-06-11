@@ -35,6 +35,7 @@ func (expSvc *service) CreateExperience(ctx context.Context, expDetail specs.Cre
 		val.ToDate = expDetail.Experiences[i].ToDate
 		val.CreatedAt = today
 		val.UpdatedAt = today
+		//TODO by context
 		val.CreatedByID = 1
 		val.UpdatedByID = 1
 
@@ -76,6 +77,7 @@ func (expSvc *service) UpdateExperience(ctx context.Context, profileID string, e
 	value.FromDate = req.Experience.FromDate
 	value.ToDate = req.Experience.ToDate
 	value.UpdatedAt = today
+	//TODO by context
 	value.UpdatedByID = 1
 
 	id, err = expSvc.ExperienceRepo.UpdateExperience(ctx, pid, id, value)

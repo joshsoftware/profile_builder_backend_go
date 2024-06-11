@@ -38,6 +38,7 @@ func (projSvc *service) CreateProject(ctx context.Context, projDetail specs.Crea
 		val.Duration = projDetail.Projects[i].Duration
 		val.CreatedAt = today
 		val.UpdatedAt = today
+		//TODO by context
 		val.CreatedByID = 1
 		val.UpdatedByID = 1
 
@@ -83,6 +84,7 @@ func (projSvc *service) UpdateProject(ctx context.Context, profileID string, edu
 	value.WorkingEndDate = req.Project.WorkingEndDate
 	value.Duration = req.Project.Duration
 	value.UpdatedAt = today
+	//TODO by context
 	value.UpdatedByID = 1
 
 	id, err = projSvc.ProjectRepo.UpdateProject(ctx, pid, id, value)

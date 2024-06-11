@@ -32,6 +32,7 @@ func (achSvc *service) CreateAchievement(ctx context.Context, cDetail specs.Crea
 		val.Description = cDetail.Achievements[i].Description
 		val.CreatedAt = today
 		val.UpdatedAt = today
+		//TODO by context
 		val.CreatedByID = 1
 		val.UpdatedByID = 1
 
@@ -60,6 +61,7 @@ func (achSvc *service) UpdateAchievement(ctx context.Context, profileID string, 
 	value.Name = req.Achievement.Name
 	value.Description = req.Achievement.Description
 	value.UpdatedAt = today
+	//TODO by context
 	value.UpdatedByID = 1
 
 	id, err = achSvc.AchievementRepo.UpdateAchievement(ctx, pid, id, value)

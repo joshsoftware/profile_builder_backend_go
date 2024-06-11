@@ -36,6 +36,7 @@ func (certificateSvc *service) CreateCertificate(ctx context.Context, cDetail sp
 		val.ToDate = cDetail.Certificates[i].ToDate
 		val.CreatedAt = today
 		val.UpdatedAt = today
+		//TODO by context
 		val.CreatedByID = 1
 		val.UpdatedByID = 1
 
@@ -68,6 +69,7 @@ func (certificateSvc *service) UpdateCertificate(ctx context.Context, profileID 
 	value.FromDate = req.Certificate.FromDate
 	value.ToDate = req.Certificate.ToDate
 	value.UpdatedAt = today
+	//TODO by context
 	value.UpdatedByID = 1
 
 	id, err = certificateSvc.CertificateRepo.UpdateCertificate(ctx, pid, id, value)
