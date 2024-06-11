@@ -6,6 +6,11 @@ import (
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+type ListAchievementFilter struct {
+	AchievementID []int    `json:"achievement_id"`
+	Name          []string `json:"name"`
+}
+
 // CreateAchievementRequest struct represents a request to create achievements details.
 type CreateAchievementRequest struct {
 	ProfileID    int           `json:"profile_id"`
