@@ -24,6 +24,7 @@ type Achievement struct {
 }
 
 type AchievementResponse struct {
+	ID          int    `json:"id"`
 	ProfileID   int    `json:"profile_id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
