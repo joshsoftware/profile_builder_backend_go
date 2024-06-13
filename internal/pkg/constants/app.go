@@ -86,7 +86,7 @@ var ResponseExperiencesColumns = []string{
 
 // ResponseAchievementsColumns defines the columns required for returning a specific user achievements.
 var ResponseAchievementsColumns = []string{
-	"profile_id", "name", "description",
+	"id", "profile_id", "name", "description",
 }
 
 // ResponseCertificatesColumns defines the columns required for returning a specific user certificates.
