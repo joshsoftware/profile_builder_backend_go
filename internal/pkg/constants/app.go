@@ -91,5 +91,5 @@ var ResponseAchievementsColumns = []string{
 
 // ResponseCertificatesColumns defines the columns required for returning a specific user certificates.
 var ResponseCertificatesColumns = []string{
-	"profile_id", "name", "organization_name", "description", "issued_date", "from_date", "to_date",
+	"id", "profile_id", "name", "organization_name", "description", "issued_date", "from_date", "to_date",
 }
