@@ -80,7 +80,7 @@ func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileI
 
 	for rows.Next() {
 		var val dto.AchievementResponse
-		err = rows.Scan(&val.ProfileID, &val.Name, &val.Description)
+		err = rows.Scan(&val.ID, &val.ProfileID, &val.Name, &val.Description)
 		if err != nil {
 			zap.S().Error("Error scanning achievements rows: ", err)
 			return []dto.AchievementResponse{}, err
