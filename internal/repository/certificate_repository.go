@@ -82,7 +82,7 @@ func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, 
 
 	for rows.Next() {
 		var val dto.CertificateResponse
-		err = rows.Scan(&val.ProfileID, &val.Name, &val.OrganizationName, &val.Description, &val.IssuedDate, &val.FromDate, &val.ToDate)
+		err = rows.Scan(&val.ID, &val.ProfileID, &val.Name, &val.OrganizationName, &val.Description, &val.IssuedDate, &val.FromDate, &val.ToDate)
 		if err != nil {
 			zap.S().Error("Error scanning certificates rows: ", err)
 			return []dto.CertificateResponse{}, err
