@@ -24,6 +24,7 @@ type Certificate struct {
 
 // CertificateResponse struct represents details of an certificates for specific id.
 type CertificateResponse struct {
+	ID               int    `json:"id"`
 	ProfileID        int    `json:"profile_id"`
 	Name             string `json:"name"`
 	OrganizationName string `json:"organization_name"`
