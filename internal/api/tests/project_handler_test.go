@@ -41,7 +41,7 @@ func TestCreateProjectHandler(t *testing.T) {
 				}]
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateProject", mock.Anything, mock.AnythingOfType("dto.CreateProjectRequest"), "1").Return(1, nil).Once()
+				mockSvc.On("CreateProject", mock.Anything, mock.AnythingOfType("specs.CreateProjectRequest"), 1).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
 		},
@@ -104,10 +104,10 @@ func TestListProjectHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name:        "Success for getting projects",
+			name:        "Success_for_getting_projects",
 			queryParams: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProject", mock.Anything, "1").Return([]specs.ProjectResponse{
+				mockSvc.On("GetProject", mock.Anything, 1).Return([]specs.ProjectResponse{
 					{
 						ProfileID:        1,
 						Name:             "Project Alpha",
@@ -128,7 +128,7 @@ func TestListProjectHandler(t *testing.T) {
 			name:        "Fail as error in GetProject",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProject", mock.Anything, "2").Return([]specs.ProjectResponse{}, errors.New("error")).Once()
+				mockSvc.On("GetProject", mock.Anything, 2).Return([]specs.ProjectResponse{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -184,7 +184,7 @@ func TestUpdateProjectHandler(t *testing.T) {
 				}
 				`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateProject", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateProjectRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateProject", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateProjectRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -225,7 +225,7 @@ func TestUpdateProjectHandler(t *testing.T) {
 		// 		}
 		// 	}`,
 		// 	setup: func(mockSvc *mocks.Service) {
-		// 		mockSvc.On("UpdateProject", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateProjectRequest")).Return(0, errors.New("Service Error")).Once()
+		// 		mockSvc.On("UpdateProject", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateProjectRequest")).Return(0, errors.New("Service Error")).Once()
 		// 	},
 		// 	expectedStatusCode: http.StatusBadGateway,
 		// },

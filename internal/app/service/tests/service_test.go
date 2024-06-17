@@ -12,17 +12,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var mockListProfile = []specs.ListProfiles{
-	{
-		ID:                1,
-		Name:              "Abhishek Dhondalkar",
-		Email:             "abhishek.dhondalkar@gmail.com",
-		YearsOfExperience: 1.0,
-		PrimarySkills:     []string{"Golang", "Python", "Java", "React"},
-		IsCurrentEmployee: 1,
-	},
-}
-
 var mockProfile = specs.Profile{
 	Name:              "Example User",
 	Email:             "example.user@gmail.com",
@@ -65,11 +54,22 @@ func TestListProfile(t *testing.T) {
 	}
 	profileService := service.NewServices(repodeps)
 
+	mockListProfile := []specs.ResponseListProfiles{
+		{
+			ID:                1,
+			Name:              "Example profile",
+			Email:             "example.profile@gmail.com",
+			YearsOfExperience: 1.0,
+			PrimarySkills:     []string{"Golang", "Python", "Java", "React"},
+			IsCurrentEmployee: "YES",
+		},
+	}
+
 	tests := []struct {
 		name            string
 		setup           func(userMock *mocks.ProfileStorer)
 		isErrorExpected bool
-		wantResponse    []specs.ListProfiles
+		wantResponse    []specs.ResponseListProfiles
 	}{
 		{
 			name: "Success_get_list_of_Profiles",
@@ -82,10 +82,10 @@ func TestListProfile(t *testing.T) {
 		{
 			name: "Fail_get_list_of_Profiles",
 			setup: func(userMock *mocks.ProfileStorer) {
-				userMock.On("ListProfiles", mock.Anything).Return([]specs.ListProfiles{}, errors.New("error")).Once()
+				userMock.On("ListProfiles", mock.Anything).Return(nil, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
-			wantResponse:    []specs.ListProfiles{},
+			wantResponse:    nil,
 		},
 	}
 
@@ -104,6 +104,7 @@ func TestListProfile(t *testing.T) {
 		})
 	}
 }
+
 
 func TestListSkills(t *testing.T) {
 	mockProfileRepo := new(mocks.ProfileStorer)

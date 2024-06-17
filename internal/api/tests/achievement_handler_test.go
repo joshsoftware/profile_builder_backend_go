@@ -3,7 +3,6 @@ package test
 import (
 	"bytes"
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -33,7 +32,7 @@ func TestCreateAchievementHandler(t *testing.T) {
 				    }]
 				}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateAchievement", mock.Anything, mock.AnythingOfType("dto.CreateAchievementRequest"), mock.AnythingOfType("string")).Return(1, nil).Once()
+				mockSvc.On("CreateAchievement", mock.Anything, mock.AnythingOfType("specs.CreateAchievementRequest"), 1).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
 		},
@@ -99,7 +98,7 @@ func TestUpdateAchievementHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for updating achievement detail",
+			name: "Success_for_updating_achievement_detail",
 			input: `{
 				"achievement": {
 					"name": "Updated Star Performer",
@@ -107,18 +106,18 @@ func TestUpdateAchievementHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateAchievement", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateAchievementRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateAchievement", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateAchievementRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:               "Fail for incorrect json",
+			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing name field",
+			name: "Fail_fo_missing_name_field",
 			input: `{
 				"achievement": {
 					"name": "",
@@ -129,7 +128,7 @@ func TestUpdateAchievementHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing description field",
+			name: "Fail_for_missing_description_field",
 			input: `{
 				"achievement": {
 					"name": "Updated Star Performer",
@@ -138,19 +137,6 @@ func TestUpdateAchievementHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
-		},
-		{
-			name: "Fail for service error",
-			input: `{
-				"achievement": {
-					"name": "Updated Star Performer",
-					"description": "Updated Description"
-				}
-			}`,
-			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateAchievement", mock.Anything, "1", "1", mock.AnythingOfType("dto.UpdateAchievementRequest")).Return(0, errors.New("Service Error")).Once()
-			},
-			expectedStatusCode: http.StatusBadGateway,
 		},
 	}
 

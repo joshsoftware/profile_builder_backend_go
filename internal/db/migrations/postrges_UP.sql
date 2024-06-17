@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     secondary_skills TEXT[],
     github_link VARCHAR(100),
     linkedin_link VARCHAR(100),
+    career_objectives TEXT,
     is_active INT NOT NULL,
     is_current_employee INT NOT NULL,
     created_at DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -32,8 +33,6 @@ CREATE TABLE IF NOT EXISTS profiles (
     created_by_id INT NOT NULL,
     updated_by_id INT NOT NULL
 );
-
-`
 
 CREATE TABLE IF NOT EXISTS educations (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

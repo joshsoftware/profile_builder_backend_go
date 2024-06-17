@@ -37,7 +37,7 @@ func TestCreateExperienceHandler(t *testing.T) {
 				}]
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateExperience", mock.Anything, mock.AnythingOfType("dto.CreateExperienceRequest"), mock.AnythingOfType("string")).Return(1, nil).Once()
+				mockSvc.On("CreateExperience", mock.Anything, mock.AnythingOfType("specs.CreateExperienceRequest"), 1).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
 		},
@@ -98,7 +98,7 @@ func TestListExperienceHandler(t *testing.T) {
 			name:        "Success for getting experiences",
 			queryParams: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetExperience", mock.Anything, "1").Return([]specs.ExperienceResponse{
+				mockSvc.On("GetExperience", mock.Anything, 1).Return([]specs.ExperienceResponse{
 					{
 						ProfileID:   1,
 						Designation: "Software Engineer",
@@ -114,7 +114,7 @@ func TestListExperienceHandler(t *testing.T) {
 			name:        "Fail as error in GetExperience",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetExperience", mock.Anything, "2").Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
+				mockSvc.On("GetExperience", mock.Anything, 2).Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -164,7 +164,7 @@ func TestUpdateExperienceHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateExperience", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateExperienceRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateExperience", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateExperienceRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -211,7 +211,7 @@ func TestUpdateExperienceHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateExperience", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateExperienceRequest")).Return(0, errors.New("Service Error")).Once()
+				mockSvc.On("UpdateExperience", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateExperienceRequest")).Return(0, errors.New("Service Error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},

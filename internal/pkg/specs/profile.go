@@ -33,6 +33,7 @@ type Profile struct {
 	SecondarySkills   []string `json:"secondary_skills"`
 	GithubLink        string   `json:"github_link"`
 	LinkedinLink      string   `json:"linkedin_link"`
+	CareerObjectives	string `json:"career_objectives"`
 }
 
 // ListProfiles struct represents details of user profiles for listing.
@@ -130,6 +131,9 @@ func (req *CreateProfileRequest) Validate() error {
 
 	if len(req.Profile.SecondarySkills) == 0 {
 		return fmt.Errorf("%s : secondary skills ", errors.ErrParameterMissing.Error())
+	}
+	if req.Profile.CareerObjectives == "" {
+		return fmt.Errorf("%s : career objectives ", errors.ErrParameterMissing.Error())
 	}
 
 	return nil

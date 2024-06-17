@@ -37,7 +37,7 @@ func TestCreateEducationHandler(t *testing.T) {
 				}]
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateEducation", mock.Anything, mock.AnythingOfType("dto.CreateEducationRequest"), mock.AnythingOfType("string")).Return(1, nil).Once()
+				mockSvc.On("CreateEducation", mock.Anything, mock.AnythingOfType("specs.CreateEducationRequest"), 1).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
 		},
@@ -113,7 +113,7 @@ func TestListEducationHandler(t *testing.T) {
 			name:        "Success for getting education",
 			queryParams: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetEducation", mock.Anything, "1").Return([]specs.EducationResponse{
+				mockSvc.On("GetEducation", mock.Anything, 1).Return([]specs.EducationResponse{
 					{
 						ProfileID:        1,
 						Degree:           "BSc Computer Science",
@@ -130,7 +130,7 @@ func TestListEducationHandler(t *testing.T) {
 			name:        "Fail as error in GetEducation",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetEducation", mock.Anything, "2").Return([]specs.EducationResponse{}, errors.New("error")).Once()
+				mockSvc.On("GetEducation", mock.Anything, 2).Return([]specs.EducationResponse{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -178,7 +178,7 @@ func TestUpdateEducationHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateEducation", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateEducationRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateEducation", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateEducationRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -228,7 +228,7 @@ func TestUpdateEducationHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateEducation", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateEducationRequest")).Return(0, errors.New("Service Error")).Once()
+				mockSvc.On("UpdateEducation", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateEducationRequest")).Return(0, errors.New("Service Error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},

@@ -40,8 +40,7 @@ func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileR
 
 	values := []interface{}{
 		pd.Name, pd.Email, pd.Gender, pd.Mobile, pd.Designation, pd.Description, pd.Title,
-		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.GithubLink, pd.LinkedinLink,
-		1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID,
+		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.GithubLink, pd.LinkedinLink, pd.CareerObjectives, 1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID,
 	}
 
 	insertQuery, args, err := psql.Insert("profiles").

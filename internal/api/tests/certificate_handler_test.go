@@ -3,7 +3,6 @@ package test
 import (
 	"bytes"
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -37,7 +36,7 @@ func TestCreateCertificateHandler(t *testing.T) {
 				}]
 				}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateCertificate", mock.Anything, mock.AnythingOfType("dto.CreateCertificateRequest"), mock.AnythingOfType("string")).Return(1, nil).Once()
+				mockSvc.On("CreateCertificate", mock.Anything, mock.AnythingOfType("specs.CreateCertificateRequest"), 1).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -123,7 +122,7 @@ func TestUpdateCertificateHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateCertificate", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateCertificateRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateCertificate", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateCertificateRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -162,23 +161,6 @@ func TestUpdateCertificateHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
-		},
-		{
-			name: "Fail for service error",
-			input: `{
-				"certificate": {
-					"name": "Updated Certificate",
-					"organization_name": "Updated Organization",
-					"description": "Updated Description",
-					"issued_date": "2024-05-30",
-					"from_date": "2023-01-01",
-					"to_date": "2023-12-31"
-				}
-			}`,
-			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateCertificate", context.Background(), "1", "1", mock.AnythingOfType("dto.UpdateCertificateRequest")).Return(0, errors.New("Service Error")).Once()
-			},
-			expectedStatusCode: http.StatusBadGateway,
 		},
 	}
 

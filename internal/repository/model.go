@@ -16,6 +16,7 @@ type ProfileRepo struct {
 	SecondarySkills   []string `db:"secondary_skills"`
 	GithubLink        string   `db:"github_link"`
 	LinkedinLink      string   `db:"linkedin_link"`
+	CareerObjectives  string   `db:"career_objectives"`
 	CreatedAt         string   `db:"created_at"`
 	UpdatedAt         string   `db:"updated_at"`
 	CreatedByID       int64    `db:"created_by_id"`

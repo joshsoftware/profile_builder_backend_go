@@ -74,6 +74,7 @@ func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail spec
 	profileRepo.SecondarySkills = profileDetail.Profile.SecondarySkills
 	profileRepo.GithubLink = profileDetail.Profile.GithubLink
 	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
+	profileRepo.CareerObjectives = profileDetail.Profile.CareerObjectives
 	profileRepo.CreatedAt = today
 	profileRepo.UpdatedAt = today
 	//TODO by context

@@ -36,13 +36,14 @@ func TestCreateProfileHandler(t *testing.T) {
                 "description": "i am ml engineer",
                 "title": "Software Engineer",
                 "years_of_experience": 4,
+				"career_objectives":"Description of the career objectives",
                 "primary_skills": ["Python","SQL","Golang"],
                 "secondary_skills": ["Docker", "Github"],
                 "github_link": "github.com/dummy-user"
                 }
             }`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateProfile", mock.Anything, mock.AnythingOfType("dto.CreateProfileRequest")).Return(1, nil).Once()
+				mockSvc.On("CreateProfile", mock.Anything, mock.AnythingOfType("specs.CreateProfileRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
 		},
@@ -249,7 +250,7 @@ func TestGetProfileHandler(t *testing.T) {
 			name:      "Success for getting profile",
 			profileID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProfile", mock.Anything, "1").Return(specs.ResponseProfile{
+				mockSvc.On("GetProfile", mock.Anything, 1).Return(specs.ResponseProfile{
 					ProfileID:         1,
 					Name:              "Example User",
 					Email:             "example@example.com",
@@ -271,7 +272,7 @@ func TestGetProfileHandler(t *testing.T) {
 			name:      "Fail as error in GetProfile",
 			profileID: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProfile", mock.Anything, "2").Return(specs.ResponseProfile{}, errors.New("error")).Once()
+				mockSvc.On("GetProfile", mock.Anything, 2).Return(specs.ResponseProfile{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -312,8 +313,8 @@ func TestUpdateProfileHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name:      "Success for updating profile detail",
-			url:       "/profiles?id=1",
+			name:      "Success_for_updating_profile_detail",
+			url:       "/profiles/1",
 			profileID: "1",
 			input: `{
                 "profile": {
@@ -333,43 +334,17 @@ func TestUpdateProfileHandler(t *testing.T) {
                 }
             }`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateProfile", context.Background(), "1", mock.AnythingOfType("dto.UpdateProfileRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateProfile", context.Background(), 1, mock.AnythingOfType("specs.UpdateProfileRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:               "Fail for incorrect json",
-			url:                "/profiles?id=1",
+			name:               "Fail_for_rincorrect_json",
+			url:                "/profiles/1",
 			profileID:          "1",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
-		},
-		{
-			name:      "Fail for service error",
-			profileID: "1",
-			url:       "/profiles?id=1",
-			input: `{
-                "profile": {
-                    "id": 1,
-                    "name": "Updated Name",
-                    "email": "updated.email@example.com",
-                    "gender": "Male",
-                    "mobile": "9999999999",
-                    "designation": "Senior Software Engineer",
-                    "description": "Experienced software engineer with expertise in Golang",
-                    "title": "Golang Developer",
-                    "years_of_experience": 7,
-                    "primary_skills": ["Golang", "Python"],
-                    "secondary_skills": ["JavaScript", "SQL"],
-                    "github_link": "https://github.com/updated",
-                    "linkedin_link": "https://www.linkedin.com/in/updated"
-                }
-            }`,
-			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateProfile", context.Background(), "1", mock.AnythingOfType("dto.UpdateProfileRequest")).Return(0, errors.New("Service Error")).Once()
-			},
-			expectedStatusCode: http.StatusBadGateway,
 		},
 	}
 

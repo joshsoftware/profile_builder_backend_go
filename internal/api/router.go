@@ -16,11 +16,11 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	subrouter := router.PathPrefix("/profiles").Subrouter()
 
 	//APIs : Profile
-	router.HandleFunc("api/profiles", handler.CreateProfileHandler(ctx, svc)).Methods(http.MethodPost)
-	router.HandleFunc("api/profiles", handler.ProfileListHandler(ctx, svc)).Methods(http.MethodGet)
-	router.HandleFunc("api/skills", handler.SkillsListHandler(ctx, svc)).Methods(http.MethodGet)
-	router.HandleFunc("api/profiles/{profile_id}", handler.GetProfileHandler(ctx, svc)).Methods(http.MethodGet)
-	router.HandleFunc("api/profiles/{profile_id}", handler.UpdateProfileHandler(ctx, svc)).Methods(http.MethodPut)
+	router.HandleFunc("/api/profiles", handler.CreateProfileHandler(ctx, svc)).Methods(http.MethodPost)
+	router.HandleFunc("/api/profiles", handler.ProfileListHandler(ctx, svc)).Methods(http.MethodGet)
+	router.HandleFunc("/api/skills", handler.SkillsListHandler(ctx, svc)).Methods(http.MethodGet)
+	router.HandleFunc("/api/profiles/{profile_id}", handler.GetProfileHandler(ctx, svc)).Methods(http.MethodGet)
+	router.HandleFunc("/api/profiles/{profile_id}", handler.UpdateProfileHandler(ctx, svc)).Methods(http.MethodPut)
 
 	//APIs : Educations
 	subrouter.HandleFunc("/{profile_id}/educations", handler.CreateEducationHandler(ctx, svc)).Methods(http.MethodPost)
