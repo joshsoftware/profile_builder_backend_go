@@ -93,3 +93,15 @@ var ResponseAchievementsColumns = []string{
 var ResponseCertificatesColumns = []string{
 	"id", "profile_id", "name", "organization_name", "description", "issued_date", "from_date", "to_date",
 }
+
+// ListQueryParams for acheivements
+var (
+	AchievementIDsStr   = "achievement_ids"
+	AchievementNamesStr = "names"
+)
+
+// ListQueryParams for certificates
+var (
+	CertificateIDsStr   = "certificate_ids"
+	CertificateNamesStr = "names"
+)
