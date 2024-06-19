@@ -6,6 +6,11 @@ import (
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+type ListCertificateFilter struct {
+	CertificateIDs []int    `json:"certificate_ids"`
+	Names          []string `json:"names"`
+}
+
 // CreateCertificateRequest struct represents a request to create certificates details.
 type CreateCertificateRequest struct {
 	ProfileID    int           `json:"profile_id"`

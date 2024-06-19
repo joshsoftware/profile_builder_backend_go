@@ -7,8 +7,8 @@ import (
 )
 
 type ListAchievementFilter struct {
-	AchievementID []int    `json:"achievement_id"`
-	Name          []string `json:"name"`
+	AchievementIDs []int    `json:"achievement_ids"`
+	Names          []string `json:"names"`
 }
 
 // CreateAchievementRequest struct represents a request to create achievements details.
