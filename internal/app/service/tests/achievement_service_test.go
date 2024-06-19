@@ -130,7 +130,7 @@ func TestListAchievements(t *testing.T) {
 			Name:      "success_get_achievement",
 			ProfileID: strconv.Itoa(mockProfileId),
 			MockSetup: func(mockAchievementStorer *mocks.AchievementStorer, profileID int) {
-				mockAchievementStorer.On("ListAchievements", mock.Anything, profileID).Return(mockResponseAchievement, nil).Once()
+				mockAchievementStorer.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return(mockResponseAchievement, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseAchievement,
@@ -139,7 +139,7 @@ func TestListAchievements(t *testing.T) {
 			Name:      "fail_get_achievement",
 			ProfileID: mockProfileID,
 			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
-				achMock.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, errors.New("error")).Once()
+				achMock.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]dto.AchievementResponse{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []dto.AchievementResponse{},
@@ -148,7 +148,7 @@ func TestListAchievements(t *testing.T) {
 			Name:      "sucess_with_empty_resultset",
 			ProfileID: mockProfileID,
 			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
-				achMock.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, nil).Once()
+				achMock.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]dto.AchievementResponse{}, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    []dto.AchievementResponse{},
@@ -157,7 +157,7 @@ func TestListAchievements(t *testing.T) {
 			Name:      "invalid_profile_id",
 			ProfileID: "invalid",
 			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
-				achMock.On("ListAchievements", mock.Anything, mock.Anything).Return([]dto.AchievementResponse{}, errors.New("invalid profile ID")).Once()
+				achMock.On("ListAchievements", mock.Anything, mock.Anything, mock.Anything).Return([]dto.AchievementResponse{}, errors.New("invalid profile ID")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []dto.AchievementResponse{},
@@ -168,7 +168,7 @@ func TestListAchievements(t *testing.T) {
 		t.Run(tt.Name, func(t *testing.T) {
 			profileIDInt, _ := strconv.Atoi(tt.ProfileID)
 			tt.MockSetup(mockAchievementRepo, profileIDInt)
-			gotResponse, err := achService.ListAchievements(context.Background(), profileIDInt)
+			gotResponse, err := achService.ListAchievements(context.Background(), profileIDInt, dto.ListAchievementFilter{})
 
 			assert.Equal(t, tt.wantResponse, gotResponse)
 			if (err != nil) != tt.isErrorExpected {
