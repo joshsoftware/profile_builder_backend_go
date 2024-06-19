@@ -34,9 +34,9 @@ func (_m *AchievementStorer) CreateAchievement(ctx context.Context, values []rep
 	return r0
 }
 
-// ListAchievements provides a mock function with given fields: ctx, profileID
-func (_m *AchievementStorer) ListAchievements(ctx context.Context, profileID int) ([]dto.AchievementResponse, error) {
-	ret := _m.Called(ctx, profileID)
+// ListAchievements provides a mock function with given fields: ctx, profileID, filter
+func (_m *AchievementStorer) ListAchievements(ctx context.Context, profileID int, filter dto.ListAchievementFilter) ([]dto.AchievementResponse, error) {
+	ret := _m.Called(ctx, profileID, filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListAchievements")
@@ -44,19 +44,19 @@ func (_m *AchievementStorer) ListAchievements(ctx context.Context, profileID int
 
 	var r0 []dto.AchievementResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int) ([]dto.AchievementResponse, error)); ok {
-		return rf(ctx, profileID)
+	if rf, ok := ret.Get(0).(func(context.Context, int, dto.ListAchievementFilter) ([]dto.AchievementResponse, error)); ok {
+		return rf(ctx, profileID, filter)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int) []dto.AchievementResponse); ok {
-		r0 = rf(ctx, profileID)
+	if rf, ok := ret.Get(0).(func(context.Context, int, dto.ListAchievementFilter) []dto.AchievementResponse); ok {
+		r0 = rf(ctx, profileID, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]dto.AchievementResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, profileID)
+	if rf, ok := ret.Get(1).(func(context.Context, int, dto.ListAchievementFilter) error); ok {
+		r1 = rf(ctx, profileID, filter)
 	} else {
 		r1 = ret.Error(1)
 	}

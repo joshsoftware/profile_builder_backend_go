@@ -34,9 +34,9 @@ func (_m *CertificateStorer) CreateCertificate(ctx context.Context, values []rep
 	return r0
 }
 
-// ListCertificates provides a mock function with given fields: ctx, profileID
-func (_m *CertificateStorer) ListCertificates(ctx context.Context, profileID int) ([]dto.CertificateResponse, error) {
-	ret := _m.Called(ctx, profileID)
+// ListCertificates provides a mock function with given fields: ctx, profileID, filter
+func (_m *CertificateStorer) ListCertificates(ctx context.Context, profileID int, filter dto.ListCertificateFilter) ([]dto.CertificateResponse, error) {
+	ret := _m.Called(ctx, profileID, filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListCertificates")
@@ -44,19 +44,19 @@ func (_m *CertificateStorer) ListCertificates(ctx context.Context, profileID int
 
 	var r0 []dto.CertificateResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int) ([]dto.CertificateResponse, error)); ok {
-		return rf(ctx, profileID)
+	if rf, ok := ret.Get(0).(func(context.Context, int, dto.ListCertificateFilter) ([]dto.CertificateResponse, error)); ok {
+		return rf(ctx, profileID, filter)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int) []dto.CertificateResponse); ok {
-		r0 = rf(ctx, profileID)
+	if rf, ok := ret.Get(0).(func(context.Context, int, dto.ListCertificateFilter) []dto.CertificateResponse); ok {
+		r0 = rf(ctx, profileID, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]dto.CertificateResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, profileID)
+	if rf, ok := ret.Get(1).(func(context.Context, int, dto.ListCertificateFilter) error); ok {
+		r1 = rf(ctx, profileID, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
