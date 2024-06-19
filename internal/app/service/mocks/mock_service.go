@@ -328,9 +328,9 @@ func (_m *Service) GetProject(ctx context.Context, profileID string) ([]dto.Proj
 	return r0, r1
 }
 
-// ListAchievements provides a mock function with given fields: ctx, profileID
-func (_m *Service) ListAchievements(ctx context.Context, profileID int) ([]dto.AchievementResponse, error) {
-	ret := _m.Called(ctx, profileID)
+// ListAchievements provides a mock function with given fields: ctx, profileID, filter
+func (_m *Service) ListAchievements(ctx context.Context, profileID int, filter dto.ListAchievementFilter) ([]dto.AchievementResponse, error) {
+	ret := _m.Called(ctx, profileID, filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListAchievements")
@@ -338,19 +338,19 @@ func (_m *Service) ListAchievements(ctx context.Context, profileID int) ([]dto.A
 
 	var r0 []dto.AchievementResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int) ([]dto.AchievementResponse, error)); ok {
-		return rf(ctx, profileID)
+	if rf, ok := ret.Get(0).(func(context.Context, int, dto.ListAchievementFilter) ([]dto.AchievementResponse, error)); ok {
+		return rf(ctx, profileID, filter)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int) []dto.AchievementResponse); ok {
-		r0 = rf(ctx, profileID)
+	if rf, ok := ret.Get(0).(func(context.Context, int, dto.ListAchievementFilter) []dto.AchievementResponse); ok {
+		r0 = rf(ctx, profileID, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]dto.AchievementResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, profileID)
+	if rf, ok := ret.Get(1).(func(context.Context, int, dto.ListAchievementFilter) error); ok {
+		r1 = rf(ctx, profileID, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -358,9 +358,9 @@ func (_m *Service) ListAchievements(ctx context.Context, profileID int) ([]dto.A
 	return r0, r1
 }
 
-// ListCertificates provides a mock function with given fields: ctx, profileID
-func (_m *Service) ListCertificates(ctx context.Context, profileID int) ([]dto.CertificateResponse, error) {
-	ret := _m.Called(ctx, profileID)
+// ListCertificates provides a mock function with given fields: ctx, profileID, fitler
+func (_m *Service) ListCertificates(ctx context.Context, profileID int, fitler dto.ListCertificateFilter) ([]dto.CertificateResponse, error) {
+	ret := _m.Called(ctx, profileID, fitler)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListCertificates")
@@ -368,19 +368,19 @@ func (_m *Service) ListCertificates(ctx context.Context, profileID int) ([]dto.C
 
 	var r0 []dto.CertificateResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int) ([]dto.CertificateResponse, error)); ok {
-		return rf(ctx, profileID)
+	if rf, ok := ret.Get(0).(func(context.Context, int, dto.ListCertificateFilter) ([]dto.CertificateResponse, error)); ok {
+		return rf(ctx, profileID, fitler)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int) []dto.CertificateResponse); ok {
-		r0 = rf(ctx, profileID)
+	if rf, ok := ret.Get(0).(func(context.Context, int, dto.ListCertificateFilter) []dto.CertificateResponse); ok {
+		r0 = rf(ctx, profileID, fitler)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]dto.CertificateResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, profileID)
+	if rf, ok := ret.Get(1).(func(context.Context, int, dto.ListCertificateFilter) error); ok {
+		r1 = rf(ctx, profileID, fitler)
 	} else {
 		r1 = ret.Error(1)
 	}
