@@ -13,7 +13,9 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/stretchr/testify/mock"
+	"github.com/undefinedlabs/go-mpatch"
 )
 
 func TestCreateAchievementHandler(t *testing.T) {
@@ -116,15 +118,26 @@ func TestListAchievementsHandler(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		queryParams        int
+		pathParams         int
+		queryParams        string
+		mockDecodeRequest  func()
 		MockSvc            func(mockSvc *mocks.Service)
 		expectedStatusCode int
 	}{
 		{
 			name:        "success_achievement",
-			queryParams: profileID,
+			pathParams:  profileID,
+			queryParams: "achievement_ids=1,2&names=Client Appreciation,Another Achievement",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (dto.ListAchievementFilter, error) {
+					return dto.ListAchievementFilter{
+						AchievementIDs: []int{1, 2},
+						Names:          []string{"Client Appreciation", "Another Achievement"},
+					}, nil
+				})
+			},
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{
+				mockSvc.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]dto.AchievementResponse{
 					{
 						ProfileID:   1,
 						Name:        "Client Appreciation",
@@ -136,9 +149,18 @@ func TestListAchievementsHandler(t *testing.T) {
 		},
 		{
 			name:        "success_achievements",
-			queryParams: profileID,
+			pathParams:  profileID,
+			queryParams: "achievement_ids=1,2&achievement_names=Client Appreciation,Another Achievement",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (dto.ListAchievementFilter, error) {
+					return dto.ListAchievementFilter{
+						AchievementIDs: []int{1, 2},
+						Names:          []string{"Client Appreciation", "Another Achievement"},
+					}, nil
+				})
+			},
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{
+				mockSvc.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]dto.AchievementResponse{
 					{
 						ProfileID:   1,
 						Name:        "Client Appreciation",
@@ -155,26 +177,43 @@ func TestListAchievementsHandler(t *testing.T) {
 		},
 		{
 			name:        "fail_to_fetch_achievements",
-			queryParams: profileID,
+			pathParams:  profileID,
+			queryParams: "",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (dto.ListAchievementFilter, error) {
+					return dto.ListAchievementFilter{}, nil
+				})
+			},
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, errors.New("some error")).Once()
+				mockSvc.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]dto.AchievementResponse{}, errors.New("some error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
 		{
 			name:        "sucess_with_empty_resultset",
-			queryParams: profileID,
+			pathParams:  profileID,
+			queryParams: "",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (dto.ListAchievementFilter, error) {
+					return dto.ListAchievementFilter{}, nil
+				})
+			},
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListAchievements", mock.Anything, profileID).Return([]dto.AchievementResponse{}, nil).Once()
+				mockSvc.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]dto.AchievementResponse{}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-
 			name:        "fail_to_fetch_achievements_with_invalid_profile_id",
-			queryParams: profileID0,
+			pathParams:  profileID0,
+			queryParams: "",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (dto.ListAchievementFilter, error) {
+					return dto.ListAchievementFilter{}, nil
+				})
+			},
 			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListAchievements", mock.Anything, profileID0).Return(nil, errors.New("invalid profile id")).Once()
+				mockSvc.On("ListAchievements", mock.Anything, profileID0, mock.Anything).Return(nil, errors.New("invalid profile id")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -183,14 +222,13 @@ func TestListAchievementsHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.MockSvc(achSvc)
-			req, err := http.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.queryParams)+"/achievements", nil)
+			req, err := http.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/achievements", nil)
 			if err != nil {
 				t.Fatal(err)
 				return
 			}
 
-			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.queryParams)})
-
+			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.pathParams)})
 			resp := httptest.NewRecorder()
 
 			handler := http.HandlerFunc(getAchievementHandler)
