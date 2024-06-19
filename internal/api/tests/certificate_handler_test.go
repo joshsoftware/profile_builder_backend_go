@@ -13,7 +13,9 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/stretchr/testify/mock"
+	"github.com/undefinedlabs/go-mpatch"
 )
 
 func TestCreateCertificateHandler(t *testing.T) {
@@ -127,15 +129,26 @@ func TestListCertificatesHandler(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		queryParams        int
+		pathParams         int
+		queryParams        string
+		mockDecodeRequest  func()
 		mockSvcSetup       func(mockSvc *mocks.Service)
 		expectedStatusCode int
 	}{
 		{
 			name:        "Success_for_fetching_single_certificate",
-			queryParams: profileID,
+			pathParams:  profileID,
+			queryParams: "certificate_ids=1,2&names=Golang,ROR",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeCertificateRequest, func(r *http.Request) (dto.ListCertificateFilter, error) {
+					return dto.ListCertificateFilter{
+						CertificateIDs: []int{1, 2},
+						Names:          []string{"Golang", "ROR"},
+					}, nil
+				})
+			},
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{
+				mockSvc.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]dto.CertificateResponse{
 					{
 						ProfileID:        1,
 						Name:             "Golang Master Class",
@@ -151,9 +164,18 @@ func TestListCertificatesHandler(t *testing.T) {
 		},
 		{
 			name:        "success_for_fetching_multiple_certificates",
-			queryParams: profileID,
+			pathParams:  profileID,
+			queryParams: "certificate_ids=1,2&names=Golang,ROR",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeCertificateRequest, func(r *http.Request) (dto.ListCertificateFilter, error) {
+					return dto.ListCertificateFilter{
+						CertificateIDs: []int{1, 2},
+						Names:          []string{"Golang", "ROR"},
+					}, nil
+				})
+			},
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{
+				mockSvc.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]dto.CertificateResponse{
 					{
 						ProfileID:   1,
 						Name:        "Certificate 1",
@@ -171,25 +193,43 @@ func TestListCertificatesHandler(t *testing.T) {
 
 		{
 			name:        "fail_to_fetch_certificates",
-			queryParams: profileID,
+			pathParams:  profileID,
+			queryParams: "",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeCertificateRequest, func(r *http.Request) (dto.ListCertificateFilter, error) {
+					return dto.ListCertificateFilter{}, nil
+				})
+			},
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, errors.New("some error")).Once()
+				mockSvc.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]dto.CertificateResponse{}, errors.New("some error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
 		{
 			name:        "sucess_with_empty_resultset",
-			queryParams: profileID,
+			pathParams:  profileID,
+			queryParams: "",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeCertificateRequest, func(r *http.Request) (dto.ListCertificateFilter, error) {
+					return dto.ListCertificateFilter{}, nil
+				})
+			},
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, nil).Once()
+				mockSvc.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]dto.CertificateResponse{}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
 		{
 			name:        "fail_to_fetch_certificates_with_invalid_profile_id",
-			queryParams: profileID0,
+			pathParams:  profileID0,
+			queryParams: "",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeCertificateRequest, func(r *http.Request) (dto.ListCertificateFilter, error) {
+					return dto.ListCertificateFilter{}, nil
+				})
+			},
 			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListCertificates", mock.Anything, profileID0).Return(nil, errors.New("invalid profile id")).Once()
+				mockSvc.On("ListCertificates", mock.Anything, profileID0, mock.Anything).Return(nil, errors.New("invalid profile id")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -199,14 +239,14 @@ func TestListCertificatesHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSvcSetup(certficateSvc)
 
-			req, err := http.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.queryParams)+"/certificates", nil)
+			req, err := http.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/certificates", nil)
 			if err != nil {
 				t.Fatal(err)
 				return
 			}
-			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.queryParams)})
-
+			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.pathParams)})
 			resp := httptest.NewRecorder()
+
 			handler := http.HandlerFunc(getCertificateHandler)
 			handler.ServeHTTP(resp, req)
 
