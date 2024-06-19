@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
@@ -27,7 +28,7 @@ func NewAchievementRepo(db *pgx.Conn) AchievementStorer {
 // AchievementStorer defines methods to interact with user achievement related data.
 type AchievementStorer interface {
 	CreateAchievement(ctx context.Context, values []AchievementDao) error
-	ListAchievements(ctx context.Context, profileID int) ([]dto.AchievementResponse, error)
+	ListAchievements(ctx context.Context, profileID int, filter dto.ListAchievementFilter) ([]dto.AchievementResponse, error)
 }
 
 // CreateAchievement inserts achievements details into the database.
@@ -64,13 +65,22 @@ func (profileStore *AchievementStore) CreateAchievement(ctx context.Context, val
 	return nil
 }
 
-func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileID int) (values []dto.AchievementResponse, err error) {
-	sql, args, err := sq.Select(constants.ResponseAchievementsColumns...).From("achievements").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
+func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileID int, filter dto.ListAchievementFilter) (values []dto.AchievementResponse, err error) {
+	queryBuilder := sq.Select(constants.ResponseAchievementsColumns...).From("achievements").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar)
+
+	if len(filter.AchievementIDs) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.AchievementIDs})
+	}
+	if len(filter.Names) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"name": filter.Names})
+	}
+
+	sql, args, err := queryBuilder.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating get achievements query: ", err)
 		return []dto.AchievementResponse{}, err
 	}
-
+	fmt.Println("sql , args  : ", sql, args)
 	rows, err := achStore.db.Query(ctx, sql, args...)
 	if err != nil {
 		zap.S().Error("Error executing get achievements query: ", err)
@@ -90,7 +100,7 @@ func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileI
 
 	if len(values) == 0 {
 		zap.S().Info("No achievements found for profileID: ", profileID)
-		return []dto.AchievementResponse{}, errors.ErrNoRecordFound
+		return []dto.AchievementResponse{}, nil
 	}
 
 	return values, nil

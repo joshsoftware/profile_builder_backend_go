@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
@@ -20,7 +21,7 @@ type CertificateStore struct {
 // CertificateStorer defines methods to interact with user certificate ralated data.
 type CertificateStorer interface {
 	CreateCertificate(ctx context.Context, values []CertificateDao) error
-	ListCertificates(ctx context.Context, profileID int) ([]dto.CertificateResponse, error)
+	ListCertificates(ctx context.Context, profileID int, filter dto.ListCertificateFilter) ([]dto.CertificateResponse, error)
 }
 
 // NewCertificateRepo creates a new instance of CertificateRepo.
@@ -32,7 +33,6 @@ func NewCertificateRepo(db *pgx.Conn) CertificateStorer {
 
 // CreateCertificate inserts certificate details into the database.
 func (profileStore *CertificateStore) CreateCertificate(ctx context.Context, values []CertificateDao) error {
-
 	insertBuilder := sq.Insert("certificates").
 		Columns(constants.CreateCertificateColumns...).
 		PlaceholderFormat(sq.Dollar)
@@ -66,8 +66,18 @@ func (profileStore *CertificateStore) CreateCertificate(ctx context.Context, val
 }
 
 // GetCertificates fetches certificates details from the database.
-func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, profileID int) (values []dto.CertificateResponse, err error) {
-	sql, args, err := sq.Select(constants.ResponseCertificatesColumns...).From("certificates").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar).ToSql()
+func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, profileID int, filter dto.ListCertificateFilter) (values []dto.CertificateResponse, err error) {
+	queryBuilder := sq.Select(constants.ResponseCertificatesColumns...).From("certificates").Where(sq.Eq{"profile_id": profileID})
+	if len(filter.CertificateIDs) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.CertificateIDs})
+	}
+	if len(filter.Names) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"name": filter.Names})
+	}
+	sql, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
+	fmt.Println("args: ", args)
+	fmt.Println("sql query", sql)
+
 	if err != nil {
 		zap.S().Error("Error generating get certificates query: ", err)
 		return []dto.CertificateResponse{}, err
@@ -91,8 +101,8 @@ func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, 
 	}
 
 	if len(values) == 0 {
-		zap.S().Error("No certificates found for profile id: ", profileID)
-		return []dto.CertificateResponse{}, errors.ErrNoRecordFound
+		zap.S().Info("No certificates found for profile id: ", profileID)
+		return []dto.CertificateResponse{}, nil
 	}
 
 	return values, nil
