@@ -35,6 +35,8 @@ func (projSvc *service) CreateProject(ctx context.Context, projDetail specs.Crea
 		val.Responsibilities = projDetail.Projects[i].Responsibilities
 		val.Technologies = projDetail.Projects[i].Technologies
 		val.TechWorkedOn = projDetail.Projects[i].TechWorkedOn
+		val.WorkingStartDate = projDetail.Projects[i].WorkingStartDate
+		val.WorkingEndDate = projDetail.Projects[i].WorkingEndDate
 		val.Duration = projDetail.Projects[i].Duration
 		val.CreatedAt = today
 		val.UpdatedAt = today

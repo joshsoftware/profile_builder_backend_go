@@ -36,7 +36,7 @@ var CreateEducationColumns = []string{
 // CreateProjectColumns defines the columns required for creating project details.
 var CreateProjectColumns = []string{
 	"name", "description", "role", "responsibilities", "technologies", "tech_worked_on",
-	"duration", "working_start_date", "working_end_date", "created_at", "updated_at",
+	"working_start_date", "working_end_date", "duration", "created_at", "updated_at",
 	"created_by_id", "updated_by_id", "profile_id",
 }
 

@@ -36,7 +36,6 @@ func (projectStore *ProjectStore) CreateProject(ctx context.Context, values []Pr
 
 	insertBuilder := psql.Insert("projects").
 		Columns(constants.CreateProjectColumns...)
-
 	for _, value := range values {
 		insertBuilder = insertBuilder.Values(
 			value.Name, value.Description, value.Role, value.Responsibilities,
