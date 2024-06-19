@@ -142,7 +142,7 @@ func TestListCertificates(t *testing.T) {
 			Name:      "success_list_certificates",
 			ProfileID: mockProfileId,
 			MockSetup: func(mockCertificateStorer *mocks.CertificateStorer, profileID int) {
-				mockCertificateStorer.On("ListCertificates", mock.Anything, profileID).Return(mockResponseCertificate, nil).Once()
+				mockCertificateStorer.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return(mockResponseCertificate, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseCertificate,
@@ -151,7 +151,7 @@ func TestListCertificates(t *testing.T) {
 			Name:      "fail_get_certificates",
 			ProfileID: mockProfileID,
 			MockSetup: func(certMock *mocks.CertificateStorer, profileID int) {
-				certMock.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, errors.New("error")).Once()
+				certMock.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]dto.CertificateResponse{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []dto.CertificateResponse{},
@@ -160,7 +160,7 @@ func TestListCertificates(t *testing.T) {
 			Name:      "sucess_with_empty_resultset",
 			ProfileID: mockProfileID,
 			MockSetup: func(certMock *mocks.CertificateStorer, profileID int) {
-				certMock.On("ListCertificates", mock.Anything, profileID).Return([]dto.CertificateResponse{}, nil).Once()
+				certMock.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]dto.CertificateResponse{}, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    []dto.CertificateResponse{},
@@ -169,7 +169,7 @@ func TestListCertificates(t *testing.T) {
 			Name:      "invalid_profile_id",
 			ProfileID: "invalid",
 			MockSetup: func(certMock *mocks.CertificateStorer, profileID int) {
-				certMock.On("ListCertificates", mock.Anything, mock.Anything).Return([]dto.CertificateResponse{}, errors.New("invalid profile ID")).Once()
+				certMock.On("ListCertificates", mock.Anything, mock.Anything, mock.Anything).Return([]dto.CertificateResponse{}, errors.New("invalid profile ID")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []dto.CertificateResponse{},
@@ -180,7 +180,7 @@ func TestListCertificates(t *testing.T) {
 		t.Run(tt.Name, func(t *testing.T) {
 			profileIDInt, _ := strconv.Atoi(tt.ProfileID)
 			tt.MockSetup(mockCertificateRepo, profileIDInt)
-			gotResponse, err := certificateService.ListCertificates(context.Background(), profileIDInt)
+			gotResponse, err := certificateService.ListCertificates(context.Background(), profileIDInt, dto.ListCertificateFilter{})
 			assert.Equal(t, tt.wantResponse, gotResponse)
 			if (err != nil) != tt.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", tt.Name, tt.isErrorExpected, err != nil)
