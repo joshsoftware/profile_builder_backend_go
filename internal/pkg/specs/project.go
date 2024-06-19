@@ -13,30 +13,30 @@ type CreateProjectRequest struct {
 
 // Project struct represents details of a project.
 type Project struct {
-	Name             string `json:"name"`
-	Description      string `json:"description"`
-	Role             string `json:"role"`
-	Responsibilities string `json:"responsibilities"`
-	Technologies     string `json:"technologies"`
-	TechWorkedOn     string `json:"tech_worked_on"`
-	WorkingStartDate string `json:"working_start_date"`
-	WorkingEndDate   string `json:"working_end_date"`
-	Duration         string `json:"duration"`
+	Name             string   `json:"name"`
+	Description      string   `json:"description"`
+	Role             string   `json:"role"`
+	Responsibilities string   `json:"responsibilities"`
+	Technologies     []string `json:"technologies"`
+	TechWorkedOn     []string `json:"tech_worked_on"`
+	WorkingStartDate string   `json:"working_start_date"`
+	WorkingEndDate   string   `json:"working_end_date"`
+	Duration         string   `json:"duration"`
 }
 
 // ProjectResponse struct represents details of a project for response.
 type ProjectResponse struct {
-	ID               int    `json:"id"`
-	ProfileID        int    `json:"profile_id"`
-	Name             string `json:"name"`
-	Description      string `json:"description"`
-	Role             string `json:"role"`
-	Responsibilities string `json:"responsibilities"`
-	Technologies     string `json:"technologies"`
-	TechWorkedOn     string `json:"tech_worked_on"`
-	WorkingStartDate string `json:"working_start_date"`
-	WorkingEndDate   string `json:"working_end_date"`
-	Duration         string `json:"duration"`
+	ID               int      `json:"id"`
+	ProfileID        int      `json:"profile_id"`
+	Name             string   `json:"name"`
+	Description      string   `json:"description"`
+	Role             string   `json:"role"`
+	Responsibilities string   `json:"responsibilities"`
+	Technologies     []string `json:"technologies"`
+	TechWorkedOn     []string `json:"tech_worked_on"`
+	WorkingStartDate string   `json:"working_start_date"`
+	WorkingEndDate   string   `json:"working_end_date"`
+	Duration         string   `json:"duration"`
 }
 
 // ResponseProject represents a project response
@@ -79,10 +79,10 @@ func (p *Project) Validate() error {
 	if p.Responsibilities == "" {
 		return fmt.Errorf("%s : responsibilities ", errors.ErrParameterMissing.Error())
 	}
-	if p.Technologies == "" {
+	if len(p.Technologies) == 0 {
 		return fmt.Errorf("%s : technologies ", errors.ErrParameterMissing.Error())
 	}
-	if p.TechWorkedOn == "" {
+	if len(p.TechWorkedOn) == 0 {
 		return fmt.Errorf("%s : techonology worked on ", errors.ErrParameterMissing.Error())
 	}
 	if p.WorkingStartDate == "" {
@@ -101,15 +101,13 @@ func (p *Project) Validate() error {
 func (p *UpdateProjectRequest) Validate() error {
 
 	fields := map[string]string{
-		"name":                 p.Project.Name,
-		"description":          p.Project.Description,
-		"role":                 p.Project.Role,
-		"responsibilities":     p.Project.Responsibilities,
-		"technologies":         p.Project.Technologies,
-		"technology worked on": p.Project.TechWorkedOn,
-		"working start date":   p.Project.WorkingStartDate,
-		"working end date":     p.Project.WorkingEndDate,
-		"duration":             p.Project.Duration,
+		"name":               p.Project.Name,
+		"description":        p.Project.Description,
+		"role":               p.Project.Role,
+		"responsibilities":   p.Project.Responsibilities,
+		"working start date": p.Project.WorkingStartDate,
+		"working end date":   p.Project.WorkingEndDate,
+		"duration":           p.Project.Duration,
 	}
 
 	for fieldName, fieldValue := range fields {

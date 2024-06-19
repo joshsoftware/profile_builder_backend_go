@@ -33,7 +33,7 @@ type Profile struct {
 	SecondarySkills   []string `json:"secondary_skills"`
 	GithubLink        string   `json:"github_link"`
 	LinkedinLink      string   `json:"linkedin_link"`
-	CareerObjectives	string `json:"career_objectives"`
+	CareerObjectives  string   `json:"career_objectives"`
 }
 
 // ListProfiles struct represents details of user profiles for listing.
@@ -73,7 +73,7 @@ type ProfileResponse struct {
 
 // ResponseProfile struct represents details of a user profile as in response.
 type ResponseProfile struct {
-	ProfileID         int      `json:"profile_id"`
+	ProfileID         int      `json:"id"`
 	Name              string   `json:"name"`
 	Email             string   `json:"email"`
 	Gender            string   `json:"gender"`
@@ -86,6 +86,7 @@ type ResponseProfile struct {
 	SecondarySkills   []string `json:"secondary_skills"`
 	GithubLink        string   `json:"github_link"`
 	LinkedinLink      string   `json:"linkedin_link"`
+	CareerObjectives  string   `json:"career_objectives"`
 }
 
 // Validate func checks if the CreateProfileRequest is valid.

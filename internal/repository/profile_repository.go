@@ -135,7 +135,7 @@ func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int)
 	}
 
 	if rows.Next() {
-		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink); err != nil {
+		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink, &value.CareerObjectives); err != nil {
 			zap.S().Error("Error scanning row: ", err)
 			return specs.ResponseProfile{}, err
 		}

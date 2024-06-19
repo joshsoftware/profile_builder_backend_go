@@ -26,15 +26,15 @@ func TestCreateProjectHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for project Detail",
+			name: "Success_for_project_Detail",
 			input: `{
 				"projects":[{
 					"name": "Least Square",
 					"description": "A Webapp Which is Used to Build a Standard Profiles of an Employee for An Organization",
 					"role": "Soft Developer",
 					"responsibilities": "Develop a Backend",
-					"technologies": "Python, Django, MongoDB, AWS",
-					"tech_worked_on": "Django, AWS",
+					"technologies": ["Python, Django, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
 					"working_start_date": "May-2020",
 					"working_end_date": "July-2020",
 					"duration": "6 Months"
@@ -59,8 +59,8 @@ func TestCreateProjectHandler(t *testing.T) {
 					"description": "A Webapp Which is Used to Build a Standard Profiles of an Employee for An Organization",
 					"role": "Soft Developer",
 					"responsibilities": "Develop a Backend",
-					"technologies": "Python, Django, MongoDB, AWS",
-					"tech_worked_on": "Django, AWS",
+					"technologies": ["Python, Django, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
 					"working_start_date": "May-2020",
 					"working_end_date": "July-2020",
 					"duration": "6 Months"
@@ -114,8 +114,8 @@ func TestListProjectHandler(t *testing.T) {
 						Description:      "A sample project",
 						Role:             "Lead Developer",
 						Responsibilities: "Developing the core features",
-						Technologies:     "Go, React",
-						TechWorkedOn:     "Go, React, Docker",
+						Technologies:     []string{"Java", "Selenium"},
+						TechWorkedOn:     []string{"Python, C#"},
 						WorkingStartDate: "2020-01-01",
 						WorkingEndDate:   "2021-01-01",
 						Duration:         "1 year",
@@ -175,8 +175,8 @@ func TestUpdateProjectHandler(t *testing.T) {
 					"description": "A Webapp Which is Used to Build a Standard IOT Apps",
 					"role": "Software Developer",
 					"responsibilities": "Develop a full stack app",
-					"technologies": "Ruby, Rails, MongoDB, AWS",
-					"tech_worked_on": "Django, AWS",
+					"technologies": ["Ruby, Rails, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
 					"working_start_date": "May-2020",
 					"working_end_date": "July-2020",
 					"duration": "6 Years"

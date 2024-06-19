@@ -72,35 +72,35 @@ type UpdateEducationRepo struct {
 // This struct maps to a database table, where each field corresponds to a column
 // in the projects table.
 type ProjectRepo struct {
-	Name             string `db:"name"`
-	Description      string `db:"description"`
-	Role             string `db:"role"`
-	Responsibilities string `db:"responsibility"`
-	Technologies     string `db:"technologies"`
-	TechWorkedOn     string `db:"tech_worked_on"`
-	WorkingStartDate string `db:"working_start_date"`
-	WorkingEndDate   string `db:"working_end_date"`
-	Duration         string `db:"duration"`
-	CreatedAt        string `db:"created_at"`
-	UpdatedAt        string `db:"updated_at"`
-	CreatedByID      int64  `db:"created_by_id"`
-	UpdatedByID      int64  `db:"updated_by_id"`
-	ProfileID        int    `db:"profile_id"`
+	Name             string   `db:"name"`
+	Description      string   `db:"description"`
+	Role             string   `db:"role"`
+	Responsibilities string   `db:"responsibility"`
+	Technologies     []string `db:"technologies"`
+	TechWorkedOn     []string `db:"tech_worked_on"`
+	WorkingStartDate string   `db:"working_start_date"`
+	WorkingEndDate   string   `db:"working_end_date"`
+	Duration         string   `db:"duration"`
+	CreatedAt        string   `db:"created_at"`
+	UpdatedAt        string   `db:"updated_at"`
+	CreatedByID      int64    `db:"created_by_id"`
+	UpdatedByID      int64    `db:"updated_by_id"`
+	ProfileID        int      `db:"profile_id"`
 }
 
 // UpdateProjectRepo represents a data access object for project information updation.
 type UpdateProjectRepo struct {
-	Name             string `db:"name"`
-	Description      string `db:"description"`
-	Role             string `db:"role"`
-	Responsibilities string `db:"responsibility"`
-	Technologies     string `db:"technologies"`
-	TechWorkedOn     string `db:"tech_worked_on"`
-	WorkingStartDate string `db:"working_start_date"`
-	WorkingEndDate   string `db:"working_end_date"`
-	Duration         string `db:"duration"`
-	UpdatedAt        string `db:"updated_at"`
-	UpdatedByID      int64  `db:"updated_by_id"`
+	Name             string   `db:"name"`
+	Description      string   `db:"description"`
+	Role             string   `db:"role"`
+	Responsibilities string   `db:"responsibility"`
+	Technologies     []string `db:"technologies"`
+	TechWorkedOn     []string `db:"tech_worked_on"`
+	WorkingStartDate string   `db:"working_start_date"`
+	WorkingEndDate   string   `db:"working_end_date"`
+	Duration         string   `db:"duration"`
+	UpdatedAt        string   `db:"updated_at"`
+	UpdatedByID      int64    `db:"updated_by_id"`
 }
 
 // ExperienceRepo represents a data access object for experience-related information.

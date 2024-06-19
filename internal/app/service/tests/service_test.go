@@ -105,7 +105,6 @@ func TestListProfile(t *testing.T) {
 	}
 }
 
-
 func TestListSkills(t *testing.T) {
 	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
