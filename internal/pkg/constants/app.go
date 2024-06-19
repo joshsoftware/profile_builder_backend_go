@@ -74,7 +74,7 @@ var ResponseEducationColumns = []string{
 
 // ResponseProjectsColumns defines the columns required for returning a specific user projects.
 var ResponseProjectsColumns = []string{
-	"id", "profile_id", "name", "description", "role", "responsibilities", "technologies", "tech_worked_on", "duration", "working_start_date", "working_end_date",
+	"id", "profile_id", "name", "description", "role", "responsibilities", "technologies", "tech_worked_on", "working_start_date", "working_end_date", "duration",
 }
 
 // ResponseExperiencesColumns defines the columns required for returning a specific user projects.
