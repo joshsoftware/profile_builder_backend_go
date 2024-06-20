@@ -43,6 +43,36 @@ func (_m *AchievementService) CreateAchievement(ctx context.Context, cDetail spe
 	return r0, r1
 }
 
+// ListAchievements provides a mock function with given fields: ctx, profileID, filter
+func (_m *AchievementService) ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) ([]specs.AchievementResponse, error) {
+	ret := _m.Called(ctx, profileID, filter)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListAchievements")
+	}
+
+	var r0 []specs.AchievementResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.ListAchievementFilter) ([]specs.AchievementResponse, error)); ok {
+		return rf(ctx, profileID, filter)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.ListAchievementFilter) []specs.AchievementResponse); ok {
+		r0 = rf(ctx, profileID, filter)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]specs.AchievementResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, specs.ListAchievementFilter) error); ok {
+		r1 = rf(ctx, profileID, filter)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpdateAchievement provides a mock function with given fields: ctx, profileID, eduID, req
 func (_m *AchievementService) UpdateAchievement(ctx context.Context, profileID string, eduID string, req specs.UpdateAchievementRequest) (int, error) {
 	ret := _m.Called(ctx, profileID, eduID, req)

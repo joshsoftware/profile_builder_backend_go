@@ -27,7 +27,7 @@ func TestCreateExperienceHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for experience detail",
+			name: "Success_for_experience_detail",
 			input: `{
 				"experiences":[{
 					"designation": "Associate Data Scientist",
@@ -42,13 +42,13 @@ func TestCreateExperienceHandler(t *testing.T) {
 			expectedStatusCode: http.StatusCreated,
 		},
 		{
-			name:               "Fail for incorrect JSON",
+			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing designation field",
+			name: "Fail_for_missing_designation_field",
 			input: `{
 				"experiences": [{
 					"designation": "",
@@ -95,7 +95,7 @@ func TestListExperienceHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name:        "Success for getting experiences",
+			name:        "Success_for_getting_experiences",
 			queryParams: "1",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("GetExperience", mock.Anything, 1).Return([]specs.ExperienceResponse{
@@ -111,7 +111,7 @@ func TestListExperienceHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:        "Fail as error in GetExperience",
+			name:        "Fail_as_error_in_getexperience",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("GetExperience", mock.Anything, 2).Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
@@ -154,7 +154,7 @@ func TestUpdateExperienceHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for updating experience detail",
+			name: "Success_for_updating_experience_detail",
 			input: `{
 				"experience": {
 					"designation": "Updated Designation",
@@ -169,13 +169,13 @@ func TestUpdateExperienceHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:               "Fail for incorrect json",
+			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing designation field",
+			name: "Fail_for_missing_designation_field",
 			input: `{
 				"experience": {
 					"designation": "",
@@ -188,7 +188,7 @@ func TestUpdateExperienceHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing company_name field",
+			name: "Fail_for_missing_company_name_field",
 			input: `{
 				"experience": {
 					"designation": "Updated Designation",
@@ -201,7 +201,7 @@ func TestUpdateExperienceHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for service error",
+			name: "Fail_for_service_error",
 			input: `{
 				"experience": {
 					"designation": "Updated Designation",

@@ -44,7 +44,7 @@ func (expSvc *service) CreateExperience(ctx context.Context, expDetail specs.Cre
 
 	err = expSvc.ExperienceRepo.CreateExperience(ctx, value)
 	if err != nil {
-		zap.S().Error("Unable to create experiences : ", err, " for profile id : ", profileID)
+		zap.S().Error("Unable to create experiences : ", err, " for profile id : ", id)
 		return 0, err
 	}
 	zap.S().Info("experience(s) created with profile id : ", id)

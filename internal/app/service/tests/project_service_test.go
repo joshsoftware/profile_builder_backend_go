@@ -26,7 +26,7 @@ func TestCreateProject(t *testing.T) {
 		isErrorExpected bool
 	}{
 		{
-			name: "Success for project details",
+			name: "Success_for_project_details",
 			input: specs.CreateProjectRequest{
 				Projects: []specs.Project{
 					{
@@ -48,7 +48,7 @@ func TestCreateProject(t *testing.T) {
 			isErrorExpected: false,
 		},
 		{
-			name: "Failed because CreateProject",
+			name: "Failed_because_createproject",
 			input: specs.CreateProjectRequest{
 				Projects: []specs.Project{
 					{
@@ -70,7 +70,7 @@ func TestCreateProject(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name: "Failed because empty payload",
+			name: "Failed_because_empty_payload",
 			input: specs.CreateProjectRequest{
 				Projects: []specs.Project{},
 			},
@@ -94,7 +94,6 @@ func TestCreateProject(t *testing.T) {
 }
 
 func TestGetProject(t *testing.T) {
-	// Initialize mock dependencies
 	mockProjectRepo := new(mocks.ProjectStorer)
 	var repodeps = service.RepoDeps{
 		ProjectDeps: mockProjectRepo,
@@ -116,7 +115,6 @@ func TestGetProject(t *testing.T) {
 		},
 	}
 
-	// Define test cases
 	tests := []struct {
 		name            string
 		profileID       int
@@ -125,7 +123,7 @@ func TestGetProject(t *testing.T) {
 		wantResponse    []specs.ProjectResponse
 	}{
 		{
-			name:      "Success get project",
+			name:      "Success_get_project",
 			profileID: mockProfileID,
 			setup: func(projMock *mocks.ProjectStorer) {
 				// Mock successful retrieval
@@ -135,7 +133,7 @@ func TestGetProject(t *testing.T) {
 			wantResponse:    mockResponseProject,
 		},
 		{
-			name:      "Fail get project",
+			name:      "Fail_get_project",
 			profileID: mockProfileID,
 			setup: func(projMock *mocks.ProjectStorer) {
 				// Mock retrieval failure
@@ -146,7 +144,6 @@ func TestGetProject(t *testing.T) {
 		},
 	}
 
-	// Iterate through test cases
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// Setup mock

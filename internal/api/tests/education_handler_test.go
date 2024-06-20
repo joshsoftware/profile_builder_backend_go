@@ -26,7 +26,7 @@ func TestCreateEducationHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for education detail",
+			name: "Success_for_education_detail",
 			input: `{
 				"educations":[{
 					"degree": "BSc in Data Science",
@@ -42,13 +42,13 @@ func TestCreateEducationHandler(t *testing.T) {
 			expectedStatusCode: http.StatusCreated,
 		},
 		{
-			name:               "Fail for incorrect json",
+			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing degree field",
+			name: "Fail_for_missing_degree_field",
 			input: `{
 				"educations":[{
 					"degree": "",
@@ -62,7 +62,7 @@ func TestCreateEducationHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing passing_year field",
+			name: "Fail_for_missing_passing_year_field",
 			input: `{
 				"educations":[{
 					"degree": "BSc in Data Science",
@@ -110,7 +110,7 @@ func TestListEducationHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name:        "Success for getting education",
+			name:        "Success_for_getting_education",
 			queryParams: "1",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("GetEducation", mock.Anything, 1).Return([]specs.EducationResponse{
@@ -127,7 +127,7 @@ func TestListEducationHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:        "Fail as error in GetEducation",
+			name:        "Fail_as_error_in_geteducation",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("GetEducation", mock.Anything, 2).Return([]specs.EducationResponse{}, errors.New("error")).Once()
@@ -167,7 +167,7 @@ func TestUpdateEducationHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for updating education detail",
+			name: "Success_for_updating_education_detail",
 			input: `{
 				"education":{
 					  "degree": "MS in CS",
@@ -183,13 +183,13 @@ func TestUpdateEducationHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:               "Fail for incorrect json",
+			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing degree field",
+			name: "Fail_for_missing_degree_field",
 			input: `{
 				"education": {
 					"degree": "",
@@ -203,7 +203,7 @@ func TestUpdateEducationHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing university_name field",
+			name: "Fail_for_missing_university_name_field",
 			input: `{
 				"education": {
 					"degree": "Updated Degree",
@@ -217,7 +217,7 @@ func TestUpdateEducationHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for service error",
+			name: "Fail_for_service_error",
 			input: `{
 				"education":{
 					  "degree": "MS in CS",

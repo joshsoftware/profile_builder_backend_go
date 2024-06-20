@@ -27,7 +27,7 @@ func TestCreateEducation(t *testing.T) {
 		expectedProfileID int
 	}{
 		{
-			name: "Success for education details",
+			name: "Success_for_education_details",
 			input: specs.CreateEducationRequest{
 				Educations: []specs.Education{
 					{
@@ -46,7 +46,7 @@ func TestCreateEducation(t *testing.T) {
 			expectedProfileID: 1,
 		},
 		{
-			name: "Failed because of error",
+			name: "Failed_because_of_error",
 			input: specs.CreateEducationRequest{
 				Educations: []specs.Education{
 					{
@@ -65,7 +65,7 @@ func TestCreateEducation(t *testing.T) {
 			expectedProfileID: 0,
 		},
 		{
-			name: "Failed because of empty payload",
+			name: "Failed_because_of_empty_payload",
 			input: specs.CreateEducationRequest{
 				Educations: []specs.Education{},
 			},
@@ -93,14 +93,12 @@ func TestCreateEducation(t *testing.T) {
 }
 
 func TestGetEducation(t *testing.T) {
-	// Initialize mock dependencies
 	mockEducationRepo := new(mocks.EducationStorer)
 	var repodeps = service.RepoDeps{
 		EducationDeps: mockEducationRepo,
 	}
 	educationService := service.NewServices(repodeps)
 
-	// Define mock data
 	mockProfileID := 123
 	mockResponseEducation := []specs.EducationResponse{
 		{
@@ -113,7 +111,6 @@ func TestGetEducation(t *testing.T) {
 		},
 	}
 
-	// Define test cases
 	tests := []struct {
 		name            string
 		profileID       int
@@ -122,7 +119,7 @@ func TestGetEducation(t *testing.T) {
 		wantResponse    []specs.EducationResponse
 	}{
 		{
-			name:      "Success get education",
+			name:      "Success_get_education",
 			profileID: mockProfileID,
 			setup: func(eduMock *mocks.EducationStorer) {
 				// Mock successful retrieval
@@ -132,7 +129,7 @@ func TestGetEducation(t *testing.T) {
 			wantResponse:    mockResponseEducation,
 		},
 		{
-			name:      "Fail get education",
+			name:      "Fail_get_education",
 			profileID: mockProfileID,
 			setup: func(eduMock *mocks.EducationStorer) {
 				// Mock retrieval failure
@@ -177,7 +174,7 @@ func TestUpdateEducation(t *testing.T) {
 		isErrorExpected bool
 	}{
 		{
-			name:        "Success for updating education details",
+			name:        "Success_for_updating_education_details",
 			profileID:   "1",
 			educationID: "1",
 			input: specs.UpdateEducationRequest{
@@ -195,7 +192,7 @@ func TestUpdateEducation(t *testing.T) {
 			isErrorExpected: false,
 		},
 		{
-			name:        "Failed because UpdateEducation returns an error",
+			name:        "Failed_because_updateeducation_returns_an_error",
 			profileID:   "100000000000000000",
 			educationID: "1",
 			input: specs.UpdateEducationRequest{
@@ -213,7 +210,7 @@ func TestUpdateEducation(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name:        "Failed because of missing education degree",
+			name:        "Failed_because_of_missing_education_degree",
 			profileID:   "1",
 			educationID: "1",
 			input: specs.UpdateEducationRequest{
@@ -231,7 +228,7 @@ func TestUpdateEducation(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name:        "Failed because of invalid profileID or educationID",
+			name:        "Failed_because_of_invalid_profileid_or_educationid",
 			profileID:   "invalid",
 			educationID: "1",
 			input: specs.UpdateEducationRequest{

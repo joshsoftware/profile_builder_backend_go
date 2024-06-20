@@ -26,7 +26,7 @@ func TestCreateProfileHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for user Detail",
+			name: "Success_for_user_detail",
 			input: `{ "profile" : {
                 "name": "Example User",
                 "email": "example.user@gmail.com",
@@ -48,13 +48,13 @@ func TestCreateProfileHandler(t *testing.T) {
 			expectedStatusCode: http.StatusCreated,
 		},
 		{
-			name:               "Fail for incorrect json",
+			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing first_name field",
+			name: "Fail_for_missing_first_name_field",
 			input: `
                 "mobile": "9999888855",
                 "designation": "Employee",
@@ -70,7 +70,7 @@ func TestCreateProfileHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing name field",
+			name: "Fail_for_missing_name_field",
 			input: `{ "profile" : {
                 "name": "",
                 "email": "example.user@gmail.com",
@@ -89,7 +89,7 @@ func TestCreateProfileHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing email field",
+			name: "Fail_for_missing_email_field",
 			input: `{ "profile" : {
                 "name": "Example User",
                 "email": "",
@@ -153,14 +153,14 @@ func TestGetProfileListHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for listing profiles",
+			name: "Success_for_listing_profiles",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("ListProfiles", mock.Anything).Return(mockListProfile, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name: "Fail as error in ListProfiles",
+			name: "Fail_as_error_in_listprofiles",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("ListProfiles", mock.Anything).Return(nil, errors.New("error")).Once()
 			},
@@ -199,7 +199,7 @@ func TestSkillsListHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for listing skills",
+			name: "Success_for_listing_skills",
 			setup: func(mockSvc *mocks.Service) {
 				mockListSkills := specs.ListSkills{Name: MockSkills}
 				mockSvc.On("ListSkills", mock.Anything).Return(mockListSkills, nil).Once()
@@ -207,7 +207,7 @@ func TestSkillsListHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name: "Fail as error in ListSkills",
+			name: "Fail_as_error_in_listskills",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("ListSkills", mock.Anything).Return(specs.ListSkills{}, errors.New("error")).Once()
 			},
@@ -247,7 +247,7 @@ func TestGetProfileHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name:      "Success for getting profile",
+			name:      "Success_for_getting_profile",
 			profileID: "1",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("GetProfile", mock.Anything, 1).Return(specs.ResponseProfile{
@@ -269,7 +269,7 @@ func TestGetProfileHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:      "Fail as error in GetProfile",
+			name:      "Fail_as_error_in_getprofile",
 			profileID: "2",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("GetProfile", mock.Anything, 2).Return(specs.ResponseProfile{}, errors.New("error")).Once()

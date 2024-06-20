@@ -4,16 +4,35 @@ import "errors"
 
 // Error Variables for replacing the errors wherever required
 var (
-	ErrInvalidBody      = errors.New("invalid request body")
-	ErrParameterMissing = errors.New("parameter missing")
-	ErrInvalidID        = errors.New("invalid id")
-	ErrEmptyPayload     = errors.New("empty payload array")
+	ErrInvalidBody          = errors.New("invalid request body")
+	ErrParameterMissing     = errors.New("parameter missing")
+	ErrInvalidID            = errors.New("invalid id")
+	ErrEmptyPayload         = errors.New("empty payload array")
+	ErrSecretKey            = errors.New("secret key not found")
+	ErrEmailNotFound        = errors.New("email not found")
+	ErrDecodeRequest        = errors.New("unable to decode request")
+	ErrGoogleRequest        = errors.New("unable to send request to google")
+	ErrDecodeResponse       = errors.New("unable to decode response")
+	ErrInvalidEmail         = errors.New("invalid email")
+	ErrGenerateToken        = errors.New("unable to generate token")
+	ErrEmptyAccessToken     = errors.New("empty access token")
+	ErrAuthToken            = errors.New("unauthorized access")
+	ErrAuthHeader           = errors.New("invalid authorization header")
+	ErrSigningMethod        = errors.New("unexpected signing method")
+	ErrInvalispecsken         = errors.New("invalid token")
+	ErrUserID               = errors.New("error in parsing userID from claims")
+	ErrTokenEmpty           = errors.New("token string is empty")
+	ErrTokenExpirationHours = errors.New("TOKEN_EXPIRATION_HOURS is not set")
+	ErrVerifyToken          = errors.New("error in verifying token")
+	ErrFailespecsFetch        = errors.New("failed to fetch data")
 )
 
 // Profile Related variables
 var (
-	ErrInvalidFormat      = errors.New("invalid request format")
-	ErrInvalidRequestData = errors.New("invalid request data")
+	ErrInvalidFormat          = errors.New("invalid request format")
+	ErrInvalidRequestData     = errors.New("invalid request data")
+	ErrHTTPRequestFailed      = errors.New("failed to perform HTTP request")
+	ErrReadResponseBodyFailed = errors.New("failed to read response body")
 )
 
 // DB Related variables

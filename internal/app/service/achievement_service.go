@@ -14,6 +14,7 @@ import (
 type AchievementService interface {
 	CreateAchievement(ctx context.Context, cDetail specs.CreateAchievementRequest, ID int) (profileID int, err error)
 	UpdateAchievement(ctx context.Context, profileID string, eduID string, req specs.UpdateAchievementRequest) (id int, err error)
+	ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) (value []specs.AchievementResponse, err error)
 }
 
 // CreateAchievement : Service layer function adds certicates details to a user profile.
@@ -44,7 +45,6 @@ func (achSvc *service) CreateAchievement(ctx context.Context, cDetail specs.Crea
 		zap.S().Error("Unable to create achievement : ", err, "for profile id : ", profileID)
 		return 0, err
 	}
-	zap.S().Info("achievement(s) created with profile id : ", id)
 
 	return id, nil
 }
@@ -72,4 +72,13 @@ func (achSvc *service) UpdateAchievement(ctx context.Context, profileID string, 
 	zap.S().Info("achievement(s) update with profile id : ", id)
 
 	return id, nil
+}
+
+func (achSvc *service) ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) (value []specs.AchievementResponse, err error) {
+	value, err = achSvc.AchievementRepo.ListAchievements(ctx, profileID, filter)
+	if err != nil {
+		zap.S().Error("error to get achievement : ", err, " for profile id : ", profileID)
+		return []specs.AchievementResponse{}, err
+	}
+	return value, nil
 }

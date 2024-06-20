@@ -11,6 +11,7 @@ import (
 
 // service implements the Service interface.
 type service struct {
+	UserLoginRepo   repository.UserStorer
 	ProfileRepo     repository.ProfileStorer
 	EducationRepo   repository.EducationStorer
 	ExperienceRepo  repository.ExperienceStorer
@@ -27,6 +28,7 @@ type Service interface {
 	GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, id int, profileDetail specs.UpdateProfileRequest) (ID int, err error)
 
+	UserLoginServive
 	EducationService
 	ProjectService
 	ExperienceService
@@ -36,6 +38,7 @@ type Service interface {
 
 // RepoDeps is used to intialize repo dependencies
 type RepoDeps struct {
+	UserLoginDeps   repository.UserStorer
 	ProfileDeps     repository.ProfileStorer
 	EducationDeps   repository.EducationStorer
 	ExperienceDeps  repository.ExperienceStorer
@@ -46,8 +49,8 @@ type RepoDeps struct {
 
 // NewServices creates a new instance of the Service.
 func NewServices(rp RepoDeps) Service {
-
 	return &service{
+		UserLoginRepo:   rp.UserLoginDeps,
 		ProfileRepo:     rp.ProfileDeps,
 		EducationRepo:   rp.EducationDeps,
 		ExperienceRepo:  rp.ExperienceDeps,

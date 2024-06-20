@@ -14,6 +14,7 @@ import (
 type CertificateService interface {
 	CreateCertificate(ctx context.Context, cDetail specs.CreateCertificateRequest, ID int) (profileID int, err error)
 	UpdateCertificate(ctx context.Context, profileID string, eduID string, req specs.UpdateCertificateRequest) (id int, err error)
+	ListCertificates(ctx context.Context, profileID int, fitler specs.ListCertificateFilter) (value []specs.CertificateResponse, err error)
 }
 
 // CreateCerticate : Service layer function adds certicates details to a user profile.
@@ -48,7 +49,6 @@ func (certificateSvc *service) CreateCertificate(ctx context.Context, cDetail sp
 		zap.S().Error("Unable to create Certificate : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
-	zap.S().Info("certificate(s) created with profile id : ", ID)
 
 	return ID, nil
 }
@@ -80,4 +80,14 @@ func (certificateSvc *service) UpdateCertificate(ctx context.Context, profileID 
 	zap.S().Info("certificate(s) update with profile id : ", id)
 
 	return id, nil
+}
+
+func (certificateSvc *service) ListCertificates(ctx context.Context, profileID int, filter specs.ListCertificateFilter) (value []specs.CertificateResponse, err error) {
+	value, err = certificateSvc.CertificateRepo.ListCertificates(ctx, profileID, filter)
+	if err != nil {
+		zap.S().Error("error to get certificate : ", err, " for profile id : ", profileID)
+		return []specs.CertificateResponse{}, err
+	}
+
+	return value, nil
 }

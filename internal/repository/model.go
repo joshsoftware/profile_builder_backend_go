@@ -1,5 +1,13 @@
 package repository
 
+// UserDao represents a data access object for user-related information.
+// This struct maps to a database table, where each field corresponds to a column
+// in the users table.
+type UserDao struct {
+	ID    int64  `db:"id"`
+	Email string `db:"email"`
+}
+
 // ProfileRepo represents a data access object for profile-related information.
 // This struct maps to a database table, where each field corresponds to a column
 // in the profile table.

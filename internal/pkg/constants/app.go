@@ -81,3 +81,25 @@ var ResponseProjectsColumns = []string{
 var ResponseExperiencesColumns = []string{
 	"id", "profile_id", "designation", "company_name", "from_date", "to_date",
 }
+
+// ResponseAchievementsColumns defines the columns required for returning a specific user achievements.
+var ResponseAchievementsColumns = []string{
+	"id", "profile_id", "name", "description",
+}
+
+// ResponseCertificatesColumns defines the columns required for returning a specific user certificates.
+var ResponseCertificatesColumns = []string{
+	"id", "profile_id", "name", "organization_name", "description", "issued_date", "from_date", "to_date",
+}
+
+// ListQueryParams for acheivements
+var (
+	AchievementIDsStr   = "achievement_ids"
+	AchievementNamesStr = "names"
+)
+
+// ListQueryParams for certificates
+var (
+	CertificateIDsStr   = "certificate_ids"
+	CertificateNamesStr = "names"
+)

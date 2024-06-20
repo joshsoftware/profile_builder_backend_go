@@ -3,11 +3,13 @@ package service_test
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -25,7 +27,7 @@ func TestCreateAchievement(t *testing.T) {
 		isErrorExpected bool
 	}{
 		{
-			name: "Success for achievement details",
+			name: "Success_for_achievement_details",
 			input: specs.CreateAchievementRequest{
 				Achievements: []specs.Achievement{
 					{
@@ -40,7 +42,7 @@ func TestCreateAchievement(t *testing.T) {
 			isErrorExpected: false,
 		},
 		{
-			name: "Failed because CreateAchievement returns an error",
+			name: "Failed_because_createachievement_returns_an_error",
 			input: specs.CreateAchievementRequest{
 				Achievements: []specs.Achievement{
 					{
@@ -55,7 +57,7 @@ func TestCreateAchievement(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name: "Failed because of missing achievement name",
+			name: "Failed_because_of_missing_achievement_name",
 			input: specs.CreateAchievementRequest{
 				Achievements: []specs.Achievement{
 					{
@@ -70,7 +72,7 @@ func TestCreateAchievement(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name: "Failed because of empty payload",
+			name: "Failed_because_of_empty_payload",
 			input: specs.CreateAchievementRequest{
 				Achievements: []specs.Achievement{},
 			},
@@ -108,7 +110,7 @@ func TestUpdateAchievement(t *testing.T) {
 		isErrorExpected bool
 	}{
 		{
-			name:          "Success for updating achievement details",
+			name:          "Success_for_updating_achievement_details",
 			profileID:     "1",
 			achievementID: "1",
 			input: specs.UpdateAchievementRequest{
@@ -123,7 +125,7 @@ func TestUpdateAchievement(t *testing.T) {
 			isErrorExpected: false,
 		},
 		{
-			name:          "Failed because UpdateAchievement returns an error",
+			name:          "Failed_because_updateachievement_returns_an_error",
 			profileID:     "100000000000000000",
 			achievementID: "1",
 			input: specs.UpdateAchievementRequest{
@@ -138,7 +140,7 @@ func TestUpdateAchievement(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name:          "Failed because of missing achievement name",
+			name:          "Failed_because_of_missing_achievement_name",
 			profileID:     "1",
 			achievementID: "1",
 			input: specs.UpdateAchievementRequest{
@@ -153,7 +155,7 @@ func TestUpdateAchievement(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name:          "Failed because of invalid profileID or achievementID",
+			name:          "Failed_because_of_invalid_profileid_or_achievementID",
 			profileID:     "invalid",
 			achievementID: "1",
 			input: specs.UpdateAchievementRequest{
@@ -175,6 +177,86 @@ func TestUpdateAchievement(t *testing.T) {
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+var (
+	profileID = 123
+)
+
+func TestListAchievements(t *testing.T) {
+	mockAchievementRepo := new(mocks.AchievementStorer)
+	var repodeps = service.RepoDeps{
+		AchievementDeps: mockAchievementRepo,
+	}
+	achService := service.NewServices(repodeps)
+
+	// mock data
+	mockProfileId := profileID
+	mockResponseAchievement := []specs.AchievementResponse{
+		{
+			ProfileID:   123,
+			Name:        "Client Appreciation",
+			Description: "Appreciated by client for the work done",
+		},
+	}
+
+	tests := []struct {
+		Name            string
+		ProfileID       string
+		MockSetup       func(*mocks.AchievementStorer, int)
+		isErrorExpected bool
+		wantResponse    []specs.AchievementResponse
+	}{
+		{
+			Name:      "success_get_achievement",
+			ProfileID: strconv.Itoa(mockProfileId),
+			MockSetup: func(mockAchievementStorer *mocks.AchievementStorer, profileID int) {
+				mockAchievementStorer.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return(mockResponseAchievement, nil).Once()
+			},
+			isErrorExpected: false,
+			wantResponse:    mockResponseAchievement,
+		},
+		{
+			Name:      "fail_get_achievement",
+			ProfileID: "123",
+			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
+				achMock.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]specs.AchievementResponse{}, errors.New("error")).Once()
+			},
+			isErrorExpected: true,
+			wantResponse:    []specs.AchievementResponse{},
+		},
+		{
+			Name:      "sucess_with_empty_resultset",
+			ProfileID: "123",
+			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
+				achMock.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]specs.AchievementResponse{}, nil).Once()
+			},
+			isErrorExpected: false,
+			wantResponse:    []specs.AchievementResponse{},
+		},
+		{
+			Name:      "invalid_profile_id",
+			ProfileID: "invalid",
+			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
+				achMock.On("ListAchievements", mock.Anything, mock.Anything, mock.Anything).Return([]specs.AchievementResponse{}, errors.New("invalid profile ID")).Once()
+			},
+			isErrorExpected: true,
+			wantResponse:    []specs.AchievementResponse{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			profileIDInt, _ := strconv.Atoi(tt.ProfileID)
+			tt.MockSetup(mockAchievementRepo, profileIDInt)
+			gotResponse, err := achService.ListAchievements(context.Background(), profileIDInt, specs.ListAchievementFilter{})
+
+			assert.Equal(t, tt.wantResponse, gotResponse)
+			if (err != nil) != tt.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", tt.Name, tt.isErrorExpected, err != nil)
 			}
 		})
 	}

@@ -1,29 +1,29 @@
 # Creating a Profile Builder Application with Admin Control and Some Advanced Features.
 
 <p>
-<b>Requirements - </b> The system revolves around a single role: Admin. 
+<b>Requirements - </b> The system revolves around a single role: Admin.
 
 <b> Admin Privileges: </b>
- Create, view, update user profiles.
- Control all profile-related operations. 
- 
- General Features: Admin can create standardized templates for user profiles. Only admins who manage all user profile activities and print the pdf of created profiles.
+Create, view, update user profiles.
+Control all profile-related operations.
+
+General Features: Admin can create standardized templates for user profiles. Only admins who manage all user profile activities and print the pdf of created profiles.
 
 </p>
-
 
 ## Setup
 
 This Project uses Postgres DB to handle database queries.
 There are few records already seeded into database and whatever updations you make on database, it will persist even after you close the application. You can run the CleanUp command to start fresh.
 
-
 Firstly, run the following command to get the Project on local system
+
 ```bash
 git clone github.com/joshsoftware/profile_builder_backend_go.git
 ```
 
 1. Run following command to download all dependencies
+
 ```bash
 go mod download
 or
@@ -31,16 +31,19 @@ go mod tidy
 ```
 
 2. Run following command to start Application
+
 ```bash
 make run
 ```
 
 2. Run following command to run unit test cases
+
 ```bash
 make test
 ```
 
 3. Run following command to check test coverage
+
 ```bash
 make test-cover
 
@@ -48,33 +51,33 @@ make test-cover
 ```
 
 4. Run following command to erase database to start fresh
+
 ```bash
 make cleanDB
 ```
 
-
-
----------------------------------------------------------------------
-
+---
 
 At Next, run the following command in terminal for DB related activities
+
 ```bash
 sudo -u postgres psql
 ```
+
 1. Run following command to Create a Database for Application
+
 ```bash
 CREATE DATABASE profile_builder;
 \c profile_builder;
 ```
 
 2. Run following command to Make migrations of DB
+
 ```bash
 make migrate
 ```
 
-
 ## APIs
-
 
 1. <b>Login API</b> : `POST http://localhost:1925/login`
 2. <b>Create Profile</b> : `POST http://localhost:1925/profiles`
@@ -93,9 +96,7 @@ make migrate
 
 ## Postman Collection
 
-
 [here](postman_collection.json)
-
 
 ## Project Structure
 
@@ -144,7 +145,7 @@ jspnlp@unispab:~/JOSH/Profile Builder Backend$ tree
 │   ├── pkg
 │   │   ├── constants
 │   │   │   └── app.go
-│   │   ├── dto
+│   │   ├── specs
 │   │   │   ├── achievement.go
 │   │   │   ├── api.go
 │   │   │   ├── certificate.go

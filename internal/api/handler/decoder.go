@@ -9,6 +9,18 @@ import (
 	"go.uber.org/zap"
 )
 
+// Decode the
+
+func decodeUserLoginRequest(r *http.Request) (specs.UserLoginRequest, error) {
+	var req specs.UserLoginRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return specs.UserLoginRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
 // Decodes the Profile Creation object Request
 func decodeCreateProfileRequest(r *http.Request) (specs.CreateProfileRequest, error) {
 	var req specs.CreateProfileRequest

@@ -36,7 +36,7 @@ func TestCreateExperience(t *testing.T) {
 		isErrorExpected bool
 	}{
 		{
-			name: "Success for experience details",
+			name: "Success_for_experience_details",
 			input: specs.CreateExperienceRequest{
 				Experiences: []specs.Experience{
 					{
@@ -53,7 +53,7 @@ func TestCreateExperience(t *testing.T) {
 			isErrorExpected: false,
 		},
 		{
-			name: "Failed because CreateExperience returns an error",
+			name: "Failed_because_createexperience_returns_an_error",
 			input: specs.CreateExperienceRequest{
 				Experiences: []specs.Experience{
 					{
@@ -70,7 +70,7 @@ func TestCreateExperience(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name: "Failed because of missing designation",
+			name: "Failed_because_of_missing_designation",
 			input: specs.CreateExperienceRequest{
 				Experiences: []specs.Experience{
 					{
@@ -87,7 +87,7 @@ func TestCreateExperience(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name: "Failed because of empty payload",
+			name: "Failed_because_of_empty_payload",
 			input: specs.CreateExperienceRequest{
 				Experiences: []specs.Experience{},
 			},
@@ -126,17 +126,16 @@ func TestGetExperience(t *testing.T) {
 		wantResponse    []specs.ExperienceResponse
 	}{
 		{
-			name:      "Success get experience",
+			name:      "Success_get_experience",
 			profileID: mockProfileID,
 			setup: func(expMock *mocks.ExperienceStorer) {
-				// Mock successful retrieval
 				expMock.On("GetExperiences", mock.Anything, mock.Anything).Return(mockResponseExperience, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseExperience,
 		},
 		{
-			name:      "Fail get experience",
+			name:      "Fail_get_experience",
 			profileID: mockProfileID,
 			setup: func(expMock *mocks.ExperienceStorer) {
 				// Mock retrieval failure
@@ -181,7 +180,7 @@ func TestUpdateExperience(t *testing.T) {
 		isErrorExpected bool
 	}{
 		{
-			name:         "Success for updating experience details",
+			name:         "Success_for_updating_experience_details",
 			profileID:    "1",
 			experienceID: "1",
 			input: specs.UpdateExperienceRequest{
@@ -198,7 +197,7 @@ func TestUpdateExperience(t *testing.T) {
 			isErrorExpected: false,
 		},
 		{
-			name:         "Failed because UpdateExperience returns an error",
+			name:         "Failed_because_updateexperience_returns_an_error",
 			profileID:    "100000000000000000",
 			experienceID: "1",
 			input: specs.UpdateExperienceRequest{
@@ -215,7 +214,7 @@ func TestUpdateExperience(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name:         "Failed because of missing experience designation",
+			name:         "Failed_because_of_missing_experience_designation",
 			profileID:    "1",
 			experienceID: "1",
 			input: specs.UpdateExperienceRequest{
@@ -232,7 +231,7 @@ func TestUpdateExperience(t *testing.T) {
 			isErrorExpected: true,
 		},
 		{
-			name:         "Failed because of invalid profileID or experienceID",
+			name:         "Failed_because_of_invalid_profileid_or_experienceid",
 			profileID:    "invalid",
 			experienceID: "1",
 			input: specs.UpdateExperienceRequest{

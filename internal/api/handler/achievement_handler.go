@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -83,6 +84,39 @@ func UpdateAchievementHandler(ctx context.Context, achSvc service.Service) func(
 		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponseWithID{
 			Message:   "Achievement updated successfully",
 			ProfileID: updatedResp,
+		})
+	}
+}
+
+func ListAchievementsHandler(ctx context.Context, achSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		profileID, err := helpers.GetParamsByID(r,"profile_id")
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrInvalidProfile)
+			zap.S().Error(err)
+			return
+		}
+		filter, err := helpers.DecodeAchievementRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrDecodeRequest)
+			zap.S().Error(err)
+			return
+		}
+
+		achivementsResp, err := achSvc.ListAchievements(ctx, profileID, filter)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailespecsFetch)
+			zap.S().Error("Unable to fetch achievement : ", err, "for profile id : ", profileID)
+			return
+		}
+
+		if len(achivementsResp) == 0 {
+			middleware.ErrorResponse(w, http.StatusNotFound, errors.ErrNoRecordFound)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.ResponseAchievement{
+			Achievements: achivementsResp,
 		})
 	}
 }

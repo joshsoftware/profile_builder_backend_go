@@ -46,13 +46,13 @@ func TestCreateProjectHandler(t *testing.T) {
 			expectedStatusCode: http.StatusCreated,
 		},
 		{
-			name:               "Fail for incorrect json",
+			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing name field",
+			name: "Fail_for_missing_name_field",
 			input: `{
 				"projects":[{
 					"name": "",
@@ -125,7 +125,7 @@ func TestListProjectHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:        "Fail as error in GetProject",
+			name:        "Fail_as_error_in_getproject",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("GetProject", mock.Anything, 2).Return([]specs.ProjectResponse{}, errors.New("error")).Once()
@@ -168,7 +168,7 @@ func TestUpdateProjectHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for updating project detail",
+			name: "Success_for_updating_project_detail",
 			input: `{
 				"project":{
 					"name": "Profile Builder",
@@ -189,13 +189,13 @@ func TestUpdateProjectHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:               "Fail for incorrect json",
+			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing name field",
+			name: "Fail_for_missing_name_field",
 			input: `{
 				"project": {
 					"name": "",
@@ -206,7 +206,7 @@ func TestUpdateProjectHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing description field",
+			name: "Fail_for_missing_description_field",
 			input: `{
 				"project": {
 					"name": "Updated Project",
@@ -216,19 +216,6 @@ func TestUpdateProjectHandler(t *testing.T) {
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
-		// {
-		// 	name: "Fail for service error",
-		// 	input: `{
-		// 		"project": {
-		// 			"name": "Updated Project",
-		// 			"description": "Updated Description"
-		// 		}
-		// 	}`,
-		// 	setup: func(mockSvc *mocks.Service) {
-		// 		mockSvc.On("UpdateProject", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateProjectRequest")).Return(0, errors.New("Service Error")).Once()
-		// 	},
-		// 	expectedStatusCode: http.StatusBadGateway,
-		// },
 	}
 
 	for _, test := range tests {

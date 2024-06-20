@@ -43,6 +43,36 @@ func (_m *CertificateService) CreateCertificate(ctx context.Context, cDetail spe
 	return r0, r1
 }
 
+// ListCertificates provides a mock function with given fields: ctx, profileID, fitler
+func (_m *CertificateService) ListCertificates(ctx context.Context, profileID int, fitler specs.ListCertificateFilter) ([]specs.CertificateResponse, error) {
+	ret := _m.Called(ctx, profileID, fitler)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListCertificates")
+	}
+
+	var r0 []specs.CertificateResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.ListCertificateFilter) ([]specs.CertificateResponse, error)); ok {
+		return rf(ctx, profileID, fitler)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.ListCertificateFilter) []specs.CertificateResponse); ok {
+		r0 = rf(ctx, profileID, fitler)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]specs.CertificateResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, specs.ListCertificateFilter) error); ok {
+		r1 = rf(ctx, profileID, fitler)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpdateCertificate provides a mock function with given fields: ctx, profileID, eduID, req
 func (_m *CertificateService) UpdateCertificate(ctx context.Context, profileID string, eduID string, req specs.UpdateCertificateRequest) (int, error) {
 	ret := _m.Called(ctx, profileID, eduID, req)

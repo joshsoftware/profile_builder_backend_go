@@ -6,9 +6,19 @@ import (
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+type ListAchievementFilter struct {
+	AchievementIDs []int    `json:"achievement_ids"`
+	Names          []string `json:"names"`
+}
+
 // CreateAchievementRequest struct represents a request to create achievements details.
 type CreateAchievementRequest struct {
 	Achievements []Achievement `json:"achievements"`
+}
+
+// UpdateAchievementRequest struct represents a request to update a achievement
+type UpdateAchievementRequest struct {
+	Achievement Achievement `json:"achievement"`
 }
 
 // Achievement struct represents details of an achievements.
@@ -17,9 +27,15 @@ type Achievement struct {
 	Description string `json:"description"`
 }
 
-// UpdateAchievementRequest struct represents a request to update a achievement
-type UpdateAchievementRequest struct {
-	Achievement Achievement `json:"achievement"`
+type AchievementResponse struct {
+	ID          int    `json:"id"`
+	ProfileID   int    `json:"profile_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type ResponseAchievement struct {
+	Achievements []AchievementResponse `json:"achievements"`
 }
 
 // Validate func checks if the CreateAchievementRequest is valid.

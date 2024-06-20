@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -46,6 +47,42 @@ func CreateCertificateHandler(ctx context.Context, certificateSvc service.Servic
 			Message:   "Certificate(s) added successfully",
 			ProfileID: profileID,
 		})
+	}
+}
+
+// ListCertificatesHandler handles HTTP requests to get certificates details of a user profile.
+func ListCertificatesHandler(ctx context.Context, certificateSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		profileID, err := helpers.GetParamsByID(r, "profile_id")
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
+
+		filter, err := helpers.DecodeCertificateRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrDecodeRequest)
+			zap.S().Error(err)
+			return
+		}
+
+		cetificateResp, err := certificateSvc.ListCertificates(ctx, profileID, filter)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailespecsFetch)
+			zap.S().Error("Unable to fetch certificate : ", err, "for profile id : ", profileID)
+			return
+		}
+
+		if len(cetificateResp) == 0 {
+			middleware.ErrorResponse(w, http.StatusNotFound, errors.ErrNoRecordFound)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK,
+			specs.ResponseCertificate{
+				Certificates: cetificateResp,
+			})
 	}
 }
 
