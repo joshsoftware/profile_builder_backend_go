@@ -6,6 +6,11 @@ import (
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+type ListCertificateFilter struct {
+	CertificateIDs []int    `json:"certificate_ids"`
+	Names          []string `json:"names"`
+}
+
 // CreateCertificateRequest struct represents a request to create certificates details.
 type CreateCertificateRequest struct {
 	ProfileID    int           `json:"profile_id"`
@@ -20,6 +25,23 @@ type Certificate struct {
 	IssuedDate       string `json:"issued_date"`
 	FromDate         string `json:"from_date"`
 	ToDate           string `json:"to_date"`
+}
+
+// CertificateResponse struct represents details of an certificates for specific id.
+type CertificateResponse struct {
+	ID               int    `json:"id"`
+	ProfileID        int    `json:"profile_id"`
+	Name             string `json:"name"`
+	OrganizationName string `json:"organization_name"`
+	Description      string `json:"description"`
+	IssuedDate       string `json:"issued_date"`
+	FromDate         string `json:"from_date"`
+	ToDate           string `json:"to_date"`
+}
+
+// ResponseCertificate used for response of certificates of profiles
+type ResponseCertificate struct {
+	Certificates []CertificateResponse `json:"certificates"`
 }
 
 // Validate func checks if the CreateCertificateRequest is valid.

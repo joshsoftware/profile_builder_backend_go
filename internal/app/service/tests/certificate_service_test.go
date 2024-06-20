@@ -3,11 +3,13 @@ package service_test
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -104,6 +106,84 @@ func TestCreateCertificate(t *testing.T) {
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+func TestListCertificates(t *testing.T) {
+	mockCertificateRepo := new(mocks.CertificateStorer)
+	var repodeps = service.RepoDeps{
+		CertificateDeps: mockCertificateRepo,
+	}
+	certificateService := service.NewServices(repodeps)
+
+	mockProfileId := strconv.Itoa(profileID)
+	mockResponseCertificate := []dto.CertificateResponse{
+		{
+			ProfileID:        123,
+			Name:             "Certificate Name",
+			OrganizationName: "Organization Name",
+			Description:      "Certificate Description",
+			IssuedDate:       "2024-01-01",
+			FromDate:         "2024-01-01",
+			ToDate:           "2024-06-01",
+		},
+	}
+
+	tests := []struct {
+		Name            string
+		ProfileID       string
+		MockSetup       func(*mocks.CertificateStorer, int)
+		isErrorExpected bool
+		wantResponse    []dto.CertificateResponse
+	}{
+		{
+			Name:      "success_list_certificates",
+			ProfileID: mockProfileId,
+			MockSetup: func(mockCertificateStorer *mocks.CertificateStorer, profileID int) {
+				mockCertificateStorer.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return(mockResponseCertificate, nil).Once()
+			},
+			isErrorExpected: false,
+			wantResponse:    mockResponseCertificate,
+		},
+		{
+			Name:      "fail_get_certificates",
+			ProfileID: mockProfileID,
+			MockSetup: func(certMock *mocks.CertificateStorer, profileID int) {
+				certMock.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]dto.CertificateResponse{}, errors.New("error")).Once()
+			},
+			isErrorExpected: true,
+			wantResponse:    []dto.CertificateResponse{},
+		},
+		{
+			Name:      "sucess_with_empty_resultset",
+			ProfileID: mockProfileID,
+			MockSetup: func(certMock *mocks.CertificateStorer, profileID int) {
+				certMock.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]dto.CertificateResponse{}, nil).Once()
+			},
+			isErrorExpected: false,
+			wantResponse:    []dto.CertificateResponse{},
+		},
+		{
+			Name:      "invalid_profile_id",
+			ProfileID: "invalid",
+			MockSetup: func(certMock *mocks.CertificateStorer, profileID int) {
+				certMock.On("ListCertificates", mock.Anything, mock.Anything, mock.Anything).Return([]dto.CertificateResponse{}, errors.New("invalid profile ID")).Once()
+			},
+			isErrorExpected: true,
+			wantResponse:    []dto.CertificateResponse{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			profileIDInt, _ := strconv.Atoi(tt.ProfileID)
+			tt.MockSetup(mockCertificateRepo, profileIDInt)
+			gotResponse, err := certificateService.ListCertificates(context.Background(), profileIDInt, dto.ListCertificateFilter{})
+			assert.Equal(t, tt.wantResponse, gotResponse)
+			if (err != nil) != tt.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", tt.Name, tt.isErrorExpected, err != nil)
 			}
 		})
 	}

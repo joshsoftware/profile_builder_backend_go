@@ -12,6 +12,7 @@ import (
 // AchievementService represents a set of methods for accessing the achievements
 type AchievementService interface {
 	CreateAchievement(ctx context.Context, cDetail dto.CreateAchievementRequest) (profileID int, err error)
+	ListAchievements(ctx context.Context, profileID int, filter dto.ListAchievementFilter) (value []dto.AchievementResponse, err error)
 }
 
 // CreateAchievement : Service layer function adds certicates details to a user profile.
@@ -42,4 +43,13 @@ func (achSvc *service) CreateAchievement(ctx context.Context, cDetail dto.Create
 	}
 
 	return cDetail.ProfileID, nil
+}
+
+func (achSvc *service) ListAchievements(ctx context.Context, profileID int, filter dto.ListAchievementFilter) (value []dto.AchievementResponse, err error) {
+	value, err = achSvc.AchievementRepo.ListAchievements(ctx, profileID, filter)
+	if err != nil {
+		zap.S().Error("error to get achievement : ", err, " for profile id : ", profileID)
+		return []dto.AchievementResponse{}, err
+	}
+	return value, nil
 }

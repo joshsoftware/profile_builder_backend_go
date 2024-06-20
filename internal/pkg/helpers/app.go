@@ -11,6 +11,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
@@ -112,4 +114,48 @@ func GetMultipleParams(r *http.Request) (string, string, error) {
 	}
 
 	return profileID, id, nil
+}
+
+// Decode the ListFilter
+func DecodeAchievementRequest(r *http.Request) (dto.ListAchievementFilter, error) {
+	achievementIDs := r.URL.Query().Get(constants.AchievementIDsStr)
+	achievementNames := r.URL.Query().Get(constants.AchievementNamesStr)
+
+	if achievementIDs == "" && achievementNames == "" {
+		return dto.ListAchievementFilter{}, nil
+	}
+
+	achievementIntIDs, err := GetQueryIntIds(r, achievementIDs)
+	if err != nil {
+		return dto.ListAchievementFilter{}, err
+	}
+
+	achievementNamesStr := GetQueryStrings(r, achievementNames)
+	filter := dto.ListAchievementFilter{
+		AchievementIDs: achievementIntIDs,
+		Names:          achievementNamesStr,
+	}
+	return filter, nil
+}
+
+func DecodeCertificateRequest(r *http.Request) (dto.ListCertificateFilter, error) {
+	certificateIDs := r.URL.Query().Get(constants.CertificateIDsStr)
+	certificateNames := r.URL.Query().Get(constants.CertificateNamesStr)
+
+	if certificateIDs == "" && certificateNames == "" {
+		return dto.ListCertificateFilter{}, nil
+	}
+
+	certificateIDsInts, err := GetQueryIntIds(r, certificateIDs)
+	if err != nil {
+		return dto.ListCertificateFilter{}, err
+	}
+
+	certificateNameStrs := GetQueryStrings(r, certificateNames)
+
+	filter := dto.ListCertificateFilter{
+		CertificateIDs: certificateIDsInts,
+		Names:          certificateNameStrs,
+	}
+	return filter, nil
 }
