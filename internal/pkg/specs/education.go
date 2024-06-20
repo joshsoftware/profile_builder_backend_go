@@ -1,4 +1,4 @@
-package dto
+package specs
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 
 // CreateEducationRequest represents a request to create education details.
 type CreateEducationRequest struct {
-	ProfileID  int         `json:"profile_id"`
 	Educations []Education `json:"educations"`
 }
 
@@ -28,6 +27,7 @@ type Education struct {
 
 // EducationResponse represents details of an educational qualification for specific id.
 type EducationResponse struct {
+	ID               int    `json:"id"`
 	ProfileID        int    `json:"profile_id"`
 	Degree           string `json:"degree"`
 	UniversityName   string `json:"university_name"`
@@ -43,9 +43,7 @@ type ResponseEducation struct {
 
 // Validate func checks if the CreateEducationRequest is valid.
 func (req *CreateEducationRequest) Validate() error {
-	if req.ProfileID == 0 {
-		return fmt.Errorf("%s : profile id ", errors.ErrParameterMissing.Error())
-	}
+
 	if len(req.Educations) == 0 {
 		return fmt.Errorf("%s : educations ", errors.ErrEmptyPayload.Error())
 	}
@@ -78,24 +76,18 @@ func (req *CreateEducationRequest) Validate() error {
 // Validate func checks if the UpdateEducationRequest is valid.
 func (req *UpdateEducationRequest) Validate() error {
 
-	if req.Education.Degree == "" {
-		return fmt.Errorf("%s : degree ", errors.ErrParameterMissing.Error())
+	fields := map[string]string{
+		"degree":             req.Education.Degree,
+		"university name":    req.Education.UniversityName,
+		"place":              req.Education.Place,
+		"percentage or cgpa": req.Education.PercentageOrCgpa,
+		"passing year":       req.Education.PassingYear,
 	}
 
-	if req.Education.UniversityName == "" {
-		return fmt.Errorf("%s : university name ", errors.ErrParameterMissing.Error())
-	}
-
-	if req.Education.Place == "" {
-		return fmt.Errorf("%s : place ", errors.ErrParameterMissing.Error())
-	}
-
-	if req.Education.PercentageOrCgpa == "" {
-		return fmt.Errorf("%s : percentage or cgpa ", errors.ErrParameterMissing.Error())
-	}
-
-	if req.Education.PassingYear == "" {
-		return fmt.Errorf("%s : passing year ", errors.ErrParameterMissing.Error())
+	for fieldName, fieldValue := range fields {
+		if fieldValue == "" {
+			return fmt.Errorf("%s : %s", errors.ErrParameterMissing.Error(), fieldName)
+		}
 	}
 
 	return nil

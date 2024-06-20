@@ -25,18 +25,10 @@ CREATE TABLE IF NOT EXISTS profiles (
     secondary_skills TEXT[],
     github_link VARCHAR(100),
     linkedin_link VARCHAR(100),
+    career_objectives TEXT,
     is_active INT NOT NULL,
     is_current_employee INT NOT NULL,
     created_at DATE NOT NULL DEFAULT CURRENT_DATE,
-	updated_at DATE NOT NULL DEFAULT CURRENT_DATE,
-    created_by_id INT NOT NULL,
-    updated_by_id INT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS skills (
-	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	name TEXT[] NOT NULL,
-	created_at DATE NOT NULL DEFAULT CURRENT_DATE,
 	updated_at DATE NOT NULL DEFAULT CURRENT_DATE,
     created_by_id INT NOT NULL,
     updated_by_id INT NOT NULL
@@ -87,8 +79,8 @@ CREATE TABLE IF NOT EXISTS projects (
     description TEXT,
     role VARCHAR(50),
     responsibilities VARCHAR(50),
-    technologies VARCHAR(150) NOT NULL,
-    tech_worked_on VARCHAR(150) NOT NULL,    
+    technologies TEXT[] NOT NULL,
+    tech_worked_on TEXT[] NOT NULL,    
     working_start_date VARCHAR(50),
     working_end_date VARCHAR(50),
     duration VARCHAR(50),

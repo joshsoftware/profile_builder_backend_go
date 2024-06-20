@@ -1,4 +1,4 @@
-package dto
+package specs
 
 import (
 	"fmt"
@@ -8,35 +8,35 @@ import (
 
 // CreateProjectRequest struct represents a request to create project details.
 type CreateProjectRequest struct {
-	ProfileID int       `json:"profile_id"`
-	Projects  []Project `json:"projects"`
+	Projects []Project `json:"projects"`
 }
 
 // Project struct represents details of a project.
 type Project struct {
-	Name             string `json:"name"`
-	Description      string `json:"description"`
-	Role             string `json:"role"`
-	Responsibilities string `json:"responsibilities"`
-	Technologies     string `json:"technologies"`
-	TechWorkedOn     string `json:"tech_worked_on"`
-	WorkingStartDate string `json:"working_start_date"`
-	WorkingEndDate   string `json:"working_end_date"`
-	Duration         string `json:"duration"`
+	Name             string   `json:"name"`
+	Description      string   `json:"description"`
+	Role             string   `json:"role"`
+	Responsibilities string   `json:"responsibilities"`
+	Technologies     []string `json:"technologies"`
+	TechWorkedOn     []string `json:"tech_worked_on"`
+	WorkingStartDate string   `json:"working_start_date"`
+	WorkingEndDate   string   `json:"working_end_date"`
+	Duration         string   `json:"duration"`
 }
 
 // ProjectResponse struct represents details of a project for response.
 type ProjectResponse struct {
-	ProfileID        int    `json:"profile_id"`
-	Name             string `json:"name"`
-	Description      string `json:"description"`
-	Role             string `json:"role"`
-	Responsibilities string `json:"responsibilities"`
-	Technologies     string `json:"technologies"`
-	TechWorkedOn     string `json:"tech_worked_on"`
-	WorkingStartDate string `json:"working_start_date"`
-	WorkingEndDate   string `json:"working_end_date"`
-	Duration         string `json:"duration"`
+	ID               int      `json:"id"`
+	ProfileID        int      `json:"profile_id"`
+	Name             string   `json:"name"`
+	Description      string   `json:"description"`
+	Role             string   `json:"role"`
+	Responsibilities string   `json:"responsibilities"`
+	Technologies     []string `json:"technologies"`
+	TechWorkedOn     []string `json:"tech_worked_on"`
+	WorkingStartDate string   `json:"working_start_date"`
+	WorkingEndDate   string   `json:"working_end_date"`
+	Duration         string   `json:"duration"`
 }
 
 // ResponseProject represents a project response
@@ -44,12 +44,14 @@ type ResponseProject struct {
 	Projects []ProjectResponse `json:"projects"`
 }
 
+// UpdateProjectRequest represents a request to update project details.
+type UpdateProjectRequest struct {
+	Project Project `json:"project"`
+}
+
 // Validate func checks if the CreateProjectRequest is valid.
 func (req *CreateProjectRequest) Validate() error {
 
-	if req.ProfileID <= 0 {
-		return errors.ErrInvalidID
-	}
 	if len(req.Projects) == 0 {
 		return fmt.Errorf("%s : projects ", errors.ErrEmptyPayload.Error())
 	}
@@ -77,10 +79,10 @@ func (p *Project) Validate() error {
 	if p.Responsibilities == "" {
 		return fmt.Errorf("%s : responsibilities ", errors.ErrParameterMissing.Error())
 	}
-	if p.Technologies == "" {
+	if len(p.Technologies) == 0 {
 		return fmt.Errorf("%s : technologies ", errors.ErrParameterMissing.Error())
 	}
-	if p.TechWorkedOn == "" {
+	if len(p.TechWorkedOn) == 0 {
 		return fmt.Errorf("%s : techonology worked on ", errors.ErrParameterMissing.Error())
 	}
 	if p.WorkingStartDate == "" {
@@ -92,5 +94,27 @@ func (p *Project) Validate() error {
 	if p.Duration == "" {
 		return fmt.Errorf("%s : duration ", errors.ErrParameterMissing.Error())
 	}
+	return nil
+}
+
+// Validate func checks if the Project details are valid.
+func (p *UpdateProjectRequest) Validate() error {
+
+	fields := map[string]string{
+		"name":               p.Project.Name,
+		"description":        p.Project.Description,
+		"role":               p.Project.Role,
+		"responsibilities":   p.Project.Responsibilities,
+		"working start date": p.Project.WorkingStartDate,
+		"working end date":   p.Project.WorkingEndDate,
+		"duration":           p.Project.Duration,
+	}
+
+	for fieldName, fieldValue := range fields {
+		if fieldValue == "" {
+			return fmt.Errorf("%s : %s", errors.ErrParameterMissing.Error(), fieldName)
+		}
+	}
+
 	return nil
 }

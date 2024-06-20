@@ -34,7 +34,7 @@ func TestAuthMiddleware(t *testing.T) {
 	}{
 		{
 			Name:    "Success",
-			Request: newRequest("GET", "/", "validToken"),
+			Request: newRequest("GET", "/", "valispecsken"),
 			MockVerifyJWTToken: func(tokenString string) (jwt.MapClaims, error) {
 				return jwt.MapClaims{"userID": int64(123), "Email": Email1}, nil
 			},
@@ -50,7 +50,7 @@ func TestAuthMiddleware(t *testing.T) {
 		},
 		{
 			Name:    "Invalid Authorization Header",
-			Request: newRequest("GET", "/", "invalidToken"),
+			Request: newRequest("GET", "/", "invalispecsken"),
 			MockVerifyJWTToken: func(tokenString string) (jwt.MapClaims, error) {
 				return nil, errors.ErrAuthHeader
 			},
@@ -66,10 +66,10 @@ func TestAuthMiddleware(t *testing.T) {
 		},
 		{
 			Name:    "Invalid Token",
-			Request: newRequest("GET", "/", "invalidToken"),
+			Request: newRequest("GET", "/", "invalispecsken"),
 			MockVerifyJWTToken: func(tokenString string) (jwt.MapClaims, error) {
 				// Return an error instead of a valid claim
-				return nil, errors.ErrInvalidToken
+				return nil, errors.ErrInvalispecsken
 			},
 			ExpectedStatusCode: http.StatusUnauthorized,
 		},

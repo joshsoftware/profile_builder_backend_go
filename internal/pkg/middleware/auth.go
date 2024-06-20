@@ -35,7 +35,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		userID, ok := claims["userID"]
 		if !ok {
-			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalidToken)
+			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalispecsken)
 			zap.S().Error(errors.ErrUserID)
 			return
 		}

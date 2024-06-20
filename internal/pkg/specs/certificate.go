@@ -1,4 +1,4 @@
-package dto
+package specs
 
 import (
 	"fmt"
@@ -13,7 +13,6 @@ type ListCertificateFilter struct {
 
 // CreateCertificateRequest struct represents a request to create certificates details.
 type CreateCertificateRequest struct {
-	ProfileID    int           `json:"profile_id"`
 	Certificates []Certificate `json:"certificates"`
 }
 
@@ -44,11 +43,14 @@ type ResponseCertificate struct {
 	Certificates []CertificateResponse `json:"certificates"`
 }
 
+// UpdateCertificateRequest struct represents a request to update a certificate
+type UpdateCertificateRequest struct {
+	Certificate Certificate `json:"certificate"`
+}
+
 // Validate func checks if the CreateCertificateRequest is valid.
 func (req *CreateCertificateRequest) Validate() error {
-	if req.ProfileID == 0 {
-		return fmt.Errorf("%s : profile id", errors.ErrParameterMissing.Error())
-	}
+
 	if len(req.Certificates) == 0 {
 		return fmt.Errorf("%s : certificates ", errors.ErrEmptyPayload.Error())
 	}
@@ -76,6 +78,27 @@ func (req *CreateCertificateRequest) Validate() error {
 
 		if edu.ToDate == "" {
 			return fmt.Errorf("%s : to date", errors.ErrParameterMissing.Error())
+		}
+	}
+
+	return nil
+}
+
+// Validate func checks if the UpdateCertificateRequest is valid.
+func (req *UpdateCertificateRequest) Validate() error {
+
+	fields := map[string]string{
+		"name":              req.Certificate.Name,
+		"organization name": req.Certificate.OrganizationName,
+		"decsription":       req.Certificate.Description,
+		"issued date":       req.Certificate.IssuedDate,
+		"from date":         req.Certificate.FromDate,
+		"to date":           req.Certificate.ToDate,
+	}
+
+	for fieldName, fieldValue := range fields {
+		if fieldValue == "" {
+			return fmt.Errorf("%s : %s", errors.ErrParameterMissing.Error(), fieldName)
 		}
 	}
 

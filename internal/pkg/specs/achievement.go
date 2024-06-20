@@ -1,4 +1,4 @@
-package dto
+package specs
 
 import (
 	"fmt"
@@ -13,8 +13,12 @@ type ListAchievementFilter struct {
 
 // CreateAchievementRequest struct represents a request to create achievements details.
 type CreateAchievementRequest struct {
-	ProfileID    int           `json:"profile_id"`
 	Achievements []Achievement `json:"achievements"`
+}
+
+// UpdateAchievementRequest struct represents a request to update a achievement
+type UpdateAchievementRequest struct {
+	Achievement Achievement `json:"achievement"`
 }
 
 // Achievement struct represents details of an achievements.
@@ -36,9 +40,7 @@ type ResponseAchievement struct {
 
 // Validate func checks if the CreateAchievementRequest is valid.
 func (req *CreateAchievementRequest) Validate() error {
-	if req.ProfileID == 0 {
-		return fmt.Errorf("%s : profile id ", errors.ErrParameterMissing.Error())
-	}
+
 	if len(req.Achievements) == 0 {
 		return fmt.Errorf("%s : achievements ", errors.ErrEmptyPayload.Error())
 	}
@@ -51,6 +53,20 @@ func (req *CreateAchievementRequest) Validate() error {
 		if edu.Description == "" {
 			return fmt.Errorf("%s : decsription ", errors.ErrParameterMissing.Error())
 		}
+	}
+
+	return nil
+}
+
+// Validate func checks if the UpdateAchievementRequest is valid.
+func (req *UpdateAchievementRequest) Validate() error {
+
+	if req.Achievement.Name == "" {
+		return fmt.Errorf("%s : name ", errors.ErrParameterMissing.Error())
+	}
+
+	if req.Achievement.Description == "" {
+		return fmt.Errorf("%s : decsription ", errors.ErrParameterMissing.Error())
 	}
 
 	return nil

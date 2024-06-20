@@ -1,4 +1,4 @@
-package dto
+package specs
 
 // MessageResponse represents a JSON response message as output.
 type MessageResponse struct {

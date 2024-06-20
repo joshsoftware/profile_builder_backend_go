@@ -1,4 +1,4 @@
-package dto
+package specs
 
 type User struct {
 	ID    int64  `json:"id"`

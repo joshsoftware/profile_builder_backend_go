@@ -33,11 +33,11 @@ func TestUserLogin(t *testing.T) {
 		Email         string
 		MockSetup     func(*mocks.UserStorer, string)
 		MockTokenFunc func(int64, string) (string, error)
-		ExpectedToken string
+		Expectespecsken string
 		ExpectedError error
 	}{
 		{
-			Name:  "success",
+			Name:  "success_of_login",
 			Email: TestEmail,
 			MockSetup: func(mockUserStorer *mocks.UserStorer, email string) {
 				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(UserID1), nil).Once()
@@ -45,7 +45,7 @@ func TestUserLogin(t *testing.T) {
 			MockTokenFunc: func(id int64, email string) (string, error) {
 				return "valid_token", nil
 			},
-			ExpectedToken: "valid_token",
+			Expectespecsken: "valid_token",
 			ExpectedError: nil,
 		},
 		{
@@ -55,11 +55,11 @@ func TestUserLogin(t *testing.T) {
 				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(userID0), errors.New("repository error")).Once()
 			},
 			MockTokenFunc: nil,
-			ExpectedToken: "",
+			Expectespecsken: "",
 			ExpectedError: errors.New("repository error"),
 		},
 		{
-			Name:  "CreateToken error",
+			Name:  "CreateToken_error",
 			Email: TestEmail,
 			MockSetup: func(mockUserStorer *mocks.UserStorer, email string) {
 				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(UserID1), nil).Once()
@@ -67,7 +67,7 @@ func TestUserLogin(t *testing.T) {
 			MockTokenFunc: func(id int64, email string) (string, error) {
 				return "", errors.New("token creation error")
 			},
-			ExpectedToken: "",
+			Expectespecsken: "",
 			ExpectedError: errors.New("token creation error"),
 		},
 	}
@@ -82,7 +82,7 @@ func TestUserLogin(t *testing.T) {
 			}
 
 			token, err := userLoginService.GenerateLoginToken(context.Background(), tt.Email)
-			assert.Equal(t, tt.ExpectedToken, token)
+			assert.Equal(t, tt.Expectespecsken, token)
 			assert.Equal(t, tt.ExpectedError, err)
 
 			mockUserLogin.AssertExpectations(t)

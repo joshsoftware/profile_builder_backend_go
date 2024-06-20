@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -27,52 +27,36 @@ func TestCreateExperienceHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success for experience detail",
+			name: "Success_for_experience_detail",
 			input: `{
-				"profile_id": 1,
 				"experiences":[{
 					"designation": "Associate Data Scientist",
 					"company_name": "Josh Software Pvt.Ltd.",
 					"from_date": "Jan-2023",
 					"to_date": "July-2024"
-					}]
-				}`,
+				}]
+			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateExperience", context.Background(), mock.AnythingOfType("dto.CreateExperienceRequest")).Return(1, nil)
+				mockSvc.On("CreateExperience", mock.Anything, mock.AnythingOfType("specs.CreateExperienceRequest"), 1).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
 		},
 		{
-			name:               "Fail for incorrect JSON",
+			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail for missing designation field",
+			name: "Fail_for_missing_designation_field",
 			input: `{
-                "profile_id": 1,
-                "experiences": [{
-                    "designation": "",
-                    "company_name": "ABC Corp",
-                    "from_date": "2023-01-01",
-                    "to_date": "2024-01-01"
-                }]
-            }`,
-			setup:              func(mockSvc *mocks.Service) {},
-			expectedStatusCode: http.StatusBadRequest,
-		},
-		{
-			name: "Fail for missing profile_id field",
-			input: `{
-                "profile_id": 0,
-                "experiences": [{
-                    "designation": "Software Engineer",
-                    "company_name": "ABC Corp",
-                    "from_date": "2023-01-01",
-                    "to_date": "2024-01-01"
-                }]
-            }`,
+				"experiences": [{
+					"designation": "",
+					"company_name": "ABC Corp",
+					"from_date": "2023-01-01",
+					"to_date": "2024-01-01"
+				}]
+			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
 		},
@@ -80,13 +64,14 @@ func TestCreateExperienceHandler(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// mockSvc := new(mocks.Service)
 			test.setup(profileSvc)
 
 			req, err := http.NewRequest("POST", "/profiles/experiences", bytes.NewBuffer([]byte(test.input)))
 			if err != nil {
 				t.Fatal(err)
+				return
 			}
+			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createExperienceHandler)
@@ -99,9 +84,9 @@ func TestCreateExperienceHandler(t *testing.T) {
 	}
 }
 
-func TestGetExperienceHandler(t *testing.T) {
+func TestListExperienceHandler(t *testing.T) {
 	expSvc := mocks.NewService(t)
-	getExperienceHandler := handler.GetExperienceHandler(context.Background(), expSvc)
+	getExperienceHandler := handler.ListExperienceHandler(context.Background(), expSvc)
 
 	tests := []struct {
 		name               string
@@ -110,10 +95,10 @@ func TestGetExperienceHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name:        "Success for getting experiences",
+			name:        "Success_for_getting_experiences",
 			queryParams: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetExperience", mock.Anything, "1").Return([]dto.ExperienceResponse{
+				mockSvc.On("GetExperience", mock.Anything, 1).Return([]specs.ExperienceResponse{
 					{
 						ProfileID:   1,
 						Designation: "Software Engineer",
@@ -126,10 +111,10 @@ func TestGetExperienceHandler(t *testing.T) {
 			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:        "Fail as error in GetExperience",
+			name:        "Fail_as_error_in_getexperience",
 			queryParams: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetExperience", mock.Anything, "2").Return([]dto.ExperienceResponse{}, errors.New("error")).Once()
+				mockSvc.On("GetExperience", mock.Anything, 2).Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -154,6 +139,103 @@ func TestGetExperienceHandler(t *testing.T) {
 			}
 
 			expSvc.AssertExpectations(t)
+		})
+	}
+}
+
+func TestUpdateExperienceHandler(t *testing.T) {
+	expSvc := new(mocks.Service)
+	updateExperienceHandler := handler.UpdateExperienceHandler(context.Background(), expSvc)
+
+	tests := []struct {
+		name               string
+		input              string
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+	}{
+		{
+			name: "Success_for_updating_experience_detail",
+			input: `{
+				"experience": {
+					"designation": "Updated Designation",
+					"company_name": "Updated Company",
+					"from_date": "2022-01-01",
+					"to_date": "2023-12-31"
+				}
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateExperience", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateExperienceRequest")).Return(1, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Fail_for_incorrect_json",
+			input:              "",
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "Fail_for_missing_designation_field",
+			input: `{
+				"experience": {
+					"designation": "",
+					"company_name": "Updated Company",
+					"from_date": "2022-01-01",
+					"to_date": "2023-12-31"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "Fail_for_missing_company_name_field",
+			input: `{
+				"experience": {
+					"designation": "Updated Designation",
+					"company_name": "",
+					"from_date": "2022-01-01",
+					"to_date": "2023-12-31"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "Fail_for_service_error",
+			input: `{
+				"experience": {
+					"designation": "Updated Designation",
+					"company_name": "Updated Company",
+					"from_date": "2022-01-01",
+					"to_date": "2023-12-31"
+				}
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateExperience", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateExperienceRequest")).Return(0, errors.New("Service Error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(expSvc)
+
+			req, err := http.NewRequest("PUT", "/profiles/1/experience/1", bytes.NewBuffer([]byte(test.input)))
+			if err != nil {
+				t.Fatal(err)
+				return
+			}
+
+			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "id": "1"})
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(updateExperienceHandler)
+			handler.ServeHTTP(rr, req)
+
+			if rr.Result().StatusCode != test.expectedStatusCode {
+				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
 		})
 	}
 }

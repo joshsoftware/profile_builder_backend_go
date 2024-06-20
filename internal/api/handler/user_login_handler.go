@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
@@ -17,7 +17,7 @@ import (
 
 func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var userInfo dto.UserInfo
+		var userInfo specs.UserInfo
 		req, err := decodeUserLoginRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -63,7 +63,7 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 
 		w.Header().Set("Authorization", "Bearer "+token)
 
-		loginResp := dto.UserLoginResponse{
+		loginResp := specs.UserLoginResponse{
 			Message:    "Login successful",
 			Token:      token,
 			StatusCode: http.StatusOK,

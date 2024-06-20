@@ -14,13 +14,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/dto"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/assert"
 	"github.com/undefinedlabs/go-mpatch"
 )
 
-// TODO : add var then used
 var (
 	TestEmail = "test@example.com"
 )
@@ -35,22 +34,22 @@ func TestUserLoginHandler(t *testing.T) {
 		AccessToken        string
 		MockSendRequest    func(context.Context, string, string, string, io.Reader, map[string]string) ([]byte, error)
 		MockSetup          func(*mocks.Service, string)
-		RequestBody        dto.UserLoginRequest
+		RequestBody        specs.UserLoginRequest
 		ExpectedStatusCode int
 		ExpectedResponse   string
 	}{
 		{
-			Name:        "success",
+			Name:        "success_of_login",
 			Email:       TestEmail,
 			AccessToken: "valid_access_token",
 			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
-				userInfo := dto.UserInfo{Email: TestEmail}
+				userInfo := specs.UserInfo{Email: TestEmail}
 				return json.Marshal(userInfo)
 			},
 			MockSetup: func(mockUserLoginService *mocks.Service, email string) {
 				mockUserLoginService.On("GenerateLoginToken", context.Background(), email).Return("valid_token", nil).Once()
 			},
-			RequestBody: dto.UserLoginRequest{
+			RequestBody: specs.UserLoginRequest{
 				AccessToken: "valid_access_token",
 			},
 			ExpectedStatusCode: http.StatusOK,
@@ -58,7 +57,7 @@ func TestUserLoginHandler(t *testing.T) {
 		},
 		{
 			Name:               "decoding_request_error",
-			RequestBody:        dto.UserLoginRequest{},
+			RequestBody:        specs.UserLoginRequest{},
 			ExpectedStatusCode: http.StatusBadRequest,
 			ExpectedResponse:   `{"error_code":400,"error_message":"empty access token"}`,
 		},
@@ -69,7 +68,7 @@ func TestUserLoginHandler(t *testing.T) {
 			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
 				return nil, errors.New("failed to perform HTTP request")
 			},
-			RequestBody:        dto.UserLoginRequest{AccessToken: "invalid_access_token"},
+			RequestBody:        specs.UserLoginRequest{AccessToken: "invalid_access_token"},
 			ExpectedStatusCode: http.StatusBadRequest,
 			ExpectedResponse:   `{"error_code":400,"error_message":"failed to perform HTTP request"}`,
 		},
@@ -80,7 +79,7 @@ func TestUserLoginHandler(t *testing.T) {
 			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
 				return []byte("invalid json"), nil
 			},
-			RequestBody:        dto.UserLoginRequest{AccessToken: "valid_access_token"},
+			RequestBody:        specs.UserLoginRequest{AccessToken: "valid_access_token"},
 			ExpectedStatusCode: http.StatusInternalServerError,
 			ExpectedResponse:   `{"error_code":500,"error_message":"invalid character 'i' looking for beginning of value"}`,
 		},
@@ -89,10 +88,10 @@ func TestUserLoginHandler(t *testing.T) {
 			Email:       "",
 			AccessToken: "valid_access_token",
 			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
-				userInfo := dto.UserInfo{Email: ""}
+				userInfo := specs.UserInfo{Email: ""}
 				return json.Marshal(userInfo)
 			},
-			RequestBody:        dto.UserLoginRequest{AccessToken: "valid_access_token"},
+			RequestBody:        specs.UserLoginRequest{AccessToken: "valid_access_token"},
 			ExpectedStatusCode: http.StatusNotFound,
 			ExpectedResponse:   `{"error_code":404,"error_message":"email not found"}`,
 		},
@@ -101,13 +100,13 @@ func TestUserLoginHandler(t *testing.T) {
 			Email:       TestEmail,
 			AccessToken: "valid_access_token",
 			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
-				userInfo := dto.UserInfo{Email: TestEmail}
+				userInfo := specs.UserInfo{Email: TestEmail}
 				return json.Marshal(userInfo)
 			},
 			MockSetup: func(mockUserLoginService *mocks.Service, email string) {
 				mockUserLoginService.On("GenerateLoginToken", context.Background(), email).Return("", errors.New("Unable to generate token")).Once()
 			},
-			RequestBody:        dto.UserLoginRequest{AccessToken: "valid_access_token"},
+			RequestBody:        specs.UserLoginRequest{AccessToken: "valid_access_token"},
 			ExpectedStatusCode: http.StatusInternalServerError,
 			ExpectedResponse:   `{"error_code":500,"error_message":"Unable to generate token"}`,
 		},

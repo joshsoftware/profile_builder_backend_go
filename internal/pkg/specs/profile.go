@@ -1,4 +1,4 @@
-package dto
+package specs
 
 import (
 	"fmt"
@@ -33,6 +33,7 @@ type Profile struct {
 	SecondarySkills   []string `json:"secondary_skills"`
 	GithubLink        string   `json:"github_link"`
 	LinkedinLink      string   `json:"linkedin_link"`
+	CareerObjectives  string   `json:"career_objectives"`
 }
 
 // ListProfiles struct represents details of user profiles for listing.
@@ -42,12 +43,27 @@ type ListProfiles struct {
 	Email             string   `json:"email"`
 	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
-	IsCurrentEmployee int64    `json:"is_current_employee"`
+	IsCurrentEmployee int      `json:"is_current_employee"`
+}
+
+// ResponseListProfiles struct represents response of user profiles for listing.
+type ResponseListProfiles struct {
+	ID                int      `json:"id"`
+	Name              string   `json:"name"`
+	Email             string   `json:"email"`
+	YearsOfExperience float64  `json:"years_of_experience"`
+	PrimarySkills     []string `json:"primary_skills"`
+	IsCurrentEmployee string   `json:"is_current_employee"`
+}
+
+// ListSkills struct represents details of skills for listing.
+type ListSkills struct {
+	Name []string `json:"skills"`
 }
 
 // ListProfilesResponse struct represents a response containing a list of user profiles.
 type ListProfilesResponse struct {
-	Profiles []ListProfiles `json:"profiles"`
+	Profiles []ResponseListProfiles `json:"profiles"`
 }
 
 // ProfileResponse struct represents a response containing profile of specific user.
@@ -57,7 +73,7 @@ type ProfileResponse struct {
 
 // ResponseProfile struct represents details of a user profile as in response.
 type ResponseProfile struct {
-	ProfileID         int      `json:"profile_id"`
+	ProfileID         int      `json:"id"`
 	Name              string   `json:"name"`
 	Email             string   `json:"email"`
 	Gender            string   `json:"gender"`
@@ -70,6 +86,7 @@ type ResponseProfile struct {
 	SecondarySkills   []string `json:"secondary_skills"`
 	GithubLink        string   `json:"github_link"`
 	LinkedinLink      string   `json:"linkedin_link"`
+	CareerObjectives  string   `json:"career_objectives"`
 }
 
 // Validate func checks if the CreateProfileRequest is valid.
@@ -115,6 +132,9 @@ func (req *CreateProfileRequest) Validate() error {
 
 	if len(req.Profile.SecondarySkills) == 0 {
 		return fmt.Errorf("%s : secondary skills ", errors.ErrParameterMissing.Error())
+	}
+	if req.Profile.CareerObjectives == "" {
+		return fmt.Errorf("%s : career objectives ", errors.ErrParameterMissing.Error())
 	}
 
 	return nil

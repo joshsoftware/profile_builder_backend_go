@@ -24,8 +24,7 @@ var CorsOptions = cors.Options{
 // CreateUserColumns defines the columns required for creating a new user profile.
 var CreateUserColumns = []string{
 	"name", "email", "gender", "mobile", "designation", "description", "title",
-	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link",
-	"is_active", "is_current_employee", "created_at", "updated_at", "created_by_id", "updated_by_id",
+	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link", "career_objectives", "is_active", "is_current_employee", "created_at", "updated_at", "created_by_id", "updated_by_id",
 }
 
 // CreateEducationColumns defines the columns required for creating education details.
@@ -37,7 +36,7 @@ var CreateEducationColumns = []string{
 // CreateProjectColumns defines the columns required for creating project details.
 var CreateProjectColumns = []string{
 	"name", "description", "role", "responsibilities", "technologies", "tech_worked_on",
-	"duration", "working_start_date", "working_end_date", "created_at", "updated_at",
+	"working_start_date", "working_end_date", "duration", "created_at", "updated_at",
 	"created_by_id", "updated_by_id", "profile_id",
 }
 
@@ -65,23 +64,22 @@ var ListProfilesColumns = []string{
 // ResponseProfileColumns defines the columns required for returning a specific user profile.
 var ResponseProfileColumns = []string{
 	"id", "name", "email", "gender", "mobile", "designation", "description", "title",
-	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link",
+	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link", "career_objectives",
 }
 
 // ResponseEducationColumns defines the columns required for returning a specific user education.
 var ResponseEducationColumns = []string{
-	"profile_id", "degree", "university_name", "place", "percent_or_cgpa", "passing_year",
+	"profile_id", "id", "degree", "university_name", "place", "percent_or_cgpa", "passing_year",
 }
 
 // ResponseProjectsColumns defines the columns required for returning a specific user projects.
 var ResponseProjectsColumns = []string{
-	"profile_id", "name", "description", "role", "responsibilities", "technologies", "tech_worked_on",
-	"duration", "working_start_date", "working_end_date",
+	"id", "profile_id", "name", "description", "role", "responsibilities", "technologies", "tech_worked_on", "working_start_date", "working_end_date", "duration",
 }
 
 // ResponseExperiencesColumns defines the columns required for returning a specific user projects.
 var ResponseExperiencesColumns = []string{
-	"profile_id", "designation", "company_name", "from_date", "to_date",
+	"id", "profile_id", "designation", "company_name", "from_date", "to_date",
 }
 
 // ResponseAchievementsColumns defines the columns required for returning a specific user achievements.
