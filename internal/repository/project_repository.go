@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
@@ -14,7 +14,7 @@ import (
 
 // ProjectStore implements the ProfileStorer interface.
 type ProjectStore struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 // ProjectStorer defines methods to interact with user profile data.
@@ -25,7 +25,7 @@ type ProjectStorer interface {
 }
 
 // NewProjectRepo creates a new instance of ProfileRepo.
-func NewProjectRepo(db *pgx.Conn) ProjectStorer {
+func NewProjectRepo(db *pgxpool.Pool) ProjectStorer {
 	return &ProjectStore{
 		db: db,
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
@@ -14,7 +14,7 @@ import (
 
 // ExperienceStore implements the ExperienceStorer interface.
 type ExperienceStore struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 // ExperienceStorer defines methods to interact with user experience related data.
@@ -25,7 +25,7 @@ type ExperienceStorer interface {
 }
 
 // NewExperienceRepo creates a new instance of ExperienceRepo.
-func NewExperienceRepo(db *pgx.Conn) ExperienceStorer {
+func NewExperienceRepo(db *pgxpool.Pool) ExperienceStorer {
 	return &ExperienceStore{
 		db: db,
 	}
