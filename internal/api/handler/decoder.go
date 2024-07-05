@@ -15,6 +15,7 @@ func decodeUserLoginRequest(r *http.Request) (specs.UserLoginRequest, error) {
 	var req specs.UserLoginRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.UserLoginRequest{}, errors.ErrInvalidBody
 	}
 
@@ -26,6 +27,7 @@ func decodeCreateProfileRequest(r *http.Request) (specs.CreateProfileRequest, er
 	var req specs.CreateProfileRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.CreateProfileRequest{}, errors.ErrInvalidBody
 	}
 
@@ -37,6 +39,7 @@ func decodeUpdateProfileRequest(r *http.Request) (specs.UpdateProfileRequest, er
 	var req specs.UpdateProfileRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.UpdateProfileRequest{}, errors.ErrInvalidBody
 	}
 
@@ -48,6 +51,7 @@ func decodeCreateEducationRequest(r *http.Request) (specs.CreateEducationRequest
 	var req specs.CreateEducationRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.CreateEducationRequest{}, errors.ErrInvalidBody
 	}
 
@@ -59,6 +63,7 @@ func decodeUpdateEducationRequest(r *http.Request) (specs.UpdateEducationRequest
 	var req specs.UpdateEducationRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.UpdateEducationRequest{}, errors.ErrInvalidBody
 	}
 
@@ -70,6 +75,7 @@ func decodeCreateProjectRequest(r *http.Request) (specs.CreateProjectRequest, er
 	var req specs.CreateProjectRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.CreateProjectRequest{}, errors.ErrInvalidBody
 	}
 
@@ -93,6 +99,7 @@ func decodeCreateExperinceRequest(r *http.Request) (specs.CreateExperienceReques
 	var req specs.CreateExperienceRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.CreateExperienceRequest{}, errors.ErrInvalidBody
 	}
 
@@ -104,6 +111,7 @@ func decodeUpdateExperienceRequest(r *http.Request) (specs.UpdateExperienceReque
 	var req specs.UpdateExperienceRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.UpdateExperienceRequest{}, errors.ErrInvalidBody
 	}
 
@@ -115,6 +123,7 @@ func decodeCreateCertificateRequest(r *http.Request) (specs.CreateCertificateReq
 	var req specs.CreateCertificateRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.CreateCertificateRequest{}, errors.ErrInvalidBody
 	}
 
@@ -126,6 +135,7 @@ func decodeUpdateCertificateRequest(r *http.Request) (specs.UpdateCertificateReq
 	var req specs.UpdateCertificateRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.UpdateCertificateRequest{}, errors.ErrInvalidBody
 	}
 
@@ -137,6 +147,7 @@ func decodeCreateAchievementRequest(r *http.Request) (specs.CreateAchievementReq
 	var req specs.CreateAchievementRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.CreateAchievementRequest{}, errors.ErrInvalidBody
 	}
 
@@ -148,6 +159,7 @@ func decodeUpdateAchievementRequest(r *http.Request) (specs.UpdateAchievementReq
 	var req specs.UpdateAchievementRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		zap.S().Error(err)
 		return specs.UpdateAchievementRequest{}, errors.ErrInvalidBody
 	}
 

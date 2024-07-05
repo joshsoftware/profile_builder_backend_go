@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
@@ -12,54 +11,71 @@ import (
 
 // ProjectService represents a set of methods for accessing the projects.
 type ProjectService interface {
-	CreateProject(ctx context.Context, projDetail specs.CreateProjectRequest, id int) (profileID int, err error)
-	GetProject(ctx context.Context, profileID int) (values []specs.ProjectResponse, err error)
-	UpdateProject(ctx context.Context, profileID string, eduID string, req specs.UpdateProjectRequest) (id int, err error)
+	CreateProject(ctx context.Context, projDetail specs.CreateProjectRequest, profileID int, userID int) (ID int, err error)
+	ListProjects(ctx context.Context, profileID int, filter specs.ListProjectsFilter) (values []specs.ProjectResponse, err error)
+	UpdateProject(ctx context.Context, profileID int, projID int, userID int, req specs.UpdateProjectRequest) (ID int, err error)
 }
 
 // CreateProject : Service layer function adds project details to a user profile.
-func (projSvc *service) CreateProject(ctx context.Context, projDetail specs.CreateProjectRequest, id int) (profileID int, err error) {
+func (projSvc *service) CreateProject(ctx context.Context, projDetail specs.CreateProjectRequest, profileID int, userID int) (ID int, err error) {
+	tx, _ := projSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := projSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
 	if len(projDetail.Projects) == 0 {
 		zap.S().Error("projects payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 
 	var value []repository.ProjectRepo
-	for i := 0; i < len(projDetail.Projects); i++ {
-		var val repository.ProjectRepo
-
-		val.ProfileID = id
-		val.Name = projDetail.Projects[i].Name
-		val.Description = projDetail.Projects[i].Description
-		val.Role = projDetail.Projects[i].Role
-		val.Responsibilities = projDetail.Projects[i].Responsibilities
-		val.Technologies = projDetail.Projects[i].Technologies
-		val.TechWorkedOn = projDetail.Projects[i].TechWorkedOn
-		val.WorkingStartDate = projDetail.Projects[i].WorkingStartDate
-		val.WorkingEndDate = projDetail.Projects[i].WorkingEndDate
-		val.Duration = projDetail.Projects[i].Duration
-		val.CreatedAt = today
-		val.UpdatedAt = today
-		//TODO by context
-		val.CreatedByID = 1
-		val.UpdatedByID = 1
+	for _, project := range projDetail.Projects {
+		val := repository.ProjectRepo{
+			ProfileID:        profileID,
+			Name:             project.Name,
+			Description:      project.Description,
+			Role:             project.Role,
+			Responsibilities: project.Responsibilities,
+			Technologies:     project.Technologies,
+			TechWorkedOn:     project.TechWorkedOn,
+			WorkingStartDate: project.WorkingStartDate,
+			WorkingEndDate:   project.WorkingEndDate,
+			Duration:         project.Duration,
+			CreatedAt:        today,
+			UpdatedAt:        today,
+			CreatedByID:      userID,
+			UpdatedByID:      userID,
+		}
 
 		value = append(value, val)
 	}
 
-	err = projSvc.ProjectRepo.CreateProject(ctx, value)
+	err = projSvc.ProjectRepo.CreateProject(ctx, value, tx)
 	if err != nil {
 		zap.S().Error("Unable to create project : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
-	zap.S().Info("project(s) created with profile id : ", id)
+	zap.S().Info("project(s) created with profile id : ", profileID)
 
-	return id, nil
+	return profileID, nil
 }
 
-// GetProject in the service layer retrieves a projects of specific profile.
-func (projSvc *service) GetProject(ctx context.Context, profileID int) (values []specs.ProjectResponse, err error) {
-	values, err = projSvc.ProjectRepo.GetProjects(ctx, profileID)
+// ListProjects in the service layer retrieves a projects of specific profile.
+func (projSvc *service) ListProjects(ctx context.Context, profileID int, filter specs.ListProjectsFilter) (values []specs.ProjectResponse, err error) {
+	tx, _ := projSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := projSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	values, err = projSvc.ProjectRepo.ListProjects(ctx, profileID, filter, tx)
 	if err != nil {
 		zap.S().Error("Unable to get projects : ", err, " for profile id : ", profileID)
 		return []specs.ProjectResponse{}, err
@@ -68,12 +84,15 @@ func (projSvc *service) GetProject(ctx context.Context, profileID int) (values [
 }
 
 // UpdateProject in the service layer update a projects of specific profile.
-func (projSvc *service) UpdateProject(ctx context.Context, profileID string, eduID string, req specs.UpdateProjectRequest) (id int, err error) {
-	pid, id, err := helpers.MultipleConvertStringToInt(profileID, eduID)
-	if err != nil {
-		zap.S().Error("error to get project params : ", err, " for profile id : ", profileID)
-		return 0, err
-	}
+func (projSvc *service) UpdateProject(ctx context.Context, profileID int, projID int, userID int, req specs.UpdateProjectRequest) (ID int, err error) {
+	tx, _ := projSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := projSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
 
 	var value repository.UpdateProjectRepo
 	value.Name = req.Project.Name
@@ -86,15 +105,14 @@ func (projSvc *service) UpdateProject(ctx context.Context, profileID string, edu
 	value.WorkingEndDate = req.Project.WorkingEndDate
 	value.Duration = req.Project.Duration
 	value.UpdatedAt = today
-	//TODO by context
-	value.UpdatedByID = 1
+	value.UpdatedByID = userID
 
-	id, err = projSvc.ProjectRepo.UpdateProject(ctx, pid, id, value)
+	profileID, err = projSvc.ProjectRepo.UpdateProject(ctx, profileID, projID, value, tx)
 	if err != nil {
 		zap.S().Error("Unable to update project : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
-	zap.S().Info("project(s) update with profile id : ", id)
+	zap.S().Info("project(s) update with profile id : ", profileID)
 
-	return id, nil
+	return profileID, nil
 }

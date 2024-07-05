@@ -98,7 +98,7 @@ func TestCreateCertificate(t *testing.T) {
 			test.setup(mockCertificateRepo)
 
 			// Test the service
-			_, err := certificateService.CreateCertificate(context.TODO(), test.input, 1)
+			_, err := certificateService.CreateCertificate(context.TODO(), test.input, 1, 1)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
@@ -116,16 +116,18 @@ func TestUpdateCertificate(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		profileID       string
-		certificateID   string
+		profileID       int
+		certificateID   int
+		userID          int
 		input           specs.UpdateCertificateRequest
 		setup           func(certificateMock *mocks.CertificateStorer)
 		isErrorExpected bool
 	}{
 		{
 			name:          "Success_for_updating_certificate_details",
-			profileID:     "1",
-			certificateID: "1",
+			profileID:     1,
+			certificateID: 1,
+			userID:        1,
 			input: specs.UpdateCertificateRequest{
 				Certificate: specs.Certificate{
 					Name:             "Updated Certificate Name",
@@ -137,14 +139,15 @@ func TestUpdateCertificate(t *testing.T) {
 				},
 			},
 			setup: func(certificateMock *mocks.CertificateStorer) {
-				certificateMock.On("UpdateCertificate", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateCertificateRepo")).Return(1, nil).Once()
+				certificateMock.On("UpdateCertificate", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateCertificateRepo")).Return(1, nil).Once()
 			},
 			isErrorExpected: false,
 		},
 		{
 			name:          "Failed_because_updatecertificate_returns_an_error",
-			profileID:     "100000000000000000",
-			certificateID: "1",
+			profileID:     10000,
+			certificateID: 1,
+			userID:        1,
 			input: specs.UpdateCertificateRequest{
 				Certificate: specs.Certificate{
 					Name:             "Certificate B",
@@ -156,14 +159,15 @@ func TestUpdateCertificate(t *testing.T) {
 				},
 			},
 			setup: func(certificateMock *mocks.CertificateStorer) {
-				certificateMock.On("UpdateCertificate", mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateCertificateRepo")).Return(0, errors.New("Error")).Once()
+				certificateMock.On("UpdateCertificate", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateCertificateRepo")).Return(0, errors.New("Error")).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
 			name:          "Failed_because_of_missing_certificate_name",
-			profileID:     "1",
-			certificateID: "1",
+			profileID:     1,
+			certificateID: 1,
+			userID:        1,
 			input: specs.UpdateCertificateRequest{
 				Certificate: specs.Certificate{
 					Name:             "",
@@ -181,8 +185,9 @@ func TestUpdateCertificate(t *testing.T) {
 		},
 		{
 			name:          "Failed_because_of_invalid_profileid_or_certificateid",
-			profileID:     "invalid",
-			certificateID: "1",
+			profileID:     -1,
+			certificateID: 1,
+			userID:        1,
 			input: specs.UpdateCertificateRequest{
 				Certificate: specs.Certificate{
 					Name:             "Valid Name",
@@ -202,7 +207,7 @@ func TestUpdateCertificate(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockCertificateRepo)
 
-			_, err := certService.UpdateCertificate(context.TODO(), test.profileID, test.certificateID, test.input)
+			_, err := certService.UpdateCertificate(context.TODO(), test.profileID, test.certificateID, test.userID, test.input)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)

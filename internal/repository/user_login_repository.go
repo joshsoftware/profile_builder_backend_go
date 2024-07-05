@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// struct to store the database connection
+// UserStore implements the UserStorer interface.
 type UserStore struct {
 	db *pgx.Conn
 }
@@ -20,18 +20,20 @@ var (
 	userTable = "users"
 )
 
-// interface
+// UserStorer defines methods to interact with user data.
 type UserStorer interface {
-	GetUserIdByEmail(ctx context.Context, email string) (int64, error)
+	GetUserIDByEmail(ctx context.Context, email string) (int64, error)
 }
 
+// NewUserLoginRepo used to initialize user repo.
 func NewUserLoginRepo(db *pgx.Conn) UserStorer {
 	return &UserStore{
 		db: db,
 	}
 }
 
-func (profileStore *UserStore) GetUserIdByEmail(ctx context.Context, email string) (int64, error) {
+// GetUserIDByEmail returns and checks the id of specific email
+func (profileStore *UserStore) GetUserIDByEmail(ctx context.Context, email string) (int64, error) {
 
 	var user UserDao
 
@@ -51,21 +53,18 @@ func (profileStore *UserStore) GetUserIdByEmail(ctx context.Context, email strin
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return 0, errors.ErrNoRecordFound
-		} else {
-			if helpers.IsDuplicateKeyError(err) {
-				zap.S().Error("Duplicate key error : ", err)
-				return 0, errors.ErrDuplicateKey
-			}
-
-			if helpers.IsInvalidProfileError(err) {
-				zap.S().Error("Invalid profile error : ", err)
-				return 0, errors.ErrInvalidProfile
-			}
-
-			zap.S().Error("Error executing select query : ", err)
 		}
+		if helpers.IsDuplicateKeyError(err) {
+			zap.S().Error("Duplicate key error : ", err)
+			return 0, errors.ErrDuplicateKey
+		}
+		if helpers.IsInvalidProfileError(err) {
+			zap.S().Error("Invalid profile error : ", err)
+			return 0, errors.ErrInvalidProfile
+		}
+
+		zap.S().Error("Error executing select query : ", err)
 	}
 
 	return user.ID, nil
-
 }

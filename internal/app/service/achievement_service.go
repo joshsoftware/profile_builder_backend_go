@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
@@ -12,70 +11,89 @@ import (
 
 // AchievementService represents a set of methods for accessing the achievements
 type AchievementService interface {
-	CreateAchievement(ctx context.Context, cDetail specs.CreateAchievementRequest, ID int) (profileID int, err error)
-	UpdateAchievement(ctx context.Context, profileID string, eduID string, req specs.UpdateAchievementRequest) (id int, err error)
+	CreateAchievement(ctx context.Context, cDetail specs.CreateAchievementRequest, profileID int, userID int) (ID int, err error)
+	UpdateAchievement(ctx context.Context, profileID int, achID int, userID int, req specs.UpdateAchievementRequest) (ID int, err error)
 	ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) (value []specs.AchievementResponse, err error)
 }
 
-// CreateAchievement : Service layer function adds certicates details to a user profile.
-func (achSvc *service) CreateAchievement(ctx context.Context, cDetail specs.CreateAchievementRequest, id int) (profileID int, err error) {
+// CreateAchievement : Service layer function adds achievement details to a user profile.
+func (achSvc *service) CreateAchievement(ctx context.Context, cDetail specs.CreateAchievementRequest, profileID int, userID int) (ID int, err error) {
+	tx, _ := achSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := achSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
 	if len(cDetail.Achievements) == 0 {
 		zap.S().Error("achievements payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 
 	var value []repository.AchievementRepo
-	for i := 0; i < len(cDetail.Achievements); i++ {
-		var val repository.AchievementRepo
-
-		val.ProfileID = id
-		val.Name = cDetail.Achievements[i].Name
-		val.Description = cDetail.Achievements[i].Description
-		val.CreatedAt = today
-		val.UpdatedAt = today
-		//TODO by context
-		val.CreatedByID = 1
-		val.UpdatedByID = 1
+	for _, achievement := range cDetail.Achievements {
+		val := repository.AchievementRepo{
+			ProfileID:   profileID,
+			Name:        achievement.Name,
+			Description: achievement.Description,
+			CreatedAt:   today,
+			UpdatedAt:   today,
+			CreatedByID: userID,
+			UpdatedByID: userID,
+		}
 
 		value = append(value, val)
 	}
 
-	err = achSvc.AchievementRepo.CreateAchievement(ctx, value)
+	err = achSvc.AchievementRepo.CreateAchievement(ctx, value, tx)
 	if err != nil {
 		zap.S().Error("Unable to create achievement : ", err, "for profile id : ", profileID)
 		return 0, err
 	}
 
-	return id, nil
+	return profileID, nil
 }
 
 // UpdateAchievement in the service layer update a achievements of specific profile.
-func (achSvc *service) UpdateAchievement(ctx context.Context, profileID string, eduID string, req specs.UpdateAchievementRequest) (id int, err error) {
-	pid, id, err := helpers.MultipleConvertStringToInt(profileID, eduID)
-	if err != nil {
-		zap.S().Error("error to get achievement params : ", err, " for profile id : ", profileID)
-		return 0, err
-	}
+func (achSvc *service) UpdateAchievement(ctx context.Context, profileID int, achID int, userID int, req specs.UpdateAchievementRequest) (ID int, err error) {
+	tx, _ := achSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := achSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
 
 	var value repository.UpdateAchievementRepo
 	value.Name = req.Achievement.Name
 	value.Description = req.Achievement.Description
 	value.UpdatedAt = today
-	//TODO by context
-	value.UpdatedByID = 1
+	value.UpdatedByID = userID
 
-	id, err = achSvc.AchievementRepo.UpdateAchievement(ctx, pid, id, value)
+	profileID, err = achSvc.AchievementRepo.UpdateAchievement(ctx, profileID, achID, value, tx)
 	if err != nil {
 		zap.S().Error("Unable to update achievement : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
-	zap.S().Info("achievement(s) update with profile id : ", id)
+	zap.S().Info("achievement(s) update with profile id : ", profileID)
 
-	return id, nil
+	return profileID, nil
 }
 
 func (achSvc *service) ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) (value []specs.AchievementResponse, err error) {
-	value, err = achSvc.AchievementRepo.ListAchievements(ctx, profileID, filter)
+	tx, _ := achSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := achSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	value, err = achSvc.AchievementRepo.ListAchievements(ctx, profileID, filter, tx)
 	if err != nil {
 		zap.S().Error("error to get achievement : ", err, " for profile id : ", profileID)
 		return []specs.AchievementResponse{}, err

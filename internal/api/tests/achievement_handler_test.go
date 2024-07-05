@@ -33,8 +33,8 @@ func TestCreateAchievementHandler(t *testing.T) {
 			input: `{
 				"achievements":[{
 				    "name": "Star Performer",
-					"description": "Description of Award"
-				    }]
+						"description": "Description of Award"
+				  }]
 				}`,
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("CreateAchievement", mock.Anything, mock.AnythingOfType("specs.CreateAchievementRequest"), 1).Return(1, nil).Once()
@@ -82,6 +82,10 @@ func TestCreateAchievementHandler(t *testing.T) {
 			}
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
 			rr := httptest.NewRecorder()
+
+			ctx := context.WithValue(req.Context(), userIDKey, 1)
+			req = req.WithContext(ctx)
+
 			handler := http.HandlerFunc(createAchievementHandler)
 			handler.ServeHTTP(rr, req)
 
@@ -92,9 +96,18 @@ func TestCreateAchievementHandler(t *testing.T) {
 	}
 }
 
+// Define a custom type for context key
+type contextKey string
+
+// Define constants for context keys
+const (
+	userIDKey        contextKey = "user_id"
+	profileIDKey     contextKey = "profile_id"
+	achievementIDKey contextKey = "achievement_id"
+)
+
 func TestUpdateAchievementHandler(t *testing.T) {
-	profileSvc := new(mocks.Service)
-	updateAchievementHandler := handler.UpdateAchievementHandler(context.Background(), profileSvc)
+	achSvc := new(mocks.Service)
 
 	tests := []struct {
 		name               string
@@ -103,15 +116,13 @@ func TestUpdateAchievementHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Success_for_updating_achievement_detail",
+			name: "Success_for_achievement_update",
 			input: `{
-				"achievement": {
-					"name": "Updated Star Performer",
-					"description": "Updated Description"
-				}
+				"name": "Updated Star Performer",
+				"description": "Updated description of Award"
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateAchievement", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateAchievementRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateAchievement", mock.Anything, 1, 1, 1, mock.AnythingOfType("specs.UpdateAchievementRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -122,12 +133,10 @@ func TestUpdateAchievementHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Fail_fo_missing_name_field",
+			name: "Fail_for_missing_name_field",
 			input: `{
-				"achievement": {
-					"name": "",
-					"description": "Updated Description"
-				}
+				"name": "",
+				"description": "Updated description of Award"
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
@@ -135,10 +144,8 @@ func TestUpdateAchievementHandler(t *testing.T) {
 		{
 			name: "Fail_for_missing_description_field",
 			input: `{
-				"achievement": {
-					"name": "Updated Star Performer",
-					"description": ""
-				}
+				"name": "Updated Star Performer",
+				"description": ""
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
@@ -147,18 +154,23 @@ func TestUpdateAchievementHandler(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(profileSvc)
+			test.setup(achSvc)
 
-			req, err := http.NewRequest("PUT", "/profiles/1/achievements/1", bytes.NewBuffer([]byte(test.input)))
+			req, err := http.NewRequest("PUT", "/profiles/achievements/1", bytes.NewBuffer([]byte(test.input)))
 			if err != nil {
 				t.Fatal(err)
 				return
 			}
+			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "achievement_id": "1"})
 
-			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "id": "1"})
+			// Set the user_id in the context
+			ctx := context.WithValue(req.Context(), userIDKey, 1)
+			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(updateAchievementHandler)
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				handler.UpdateAchievementHandler(ctx, achSvc)(w, r)
+			})
 			handler.ServeHTTP(rr, req)
 
 			if rr.Result().StatusCode != test.expectedStatusCode {

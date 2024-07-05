@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// CreateToken used to generate a token
 func CreateToken(userID int64, email string) (string, error) {
 	secretKey := os.Getenv("SECRET_KEY")
 
@@ -40,6 +41,7 @@ func CreateToken(userID int64, email string) (string, error) {
 	return tokenString, nil
 }
 
+// CreateClaims to generate claims that are required to create token
 func createClaims(userID int64, email string, expiration time.Duration) jwt.MapClaims {
 	return jwt.MapClaims{
 		"authorised": true,

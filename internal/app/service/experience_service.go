@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
@@ -12,50 +11,66 @@ import (
 
 // ExperienceService represents a set of methods for accessing the experiences
 type ExperienceService interface {
-	CreateExperience(ctx context.Context, expDetail specs.CreateExperienceRequest, id int) (profileID int, err error)
-	GetExperience(ctx context.Context, id int) (values []specs.ExperienceResponse, err error)
-	UpdateExperience(ctx context.Context, profileID string, eduID string, req specs.UpdateExperienceRequest) (id int, err error)
+	CreateExperience(ctx context.Context, expDetail specs.CreateExperienceRequest, profileID int, userID int) (ID int, err error)
+	ListExperiences(ctx context.Context, id int, filter specs.ListExperiencesFilter) (values []specs.ExperienceResponse, err error)
+	UpdateExperience(ctx context.Context, profileID int, expID int, userID int, req specs.UpdateExperienceRequest) (ID int, err error)
 }
 
 // CreateExperience : Service layer function adds experiences details to a user profile.
-func (expSvc *service) CreateExperience(ctx context.Context, expDetail specs.CreateExperienceRequest, id int) (profileID int, err error) {
+func (expSvc *service) CreateExperience(ctx context.Context, expDetail specs.CreateExperienceRequest, profileID int, userID int) (ID int, err error) {
+	tx, _ := expSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := expSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
 	if len(expDetail.Experiences) == 0 {
 		zap.S().Error("experiences payload can't be empty")
 		return 0, errors.ErrEmptyPayload
 	}
 
 	var value []repository.ExperienceRepo
-	for i := 0; i < len(expDetail.Experiences); i++ {
-		var val repository.ExperienceRepo
-
-		val.ProfileID = id
-		val.Designation = expDetail.Experiences[i].Designation
-		val.CompanyName = expDetail.Experiences[i].CompanyName
-		val.FromDate = expDetail.Experiences[i].FromDate
-		val.ToDate = expDetail.Experiences[i].ToDate
-		val.CreatedAt = today
-		val.UpdatedAt = today
-		//TODO by context
-		val.CreatedByID = 1
-		val.UpdatedByID = 1
+	for _, experience := range expDetail.Experiences {
+		val := repository.ExperienceRepo{
+			ProfileID:   profileID,
+			Designation: experience.Designation,
+			CompanyName: experience.CompanyName,
+			FromDate:    experience.FromDate,
+			ToDate:      experience.ToDate,
+			CreatedAt:   today,
+			UpdatedAt:   today,
+			CreatedByID: userID,
+			UpdatedByID: userID,
+		}
 
 		value = append(value, val)
 	}
 
-	err = expSvc.ExperienceRepo.CreateExperience(ctx, value)
+	err = expSvc.ExperienceRepo.CreateExperience(ctx, value, tx)
 	if err != nil {
-		zap.S().Error("Unable to create experiences : ", err, " for profile id : ", id)
+		zap.S().Error("Unable to create experiences : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
-	zap.S().Info("experience(s) created with profile id : ", id)
+	zap.S().Info("experience(s) created with profile id : ", profileID)
 
-	return id, nil
+	return profileID, nil
 }
 
-// GetExperience in the service layer retrieves a experiences of specific profile.
-func (expSvc *service) GetExperience(ctx context.Context, id int) (values []specs.ExperienceResponse, err error) {
+// ListExperiences in the service layer retrieves a experiences of specific profile.
+func (expSvc *service) ListExperiences(ctx context.Context, id int, filter specs.ListExperiencesFilter) (values []specs.ExperienceResponse, err error) {
+	tx, _ := expSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := expSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
 
-	values, err = expSvc.ExperienceRepo.GetExperiences(ctx, id)
+	values, err = expSvc.ExperienceRepo.ListExperiences(ctx, id, filter, tx)
 	if err != nil {
 		zap.S().Error("Unable to get experiences : ", err, " for profile id : ", id)
 		return []specs.ExperienceResponse{}, err
@@ -64,12 +79,15 @@ func (expSvc *service) GetExperience(ctx context.Context, id int) (values []spec
 }
 
 // UpdateExperience in the service layer update a experience of specific profile.
-func (expSvc *service) UpdateExperience(ctx context.Context, profileID string, eduID string, req specs.UpdateExperienceRequest) (id int, err error) {
-	pid, id, err := helpers.MultipleConvertStringToInt(profileID, eduID)
-	if err != nil {
-		zap.S().Error("error to get experience params : ", err, " for profile id : ", profileID)
-		return 0, err
-	}
+func (expSvc *service) UpdateExperience(ctx context.Context, profileID int, expID int, userID int, req specs.UpdateExperienceRequest) (ID int, err error) {
+	tx, _ := expSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := expSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
 
 	var value repository.UpdateExperienceRepo
 	value.Designation = req.Experience.Designation
@@ -77,15 +95,14 @@ func (expSvc *service) UpdateExperience(ctx context.Context, profileID string, e
 	value.FromDate = req.Experience.FromDate
 	value.ToDate = req.Experience.ToDate
 	value.UpdatedAt = today
-	//TODO by context
-	value.UpdatedByID = 1
+	value.UpdatedByID = userID
 
-	id, err = expSvc.ExperienceRepo.UpdateExperience(ctx, pid, id, value)
+	profileID, err = expSvc.ExperienceRepo.UpdateExperience(ctx, profileID, expID, value, tx)
 	if err != nil {
 		zap.S().Error("Unable to update education : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
-	zap.S().Info("experience(s) update with profile id : ", id)
+	zap.S().Info("experience(s) update with profile id : ", profileID)
 
-	return id, nil
+	return profileID, nil
 }

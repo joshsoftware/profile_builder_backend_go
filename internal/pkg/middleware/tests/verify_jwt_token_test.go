@@ -32,7 +32,7 @@ func generateTokenString(secretKey []byte, claims jwt.MapClaims, signingMethod j
 }
 
 func TestVerifyJwtToken(t *testing.T) {
-	test_secret_key := []byte(os.Getenv("SECRET_KEY"))
+	testSecretKey := []byte(os.Getenv("SECRET_KEY"))
 	fixedTime := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
 	patch, err := mpatch.PatchMethod(time.Now, func() time.Time { return fixedTime })
 	if err != nil {
@@ -48,7 +48,7 @@ func TestVerifyJwtToken(t *testing.T) {
 	}{
 		{
 			name: "success",
-			tokenString: generateTokenString(test_secret_key, jwt.MapClaims{
+			tokenString: generateTokenString(testSecretKey, jwt.MapClaims{
 				"userID": userID,
 				"email":  Email,
 				"exp":    time.Now().Add(time.Hour).Unix(),
@@ -63,7 +63,7 @@ func TestVerifyJwtToken(t *testing.T) {
 		},
 		{
 			name: "error_token_expired",
-			tokenString: generateTokenString(test_secret_key, jwt.MapClaims{
+			tokenString: generateTokenString(testSecretKey, jwt.MapClaims{
 				"userID": userID,
 				"email":  Email,
 				"exp":    time.Now().Add(-time.Hour).Unix(),
