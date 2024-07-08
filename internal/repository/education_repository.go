@@ -19,9 +19,9 @@ type EducationStore struct {
 
 // EducationStorer defines methods to interact with user education related data.
 type EducationStorer interface {
-	CreateEducation(ctx context.Context, values []EducationRepo) error
-	GetEducation(ctx context.Context, profileID int) (value []specs.EducationResponse, err error)
-	UpdateEducation(ctx context.Context, profileID int, eduID int, req UpdateEducationRepo) (int, error)
+	CreateEducation(ctx context.Context, values []EducationRepo, tx pgx.Tx) error
+	ListEducations(ctx context.Context, profileID int, filter specs.ListEducationsFilter, tx pgx.Tx) (values []specs.EducationResponse, err error)
+	UpdateEducation(ctx context.Context, profileID int, eduID int, req UpdateEducationRepo, tx pgx.Tx) (int, error)
 }
 
 // NewEducationRepo creates a new instance of EducationRepo.
@@ -32,7 +32,7 @@ func NewEducationRepo(db *pgxpool.Pool) EducationStorer {
 }
 
 // CreateEducation inserts education details into the database.
-func (eduStore *EducationStore) CreateEducation(ctx context.Context, values []EducationRepo) error {
+func (eduStore *EducationStore) CreateEducation(ctx context.Context, values []EducationRepo, tx pgx.Tx) error {
 
 	insertBuilder := psql.Insert("educations").
 		Columns(constants.CreateEducationColumns...)
@@ -50,7 +50,7 @@ func (eduStore *EducationStore) CreateEducation(ctx context.Context, values []Ed
 		zap.S().Error("Error generating education insert query: ", err)
 		return err
 	}
-	_, err = eduStore.db.Exec(ctx, insertQuery, args...)
+	_, err = tx.Exec(ctx, insertQuery, args...)
 	if err != nil {
 		if helpers.IsDuplicateKeyError(err) {
 			return errors.ErrDuplicateKey
@@ -65,18 +65,25 @@ func (eduStore *EducationStore) CreateEducation(ctx context.Context, values []Ed
 	return nil
 }
 
-// GetEducation returns a details education in the Database that are currently available for perticular ID
-func (eduStore *EducationStore) GetEducation(ctx context.Context, profileID int) (values []specs.EducationResponse, err error) {
-	sql, args, err := psql.Select(constants.ResponseEducationColumns...).From("educations").
-		Where(sq.Eq{"profile_id": profileID}).ToSql()
-	if err != nil {
-		zap.S().Error("Error generating get education select query: ", err)
-		return []specs.EducationResponse{}, err
+// ListEducations returns a details education in the Database that are currently available for perticular ID
+func (eduStore *EducationStore) ListEducations(ctx context.Context, profileID int, filter specs.ListEducationsFilter, tx pgx.Tx) (values []specs.EducationResponse, err error) {
+	queryBuilder := sq.Select(constants.ResponseEducationColumns...).From("educations").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar)
+
+	if len(filter.EduationsIDs) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.EduationsIDs})
+	}
+	if len(filter.Names) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"name": filter.Names})
 	}
 
-	rows, err := eduStore.db.Query(ctx, sql, args...)
+	sql, args, err := queryBuilder.ToSql()
 	if err != nil {
-		zap.S().Error("Error executing get education query: ", err)
+		zap.S().Error("Error generating get educations query: ", err)
+		return []specs.EducationResponse{}, err
+	}
+	rows, err := tx.Query(ctx, sql, args...)
+	if err != nil {
+		zap.S().Error("Error executing get educations query: ", err)
 		return []specs.EducationResponse{}, err
 	}
 	defer rows.Close()
@@ -90,16 +97,11 @@ func (eduStore *EducationStore) GetEducation(ctx context.Context, profileID int)
 		values = append(values, value)
 	}
 
-	if len(values) == 0 {
-		zap.S().Info("No education found for profileID: ", profileID)
-		return []specs.EducationResponse{}, errors.ErrNoRecordFound
-	}
-
 	return values, nil
 }
 
 // UpdateEducation updates education details into the database.
-func (eduStore *EducationStore) UpdateEducation(ctx context.Context, profileID int, eduID int, req UpdateEducationRepo) (int, error) {
+func (eduStore *EducationStore) UpdateEducation(ctx context.Context, profileID int, eduID int, req UpdateEducationRepo, tx pgx.Tx) (int, error) {
 	updateQuery, args, err := psql.Update("educations").
 		SetMap(map[string]interface{}{
 			"degree": req.Degree, "university_name": req.UniversityName,
@@ -112,7 +114,7 @@ func (eduStore *EducationStore) UpdateEducation(ctx context.Context, profileID i
 		return 0, err
 	}
 
-	res, err := eduStore.db.Exec(ctx, updateQuery, args...)
+	res, err := tx.Exec(ctx, updateQuery, args...)
 	if err != nil {
 		if helpers.IsInvalidProfileError(err) {
 			return 0, errors.ErrInvalidProfile

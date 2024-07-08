@@ -8,6 +8,7 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+// GetQueryIntIds used to get query params as in int format
 func GetQueryIntIds(r *http.Request, key string) ([]int, error) {
 	var IDInts []int
 	if key != "" {
@@ -23,6 +24,7 @@ func GetQueryIntIds(r *http.Request, key string) ([]int, error) {
 	return IDInts, nil
 }
 
+// GetQueryStrings used to get query params as in strings format
 func GetQueryStrings(r *http.Request, key string) []string {
 	var NameStrs []string
 	if key != "" {

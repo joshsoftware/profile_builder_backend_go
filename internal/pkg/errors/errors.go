@@ -19,12 +19,13 @@ var (
 	ErrAuthToken            = errors.New("unauthorized access")
 	ErrAuthHeader           = errors.New("invalid authorization header")
 	ErrSigningMethod        = errors.New("unexpected signing method")
-	ErrInvalispecsken         = errors.New("invalid token")
+	ErrInvalispecsken       = errors.New("invalid token")
 	ErrUserID               = errors.New("error in parsing userID from claims")
 	ErrTokenEmpty           = errors.New("token string is empty")
 	ErrTokenExpirationHours = errors.New("TOKEN_EXPIRATION_HOURS is not set")
 	ErrVerifyToken          = errors.New("error in verifying token")
-	ErrFailespecsFetch        = errors.New("failed to fetch data")
+	ErrFailespecsFetch      = errors.New("failed to fetch data")
+	ErrInvalidUserID        = errors.New("invalid user id")
 )
 
 // Profile Related variables
@@ -41,4 +42,5 @@ var (
 	ErrDuplicateKey     = errors.New("record already exists")
 	ErrInvalidProfile   = errors.New("invalid profile id")
 	ErrNoRecordFound    = errors.New("no record found")
+	ErrInvalidConfig    = errors.New("invalid configuration for database connection")
 )

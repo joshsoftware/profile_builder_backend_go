@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -26,13 +27,13 @@ func NewAchievementRepo(db *pgxpool.Pool) AchievementStorer {
 
 // AchievementStorer defines methods to interact with user achievement related data.
 type AchievementStorer interface {
-	CreateAchievement(ctx context.Context, values []AchievementRepo) error
-	UpdateAchievement(ctx context.Context, profileID int, achID int, req UpdateAchievementRepo) (int, error)
-	ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) ([]specs.AchievementResponse, error)
+	CreateAchievement(ctx context.Context, values []AchievementRepo, tx pgx.Tx) error
+	UpdateAchievement(ctx context.Context, profileID int, achID int, req UpdateAchievementRepo, tx pgx.Tx) (int, error)
+	ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter, tx pgx.Tx) ([]specs.AchievementResponse, error)
 }
 
 // CreateAchievement inserts achievements details into the database.
-func (achStore *AchievementStore) CreateAchievement(ctx context.Context, values []AchievementRepo) error {
+func (achStore *AchievementStore) CreateAchievement(ctx context.Context, values []AchievementRepo, tx pgx.Tx) error {
 
 	insertBuilder := psql.Insert("achievements").
 		Columns(constants.CreateAchievementColumns...)
@@ -43,13 +44,13 @@ func (achStore *AchievementStore) CreateAchievement(ctx context.Context, values 
 			value.CreatedByID, value.UpdatedByID, value.ProfileID,
 		)
 	}
-
 	insertQuery, args, err := insertBuilder.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating achievement insert query: ", err)
 		return err
 	}
-	_, err = achStore.db.Exec(ctx, insertQuery, args...)
+
+	_, err = tx.Exec(ctx, insertQuery, args...)
 	if err != nil {
 		if helpers.IsDuplicateKeyError(err) {
 			return errors.ErrDuplicateKey
@@ -65,7 +66,7 @@ func (achStore *AchievementStore) CreateAchievement(ctx context.Context, values 
 }
 
 // UpdateAchievement updates achievements details into the database.
-func (achStore *AchievementStore) UpdateAchievement(ctx context.Context, profileID int, achID int, req UpdateAchievementRepo) (int, error) {
+func (achStore *AchievementStore) UpdateAchievement(ctx context.Context, profileID int, achID int, req UpdateAchievementRepo, tx pgx.Tx) (int, error) {
 	updateQuery, args, err := psql.Update("achievements").
 		SetMap(map[string]interface{}{
 			"name": req.Name, "description": req.Description,
@@ -76,7 +77,7 @@ func (achStore *AchievementStore) UpdateAchievement(ctx context.Context, profile
 		return 0, err
 	}
 
-	res, err := achStore.db.Exec(ctx, updateQuery, args...)
+	res, err := tx.Exec(ctx, updateQuery, args...)
 	if err != nil {
 		if helpers.IsInvalidProfileError(err) {
 			return 0, errors.ErrInvalidProfile
@@ -93,7 +94,8 @@ func (achStore *AchievementStore) UpdateAchievement(ctx context.Context, profile
 	return profileID, nil
 }
 
-func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) (values []specs.AchievementResponse, err error) {
+// ListAchievements lists achievements from the database.
+func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter, tx pgx.Tx) (values []specs.AchievementResponse, err error) {
 	queryBuilder := sq.Select(constants.ResponseAchievementsColumns...).From("achievements").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar)
 
 	if len(filter.AchievementIDs) > 0 {
@@ -108,7 +110,7 @@ func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileI
 		zap.S().Error("Error generating get achievements query: ", err)
 		return []specs.AchievementResponse{}, err
 	}
-	rows, err := achStore.db.Query(ctx, sql, args...)
+	rows, err := tx.Query(ctx, sql, args...)
 	if err != nil {
 		zap.S().Error("Error executing get achievements query: ", err)
 		return []specs.AchievementResponse{}, err
@@ -123,11 +125,6 @@ func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileI
 			return []specs.AchievementResponse{}, err
 		}
 		values = append(values, val)
-	}
-
-	if len(values) == 0 {
-		zap.S().Info("No achievements found for profileID: ", profileID)
-		return []specs.AchievementResponse{}, nil
 	}
 
 	return values, nil

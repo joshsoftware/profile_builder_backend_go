@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,11 +20,13 @@ type ProfileStore struct {
 
 // ProfileStorer defines methods to interact with user profile data.
 type ProfileStorer interface {
-	CreateProfile(ctx context.Context, pd ProfileRepo) (int, error)
-	ListProfiles(ctx context.Context) (values []specs.ListProfiles, err error)
-	GetProfile(ctx context.Context, profileID int) (value specs.ResponseProfile, err error)
-	UpdateProfile(ctx context.Context, profileID int, pd UpdateProfileRepo) (int, error)
-	ListSkills(ctx context.Context) (values specs.ListSkills, err error)
+	CreateProfile(ctx context.Context, pd ProfileRepo, tx pgx.Tx) (int, error)
+	ListProfiles(ctx context.Context, tx pgx.Tx) (values []specs.ListProfiles, err error)
+	GetProfile(ctx context.Context, profileID int, tx pgx.Tx) (value specs.ResponseProfile, err error)
+	UpdateProfile(ctx context.Context, profileID int, pd UpdateProfileRepo, tx pgx.Tx) (int, error)
+	ListSkills(ctx context.Context, tx pgx.Tx) (values specs.ListSkills, err error)
+	BeginTransaction(ctx context.Context) (tx pgx.Tx, err error)
+	HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error)
 }
 
 // NewProfileRepo creates a new instance of ProfileRepo.
@@ -36,7 +39,7 @@ func NewProfileRepo(db *pgxpool.Pool) ProfileStorer {
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 // CreateProfile inserts a new user profile into the database.
-func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileRepo) (int, error) {
+func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileRepo, tx pgx.Tx) (int, error) {
 
 	values := []interface{}{
 		pd.Name, pd.Email, pd.Gender, pd.Mobile, pd.Designation, pd.Description, pd.Title,
@@ -53,8 +56,13 @@ func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileR
 		return 0, err
 	}
 
+	if tx == nil {
+		zap.S().Error("Transaction is nil")
+		return 0, fmt.Errorf("internal error: transaction is nil")
+	}
+
 	var profileID int
-	err = profileStore.db.QueryRow(ctx, insertQuery, args...).Scan(&profileID)
+	err = tx.QueryRow(ctx, insertQuery, args...).Scan(&profileID)
 	if err != nil {
 		if helpers.IsDuplicateKeyError(err) {
 			return 0, errors.ErrDuplicateKey
@@ -70,13 +78,13 @@ func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileR
 }
 
 // ListProfiles returns a list of all profiles in the Database that are currently available
-func (profileStore *ProfileStore) ListProfiles(ctx context.Context) (values []specs.ListProfiles, err error) {
+func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) (values []specs.ListProfiles, err error) {
 	sql, args, err := psql.Select(constants.ListProfilesColumns...).From("profiles").ToSql()
 	if err != nil {
 		zap.S().Error("Error generating list project select query: ", err)
 		return []specs.ListProfiles{}, err
 	}
-	rows, err := profileStore.db.Query(ctx, sql, args...)
+	rows, err := tx.Query(ctx, sql, args...)
 	if err != nil {
 		zap.S().Error("error executing list project insert query:", err)
 		return []specs.ListProfiles{}, err
@@ -97,13 +105,13 @@ func (profileStore *ProfileStore) ListProfiles(ctx context.Context) (values []sp
 }
 
 // ListSkills returns a list of all skills in the Database that are currently available
-func (profileStore *ProfileStore) ListSkills(ctx context.Context) (values specs.ListSkills, err error) {
+func (profileStore *ProfileStore) ListSkills(ctx context.Context, tx pgx.Tx) (values specs.ListSkills, err error) {
 	sql, args, err := psql.Select("name").From("skills").ToSql()
 	if err != nil {
 		zap.S().Error("Error generating list skills select query: ", err)
 		return specs.ListSkills{}, err
 	}
-	rows, err := profileStore.db.Query(ctx, sql, args...)
+	rows, err := tx.Query(ctx, sql, args...)
 	if err != nil {
 		zap.S().Error("error executing list skills insert query:", err)
 		return specs.ListSkills{}, err
@@ -120,7 +128,7 @@ func (profileStore *ProfileStore) ListSkills(ctx context.Context) (values specs.
 }
 
 // GetProfile returns a details profile in the Database that are currently available for perticular ID
-func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int) (value specs.ResponseProfile, err error) {
+func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int, tx pgx.Tx) (value specs.ResponseProfile, err error) {
 	query, args, err := psql.Select(constants.ResponseProfileColumns...).From("profiles").
 		Where(sq.Eq{"id": profileID}).ToSql()
 	if err != nil {
@@ -128,7 +136,7 @@ func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int)
 		return specs.ResponseProfile{}, err
 	}
 
-	rows, err := profileStore.db.Query(ctx, query, args...)
+	rows, err := tx.Query(ctx, query, args...)
 	if err != nil {
 		zap.S().Error("Error executing get profile query: ", err)
 		return specs.ResponseProfile{}, err
@@ -149,7 +157,7 @@ func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int)
 }
 
 // UpdateProfile updates an existing user profile in the database.
-func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID int, pd UpdateProfileRepo) (int, error) {
+func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID int, pd UpdateProfileRepo, tx pgx.Tx) (int, error) {
 
 	updateQuery, args, err := psql.Update("profiles").
 		SetMap(map[string]interface{}{
@@ -167,7 +175,7 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 		return 0, err
 	}
 
-	res, err := profileStore.db.Exec(ctx, updateQuery, args...)
+	res, err := tx.Exec(ctx, updateQuery, args...)
 	if err != nil {
 		if helpers.IsDuplicateKeyError(err) {
 			return 0, errors.ErrDuplicateKey
@@ -185,4 +193,26 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 	}
 
 	return profileID, nil
+}
+
+// BeginTransaction used to begin transaction while each task
+func (profileStore *ProfileStore) BeginTransaction(ctx context.Context) (tx pgx.Tx, err error) {
+	tx, err = profileStore.db.BeginTx(ctx, pgx.TxOptions{})
+	return
+}
+
+// HandleTransaction used to handle transaction while each task
+func (profileStore *ProfileStore) HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error) {
+	if incomingErr != nil {
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return
+		}
+		return
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		return
+	}
+	return
 }

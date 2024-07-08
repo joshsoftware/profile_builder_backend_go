@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -14,12 +16,20 @@ import (
 // CreateEducationHandler handles HTTP requests to add education details to a user profile.
 func CreateEducationHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := helpers.GetParamsByID(r, "profile_id")
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
 			return
 		}
+
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
 		req, err := decodeCreateEducationRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -34,10 +44,10 @@ func CreateEducationHandler(ctx context.Context, profileSvc service.Service) fun
 			return
 		}
 
-		profileID, err := profileSvc.CreateEducation(ctx, req, id)
+		profileID, err = profileSvc.CreateEducation(ctx, req, profileID, userID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error("Unable to create education : ", err, "for profile id : ", profileID)
+			zap.S().Error("Unable to create education : ", err, " for profile id : ", profileID)
 			return
 		}
 
@@ -51,22 +61,32 @@ func CreateEducationHandler(ctx context.Context, profileSvc service.Service) fun
 // ListEducationHandler returns an HTTP handler that particular education using profileSvc.
 func ListEducationHandler(ctx context.Context, eduSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, err := helpers.GetParamsByID(r, "profile_id")
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
 			return
 		}
-
-		values, err := eduSvc.GetEducation(ctx, profileID)
+		filter, err := helpers.DecodeEducationsRequest(r)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error("Unable to fetch education : ", err, "for profile id : ", profileID)
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrDecodeRequest)
+			zap.S().Error(err)
 			return
 		}
 
+		eduResp, err := eduSvc.ListEducations(ctx, profileID, filter)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailespecsFetch)
+			zap.S().Error("Unable to fetch educations : ", err, "for profile id : ", profileID)
+			return
+		}
+
+		if len(eduResp) == 0 {
+			eduResp = []specs.EducationResponse{}
+		}
+
 		middleware.SuccessResponse(w, http.StatusOK, specs.ResponseEducation{
-			Educations: values,
+			Educations: eduResp,
 		})
 	}
 }
@@ -77,6 +97,13 @@ func UpdateEducationHandler(ctx context.Context, eduSvc service.Service) func(ht
 		profileID, eduID, err := helpers.GetMultipleParams(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
+
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)
 			return
 		}
@@ -95,10 +122,10 @@ func UpdateEducationHandler(ctx context.Context, eduSvc service.Service) func(ht
 			return
 		}
 
-		updatedResp, err := eduSvc.UpdateEducation(ctx, profileID, eduID, req)
+		updatedResp, err := eduSvc.UpdateEducation(ctx, profileID, eduID, userID, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error("Unable to update education : ", err, "for profile id : ", profileID)
+			zap.S().Error("Unable to update education : ", err, "for profile id : ", profileID, "education id : ", eduID)
 			return
 		}
 

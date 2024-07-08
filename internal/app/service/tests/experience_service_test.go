@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var mockListExpFilter = specs.ListExperiencesFilter{
+	ExperiencesIDs: []int{},
+	Names:          []string{},
+}
+
 var mockResponseExperience = []specs.ExperienceResponse{
 	{
 		ProfileID:   123,
@@ -101,7 +106,7 @@ func TestCreateExperience(t *testing.T) {
 			test.setup(mockExperienceRepo)
 
 			// Test the service
-			_, err := experienceService.CreateExperience(context.TODO(), test.input, 1)
+			_, err := experienceService.CreateExperience(context.TODO(), test.input, 1, 1)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
@@ -129,7 +134,7 @@ func TestGetExperience(t *testing.T) {
 			name:      "Success_get_experience",
 			profileID: mockProfileID,
 			setup: func(expMock *mocks.ExperienceStorer) {
-				expMock.On("GetExperiences", mock.Anything, mock.Anything).Return(mockResponseExperience, nil).Once()
+				expMock.On("ListExperiences", mock.Anything, mock.Anything).Return(mockResponseExperience, nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseExperience,
@@ -139,7 +144,7 @@ func TestGetExperience(t *testing.T) {
 			profileID: mockProfileID,
 			setup: func(expMock *mocks.ExperienceStorer) {
 				// Mock retrieval failure
-				expMock.On("GetExperiences", mock.Anything, mock.Anything).Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
+				expMock.On("ListExperiences", mock.Anything, mock.Anything).Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []specs.ExperienceResponse{},
@@ -153,7 +158,7 @@ func TestGetExperience(t *testing.T) {
 			test.setup(mockExperienceRepo)
 
 			// Call the method being tested
-			gotResp, err := experienceService.GetExperience(context.Background(), test.profileID)
+			gotResp, err := experienceService.ListExperiences(context.Background(), test.profileID, mockListExpFilter)
 
 			// Assertions
 			assert.Equal(t, test.wantResponse, gotResp)
@@ -173,16 +178,18 @@ func TestUpdateExperience(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		profileID       string
-		experienceID    string
+		profileID       int
+		experienceID    int
+		userID          int
 		input           specs.UpdateExperienceRequest
 		setup           func(experienceMock *mocks.ExperienceStorer)
 		isErrorExpected bool
 	}{
 		{
 			name:         "Success_for_updating_experience_details",
-			profileID:    "1",
-			experienceID: "1",
+			profileID:    1,
+			experienceID: 1,
+			userID:       1,
 			input: specs.UpdateExperienceRequest{
 				Experience: specs.Experience{
 					Designation: "Updated Designation",
@@ -192,14 +199,15 @@ func TestUpdateExperience(t *testing.T) {
 				},
 			},
 			setup: func(experienceMock *mocks.ExperienceStorer) {
-				experienceMock.On("UpdateExperience", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateExperienceRepo")).Return(1, nil).Once()
+				experienceMock.On("UpdateExperience", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateExperienceRepo")).Return(1, nil).Once()
 			},
 			isErrorExpected: false,
 		},
 		{
 			name:         "Failed_because_updateexperience_returns_an_error",
-			profileID:    "100000000000000000",
-			experienceID: "1",
+			profileID:    100000,
+			experienceID: 1,
+			userID:       1,
 			input: specs.UpdateExperienceRequest{
 				Experience: specs.Experience{
 					Designation: "Designation B",
@@ -209,14 +217,15 @@ func TestUpdateExperience(t *testing.T) {
 				},
 			},
 			setup: func(experienceMock *mocks.ExperienceStorer) {
-				experienceMock.On("UpdateExperience", mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateExperienceRepo")).Return(0, errors.New("Error")).Once()
+				experienceMock.On("UpdateExperience", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateExperienceRepo")).Return(0, errors.New("Error")).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
 			name:         "Failed_because_of_missing_experience_designation",
-			profileID:    "1",
-			experienceID: "1",
+			profileID:    1,
+			experienceID: 1,
+			userID:       1,
 			input: specs.UpdateExperienceRequest{
 				Experience: specs.Experience{
 					Designation: "",
@@ -226,14 +235,15 @@ func TestUpdateExperience(t *testing.T) {
 				},
 			},
 			setup: func(experienceMock *mocks.ExperienceStorer) {
-				experienceMock.On("UpdateExperience", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateExperienceRepo")).Return(0, errors.New("Missing experience designation")).Once()
+				experienceMock.On("UpdateExperience", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateExperienceRepo")).Return(0, errors.New("Missing experience designation")).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
 			name:         "Failed_because_of_invalid_profileid_or_experienceid",
-			profileID:    "invalid",
-			experienceID: "1",
+			profileID:    -1,
+			experienceID: 1,
+			userID:       1,
 			input: specs.UpdateExperienceRequest{
 				Experience: specs.Experience{
 					Designation: "Valid Designation",
@@ -251,7 +261,7 @@ func TestUpdateExperience(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockExperienceRepo)
 
-			_, err := expService.UpdateExperience(context.TODO(), test.profileID, test.experienceID, test.input)
+			_, err := expService.UpdateExperience(context.TODO(), test.profileID, test.experienceID, test.userID, test.input)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)

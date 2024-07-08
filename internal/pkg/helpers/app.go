@@ -16,6 +16,7 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 )
 
+// SendRequest used to check valid login request
 func SendRequest(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
 	serverRequest, err := http.NewRequestWithContext(ctx, methodType, url, body)
 	if err != nil {
@@ -77,21 +78,6 @@ func ConvertStringToInt(value string) (int, error) {
 	return id, nil
 }
 
-// MultipleConvertStringToInt returns the integer value of given string
-func MultipleConvertStringToInt(profileID string, id string) (int, int, error) {
-	profileIDInt, err := strconv.Atoi(profileID)
-	if err != nil {
-		return 0, 0, errors.ErrInvalidRequestData
-	}
-
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		return 0, 0, errors.ErrInvalidRequestData
-	}
-
-	return profileIDInt, idInt, nil
-}
-
 // GetParamsByID returns the url params which is coming from the query parameters
 func GetParamsByID(r *http.Request, id string) (ID int, err error) {
 	vars := mux.Vars(r)
@@ -107,21 +93,40 @@ func GetParamsByID(r *http.Request, id string) (ID int, err error) {
 	return ID, nil
 }
 
+// GetUserIDFromContext returns the user_id which is coming from the context
+func GetUserIDFromContext(r *http.Request) (ID int, err error) {
+	userID, ok := r.Context().Value("userID").(float64)
+	if !ok {
+		return 0, errors.ErrInvalidUserID
+	}
+	return int(userID), nil
+}
+
 // GetMultipleParams returns the multiple IDs which is coming from the query parameters
-func GetMultipleParams(r *http.Request) (string, string, error) {
+func GetMultipleParams(r *http.Request) (int, int, error) {
 	vars := mux.Vars(r)
 
-	profileID, profileIDOk := vars["profile_id"]
-	id, idOk := vars["id"]
+	profileIDStr, profileIDOk := vars["profile_id"]
+	idStr, idOk := vars["id"]
 
 	if !profileIDOk || !idOk {
-		return "", "", errors.ErrInvalidRequestData
+		return 0, 0, errors.ErrInvalidRequestData
+	}
+
+	profileID, err := strconv.Atoi(profileIDStr)
+	if err != nil {
+		return 0, 0, errors.ErrInvalidRequestData
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return 0, 0, errors.ErrInvalidRequestData
 	}
 
 	return profileID, id, nil
 }
 
-// Decode the ListFilter
+// DecodeAchievementRequest Decode the ListFilter
 func DecodeAchievementRequest(r *http.Request) (specs.ListAchievementFilter, error) {
 	achievementIDs := r.URL.Query().Get(constants.AchievementIDsStr)
 	achievementNames := r.URL.Query().Get(constants.AchievementNamesStr)
@@ -143,6 +148,7 @@ func DecodeAchievementRequest(r *http.Request) (specs.ListAchievementFilter, err
 	return filter, nil
 }
 
+// DecodeCertificateRequest decode Certificate request and returns a filter
 func DecodeCertificateRequest(r *http.Request) (specs.ListCertificateFilter, error) {
 	certificateIDs := r.URL.Query().Get(constants.CertificateIDsStr)
 	certificateNames := r.URL.Query().Get(constants.CertificateNamesStr)
@@ -161,6 +167,75 @@ func DecodeCertificateRequest(r *http.Request) (specs.ListCertificateFilter, err
 	filter := specs.ListCertificateFilter{
 		CertificateIDs: certificateIDsInts,
 		Names:          certificateNameStrs,
+	}
+	return filter, nil
+}
+
+// DecodeProjectsRequest decode Projects request and returns a filter
+func DecodeProjectsRequest(r *http.Request) (specs.ListProjectsFilter, error) {
+	projectsIDs := r.URL.Query().Get(constants.ProjectsIDsStr)
+	projectsNames := r.URL.Query().Get(constants.ProjectsNamesStr)
+
+	if projectsIDs == "" && projectsNames == "" {
+		return specs.ListProjectsFilter{}, nil
+	}
+
+	projectsIDsInts, err := GetQueryIntIds(r, projectsIDs)
+	if err != nil {
+		return specs.ListProjectsFilter{}, err
+	}
+
+	projectsNameStrs := GetQueryStrings(r, projectsNames)
+
+	filter := specs.ListProjectsFilter{
+		ProjectsIDs: projectsIDsInts,
+		Names:       projectsNameStrs,
+	}
+	return filter, nil
+}
+
+// DecodeEducationsRequest decode educations request and returns a filter
+func DecodeEducationsRequest(r *http.Request) (specs.ListEducationsFilter, error) {
+	educationsIDs := r.URL.Query().Get(constants.EducationsIDsStr)
+	educationsNames := r.URL.Query().Get(constants.EducationsNamesStr)
+
+	if educationsIDs == "" && educationsNames == "" {
+		return specs.ListEducationsFilter{}, nil
+	}
+
+	projectsIDsInts, err := GetQueryIntIds(r, educationsIDs)
+	if err != nil {
+		return specs.ListEducationsFilter{}, err
+	}
+
+	projectsNameStrs := GetQueryStrings(r, educationsNames)
+
+	filter := specs.ListEducationsFilter{
+		EduationsIDs: projectsIDsInts,
+		Names:        projectsNameStrs,
+	}
+	return filter, nil
+}
+
+// DecodeExperiencesRequest decode experiences request and returns a filter
+func DecodeExperiencesRequest(r *http.Request) (specs.ListExperiencesFilter, error) {
+	experiencesIDs := r.URL.Query().Get(constants.ExperiencesIDsStr)
+	experiencesNames := r.URL.Query().Get(constants.ExperiencesNamesStr)
+
+	if experiencesIDs == "" && experiencesNames == "" {
+		return specs.ListExperiencesFilter{}, nil
+	}
+
+	experiencesIDsInts, err := GetQueryIntIds(r, experiencesIDs)
+	if err != nil {
+		return specs.ListExperiencesFilter{}, err
+	}
+
+	experiencesNameStrs := GetQueryStrings(r, experiencesNames)
+
+	filter := specs.ListExperiencesFilter{
+		ExperiencesIDs: experiencesIDsInts,
+		Names:          experiencesNameStrs,
 	}
 	return filter, nil
 }

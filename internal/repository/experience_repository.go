@@ -19,9 +19,9 @@ type ExperienceStore struct {
 
 // ExperienceStorer defines methods to interact with user experience related data.
 type ExperienceStorer interface {
-	CreateExperience(ctx context.Context, values []ExperienceRepo) error
-	GetExperiences(ctx context.Context, profileID int) (values []specs.ExperienceResponse, err error)
-	UpdateExperience(ctx context.Context, profileID int, eduID int, req UpdateExperienceRepo) (int, error)
+	CreateExperience(ctx context.Context, values []ExperienceRepo, tx pgx.Tx) error
+	ListExperiences(ctx context.Context, profileID int, filter specs.ListExperiencesFilter, tx pgx.Tx) (values []specs.ExperienceResponse, err error)
+	UpdateExperience(ctx context.Context, profileID int, eduID int, req UpdateExperienceRepo, tx pgx.Tx) (int, error)
 }
 
 // NewExperienceRepo creates a new instance of ExperienceRepo.
@@ -32,7 +32,7 @@ func NewExperienceRepo(db *pgxpool.Pool) ExperienceStorer {
 }
 
 // CreateExperience inserts experience details into the database.
-func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []ExperienceRepo) error {
+func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []ExperienceRepo, tx pgx.Tx) error {
 
 	insertBuilder := psql.Insert("experiences").
 		Columns(constants.CreateExperienceColumns...)
@@ -49,7 +49,7 @@ func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []
 		zap.S().Error("Error generating experience insert query: ", err)
 		return err
 	}
-	_, err = expStore.db.Exec(ctx, insertQuery, args...)
+	_, err = tx.Exec(ctx, insertQuery, args...)
 	if err != nil {
 		if helpers.IsDuplicateKeyError(err) {
 			return errors.ErrDuplicateKey
@@ -64,16 +64,23 @@ func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []
 	return nil
 }
 
-// GetExperiences returns a details experiences in the Database that are currently available for perticular ID
-func (expStore *ExperienceStore) GetExperiences(ctx context.Context, profileID int) (values []specs.ExperienceResponse, err error) {
-	sql, args, err := psql.Select(constants.ResponseExperiencesColumns...).From("experiences").
-		Where(sq.Eq{"profile_id": profileID}).ToSql()
-	if err != nil {
-		zap.S().Error("Error generating get experiences select query: ", err)
-		return []specs.ExperienceResponse{}, err
+// ListExperiences returns a details experiences in the Database that are currently available for perticular ID
+func (expStore *ExperienceStore) ListExperiences(ctx context.Context, profileID int, filter specs.ListExperiencesFilter, tx pgx.Tx) (values []specs.ExperienceResponse, err error) {
+	queryBuilder := sq.Select(constants.ResponseExperiencesColumns...).From("experiences").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar)
+
+	if len(filter.ExperiencesIDs) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.ExperiencesIDs})
+	}
+	if len(filter.Names) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"name": filter.Names})
 	}
 
-	rows, err := expStore.db.Query(ctx, sql, args...)
+	sql, args, err := queryBuilder.ToSql()
+	if err != nil {
+		zap.S().Error("Error generating get experiences query: ", err)
+		return []specs.ExperienceResponse{}, err
+	}
+	rows, err := tx.Query(ctx, sql, args...)
 	if err != nil {
 		zap.S().Error("Error executing get experiences query: ", err)
 		return []specs.ExperienceResponse{}, err
@@ -89,16 +96,11 @@ func (expStore *ExperienceStore) GetExperiences(ctx context.Context, profileID i
 		values = append(values, value)
 	}
 
-	if len(values) == 0 {
-		zap.S().Info("No experience found for profileID: ", profileID)
-		return []specs.ExperienceResponse{}, errors.ErrNoRecordFound
-	}
-
 	return values, nil
 }
 
 // UpdateExperience updates experience details into the database.
-func (expStore *ExperienceStore) UpdateExperience(ctx context.Context, profileID int, eduID int, req UpdateExperienceRepo) (int, error) {
+func (expStore *ExperienceStore) UpdateExperience(ctx context.Context, profileID int, eduID int, req UpdateExperienceRepo, tx pgx.Tx) (int, error) {
 	updateQuery, args, err := psql.Update("experiences").
 		SetMap(map[string]interface{}{
 			"designation": req.Designation, "company_name": req.CompanyName,
@@ -110,7 +112,7 @@ func (expStore *ExperienceStore) UpdateExperience(ctx context.Context, profileID
 		return 0, err
 	}
 
-	res, err := expStore.db.Exec(ctx, updateQuery, args...)
+	res, err := tx.Exec(ctx, updateQuery, args...)
 	if err != nil {
 		if helpers.IsInvalidProfileError(err) {
 			return 0, errors.ErrInvalidProfile

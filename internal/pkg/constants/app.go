@@ -103,3 +103,26 @@ var (
 	CertificateIDsStr   = "certificate_ids"
 	CertificateNamesStr = "names"
 )
+
+// ListQueryParams for projects
+var (
+	ProjectsIDsStr   = "projects_ids"
+	ProjectsNamesStr = "names"
+)
+
+// ListQueryParams for educations
+var (
+	EducationsIDsStr   = "educations_ids"
+	EducationsNamesStr = "names"
+)
+
+// ListQueryParams for experiences
+var (
+	ExperiencesIDsStr   = "experiences_ids"
+	ExperiencesNamesStr = "names"
+)
+
+// profileID for getting query params.
+var (
+	ProfileID = "profile_id"
+)

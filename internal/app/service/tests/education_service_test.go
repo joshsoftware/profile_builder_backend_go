@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var mockListEduFilter = specs.ListEducationsFilter{
+	EduationsIDs: []int{},
+	Names:        []string{},
+}
+
 func TestCreateEducation(t *testing.T) {
 	mockEducationRepo := new(mocks.EducationStorer)
 	var repodeps = service.RepoDeps{
@@ -79,7 +84,7 @@ func TestCreateEducation(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockEducationRepo)
 
-			profileID, err := eduService.CreateEducation(context.Background(), test.input, 1)
+			profileID, err := eduService.CreateEducation(context.Background(), test.input, 1, 1)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
@@ -92,7 +97,7 @@ func TestCreateEducation(t *testing.T) {
 	}
 }
 
-func TestGetEducation(t *testing.T) {
+func TestListEducations(t *testing.T) {
 	mockEducationRepo := new(mocks.EducationStorer)
 	var repodeps = service.RepoDeps{
 		EducationDeps: mockEducationRepo,
@@ -147,7 +152,7 @@ func TestGetEducation(t *testing.T) {
 			test.setup(mockEducationRepo)
 
 			// Call the method being tested
-			gotResp, err := educationService.GetEducation(context.Background(), test.profileID)
+			gotResp, err := educationService.ListEducations(context.Background(), test.profileID, mockListEduFilter)
 
 			// Assertions
 			assert.Equal(t, test.wantResponse, gotResp)
@@ -167,16 +172,18 @@ func TestUpdateEducation(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		profileID       string
-		educationID     string
+		profileID       int
+		educationID     int
+		userID          int
 		input           specs.UpdateEducationRequest
 		setup           func(educationMock *mocks.EducationStorer)
 		isErrorExpected bool
 	}{
 		{
 			name:        "Success_for_updating_education_details",
-			profileID:   "1",
-			educationID: "1",
+			profileID:   1,
+			educationID: 1,
+			userID:      1,
 			input: specs.UpdateEducationRequest{
 				Education: specs.Education{
 					Degree:           "Updated Degree",
@@ -187,14 +194,15 @@ func TestUpdateEducation(t *testing.T) {
 				},
 			},
 			setup: func(educationMock *mocks.EducationStorer) {
-				educationMock.On("UpdateEducation", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(1, nil).Once()
+				educationMock.On("UpdateEducation", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(1, nil).Once()
 			},
 			isErrorExpected: false,
 		},
 		{
 			name:        "Failed_because_updateeducation_returns_an_error",
-			profileID:   "100000000000000000",
-			educationID: "1",
+			profileID:   100000,
+			educationID: 1,
+			userID:      1,
 			input: specs.UpdateEducationRequest{
 				Education: specs.Education{
 					Degree:           "Degree B",
@@ -205,14 +213,15 @@ func TestUpdateEducation(t *testing.T) {
 				},
 			},
 			setup: func(educationMock *mocks.EducationStorer) {
-				educationMock.On("UpdateEducation", mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(0, errors.New("Error")).Once()
+				educationMock.On("UpdateEducation", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(0, errors.New("Error")).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
 			name:        "Failed_because_of_missing_education_degree",
-			profileID:   "1",
-			educationID: "1",
+			profileID:   1,
+			educationID: 1,
+			userID:      1,
 			input: specs.UpdateEducationRequest{
 				Education: specs.Education{
 					Degree:           "",
@@ -223,14 +232,15 @@ func TestUpdateEducation(t *testing.T) {
 				},
 			},
 			setup: func(educationMock *mocks.EducationStorer) {
-				educationMock.On("UpdateEducation", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(0, errors.New("Missing education degree")).Once()
+				educationMock.On("UpdateEducation", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(0, errors.New("Missing education degree")).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
 			name:        "Failed_because_of_invalid_profileid_or_educationid",
-			profileID:   "invalid",
-			educationID: "1",
+			profileID:   -1,
+			educationID: 1,
+			userID:      1,
 			input: specs.UpdateEducationRequest{
 				Education: specs.Education{
 					Degree:           "Valid Degree",
@@ -249,7 +259,7 @@ func TestUpdateEducation(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockEducationRepo)
 
-			_, err := eduService.UpdateEducation(context.TODO(), test.profileID, test.educationID, test.input)
+			_, err := eduService.UpdateEducation(context.TODO(), test.profileID, test.educationID, test.userID, test.input)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)

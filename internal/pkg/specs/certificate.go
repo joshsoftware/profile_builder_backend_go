@@ -6,6 +6,7 @@ import (
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+// ListCertificateFilter used to filter certificates based on ids and names
 type ListCertificateFilter struct {
 	CertificateIDs []int    `json:"certificate_ids"`
 	Names          []string `json:"names"`

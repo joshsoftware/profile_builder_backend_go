@@ -8,18 +8,18 @@
 
 CREATE TABLE IF NOT EXISTS users(
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	email VARCHAR(50) NOT NULL UNIQUE
+	email VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS profiles (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	name VARCHAR(100) NOT NULL,
-    email VARCHAR(60) NOT NULL UNIQUE,
-    gender VARCHAR(10),
+    email VARCHAR(100) NOT NULL UNIQUE,
+    gender VARCHAR(50),
     mobile char(10) NOT NULL UNIQUE,
-    designation VARCHAR(30),
+    designation VARCHAR(100),
     description TEXT,
-    title VARCHAR(60) NOT NULL,
+    title VARCHAR(150) NOT NULL,
     years_of_experience FLOAT NOT NULL,
     primary_skills TEXT[],
     secondary_skills TEXT[],
@@ -36,9 +36,9 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 CREATE TABLE IF NOT EXISTS educations (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	degree VARCHAR(50) NOT NULL,
+	degree VARCHAR(100) NOT NULL,
     university_name VARCHAR(100),
-    place VARCHAR(80),
+    place VARCHAR(100),
     percent_or_cgpa VARCHAR(40),
     passing_year VARCHAR(50),
 	created_at DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -50,13 +50,15 @@ CREATE TABLE IF NOT EXISTS educations (
     CONSTRAINT fk_profile_id
 		FOREIGN KEY(profile_id)
 		REFERENCES profiles(id)
-		ON DELETE CASCADE
+		ON DELETE CASCADE,
+		
+	CONSTRAINT unique_degree_profile UNIQUE (degree, profile_id)
 );
 
 CREATE TABLE IF NOT EXISTS certificates (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	name VARCHAR(100) NOT NULL,
-    organization_name VARCHAR(80),
+    organization_name VARCHAR(100),
     description TEXT,
     issued_date VARCHAR(50),
     from_date VARCHAR(50),
@@ -70,15 +72,17 @@ CREATE TABLE IF NOT EXISTS certificates (
     CONSTRAINT fk_profile_id1
 		FOREIGN KEY(profile_id)
 		REFERENCES profiles(id)
-		ON DELETE CASCADE
+		ON DELETE CASCADE,
+		
+	CONSTRAINT unique_name_profile_cert UNIQUE (name, profile_id)
 );
 
 CREATE TABLE IF NOT EXISTS projects (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	name VARCHAR(60) NOT NULL,
+	name VARCHAR(100) NOT NULL,
     description TEXT,
     role VARCHAR(50),
-    responsibilities VARCHAR(50),
+    responsibilities VARCHAR(500),
     technologies TEXT[] NOT NULL,
     tech_worked_on TEXT[] NOT NULL,    
     working_start_date VARCHAR(50),
@@ -93,13 +97,15 @@ CREATE TABLE IF NOT EXISTS projects (
     CONSTRAINT fk_profile_id2
 		FOREIGN KEY(profile_id)
 		REFERENCES profiles(id)
-		ON DELETE CASCADE
+		ON DELETE CASCADE,
+		
+	CONSTRAINT unique_name_profile_proj UNIQUE (name, profile_id)
 );
 
 CREATE TABLE IF NOT EXISTS experiences (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	designation TEXT NOT NULL,
-    company_name VARCHAR(80) NOT NULL,
+    company_name VARCHAR(100) NOT NULL,
     from_date VARCHAR(50) NOT NULL,
     to_date VARCHAR(50) NOT NULL,
 	created_at DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -111,7 +117,9 @@ CREATE TABLE IF NOT EXISTS experiences (
     CONSTRAINT fk_profile_id3
 		FOREIGN KEY(profile_id)
 		REFERENCES profiles(id)
-		ON DELETE CASCADE
+		ON DELETE CASCADE,
+		
+	CONSTRAINT unique_designation_company_profile UNIQUE (designation, company_name, profile_id)
 );
 
 CREATE TABLE IF NOT EXISTS achievements (
@@ -127,5 +135,7 @@ CREATE TABLE IF NOT EXISTS achievements (
     CONSTRAINT fk_profile_id4
 		FOREIGN KEY(profile_id)
 		REFERENCES profiles(id)
-		ON DELETE CASCADE
+		ON DELETE CASCADE,
+		
+	CONSTRAINT unique_name_profile UNIQUE (name, profile_id)
 );
