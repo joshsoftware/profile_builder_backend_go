@@ -5,18 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"go.uber.org/zap"
-)
-
-// Define a custom type for context key
-type contextKey string
-
-// Define constants for context keys
-const (
-	userIDKey        contextKey = "user_id"
-	profileIDKey     contextKey = "profile_id"
-	achievementIDKey contextKey = "achievement_id"
 )
 
 // AuthMiddleware used for Authentication.
@@ -51,7 +42,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userIDKey, userID)
+		ctx := context.WithValue(r.Context(), constants.UserIDKey, userID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
