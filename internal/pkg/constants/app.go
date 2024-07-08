@@ -126,3 +126,14 @@ var (
 var (
 	ProfileID = "profile_id"
 )
+
+// userID in context
+// Define a custom type for context key
+type ContextKey string
+
+// Define constants for context keys
+const (
+	UserIDKey        ContextKey = "user_id"
+	ProfileIDKey     ContextKey = "profile_id"
+	AchievementIDKey ContextKey = "achievement_id"
+)

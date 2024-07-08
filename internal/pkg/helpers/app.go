@@ -95,7 +95,7 @@ func GetParamsByID(r *http.Request, id string) (ID int, err error) {
 
 // GetUserIDFromContext returns the user_id which is coming from the context
 func GetUserIDFromContext(r *http.Request) (ID int, err error) {
-	userID, ok := r.Context().Value("userID").(float64)
+	userID, ok := r.Context().Value(constants.UserIDKey).(float64)
 	if !ok {
 		return 0, errors.ErrInvalidUserID
 	}
