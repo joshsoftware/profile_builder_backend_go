@@ -16,6 +16,12 @@ type UpdateEducationRequest struct {
 	Education Education `json:"education"`
 }
 
+// ListEducationsFilter used to filter educations based on ids and names
+type ListEducationsFilter struct {
+	EduationsIDs []int    `json:"educations_ids"`
+	Names        []string `json:"names"`
+}
+
 // Education represents details of an educational qualification.
 type Education struct {
 	Degree           string `json:"degree"`

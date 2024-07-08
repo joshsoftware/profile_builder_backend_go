@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// VerifyJWTToken used to verify user given token
 func VerifyJWTToken(tokenString string) (jwt.MapClaims, error) {
 	if tokenString == "" {
 		return nil, errors.ErrTokenEmpty

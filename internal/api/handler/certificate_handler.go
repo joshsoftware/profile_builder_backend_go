@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
@@ -15,9 +16,16 @@ import (
 // CreateCertificateHandler handles HTTP requests to add certificates details to a user profile.
 func CreateCertificateHandler(ctx context.Context, certificateSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := helpers.GetParamsByID(r, "profile_id")
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
+
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)
 			return
 		}
@@ -36,7 +44,7 @@ func CreateCertificateHandler(ctx context.Context, certificateSvc service.Servic
 			return
 		}
 
-		profileID, err := certificateSvc.CreateCertificate(ctx, req, id)
+		profileID, err = certificateSvc.CreateCertificate(ctx, req, profileID, userID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to create certificate : ", err, "for profile id : ", profileID)
@@ -53,7 +61,7 @@ func CreateCertificateHandler(ctx context.Context, certificateSvc service.Servic
 // ListCertificatesHandler handles HTTP requests to get certificates details of a user profile.
 func ListCertificatesHandler(ctx context.Context, certificateSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, err := helpers.GetParamsByID(r, "profile_id")
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
@@ -75,23 +83,28 @@ func ListCertificatesHandler(ctx context.Context, certificateSvc service.Service
 		}
 
 		if len(cetificateResp) == 0 {
-			middleware.ErrorResponse(w, http.StatusNotFound, errors.ErrNoRecordFound)
-			return
+			cetificateResp = []specs.CertificateResponse{}
 		}
 
-		middleware.SuccessResponse(w, http.StatusOK,
-			specs.ResponseCertificate{
-				Certificates: cetificateResp,
-			})
+		middleware.SuccessResponse(w, http.StatusOK, specs.ResponseCertificate{
+			Certificates: cetificateResp,
+		})
 	}
 }
 
 // UpdateCertificateHandler returns an HTTP handler that updates certificates using profileSvc.
 func UpdateCertificateHandler(ctx context.Context, certificateSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, eduID, err := helpers.GetMultipleParams(r)
+		profileID, certID, err := helpers.GetMultipleParams(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
+
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)
 			return
 		}
@@ -110,10 +123,10 @@ func UpdateCertificateHandler(ctx context.Context, certificateSvc service.Servic
 			return
 		}
 
-		updatedResp, err := certificateSvc.UpdateCertificate(ctx, profileID, eduID, req)
+		updatedResp, err := certificateSvc.UpdateCertificate(ctx, profileID, certID, userID, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error("Unable to update certificate : ", err, "for profile id : ", profileID)
+			zap.S().Error("Unable to update certificate : ", err, "for profile id : ", profileID, "certificate id : ", certID)
 			return
 		}
 

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -22,11 +23,11 @@ type service struct {
 
 // Service interface provides methods to interact with user profiles.
 type Service interface {
-	CreateProfile(ctx context.Context, profileDetail specs.CreateProfileRequest) (int, error)
+	CreateProfile(ctx context.Context, profileDetail specs.CreateProfileRequest, userID int) (profileID int, err error)
 	ListProfiles(ctx context.Context) (values []specs.ResponseListProfiles, err error)
 	ListSkills(ctx context.Context) (values specs.ListSkills, err error)
 	GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error)
-	UpdateProfile(ctx context.Context, id int, profileDetail specs.UpdateProfileRequest) (ID int, err error)
+	UpdateProfile(ctx context.Context, profileID int, userID int, profileDetail specs.UpdateProfileRequest) (ID int, err error)
 
 	UserLoginServive
 	EducationService
@@ -38,6 +39,7 @@ type Service interface {
 
 // RepoDeps is used to intialize repo dependencies
 type RepoDeps struct {
+	db              *pgx.Conn
 	UserLoginDeps   repository.UserStorer
 	ProfileDeps     repository.ProfileStorer
 	EducationDeps   repository.EducationStorer
@@ -57,13 +59,23 @@ func NewServices(rp RepoDeps) Service {
 		ProjectRepo:     rp.ProjectDeps,
 		CertificateRepo: rp.CertificateDeps,
 		AchievementRepo: rp.AchievementDeps,
+		//
 	}
 }
 
 var today = helpers.GetTodaysDate()
 
 // CreateProfile : Service layer function creates a new user profile using the provided details.
-func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail specs.CreateProfileRequest) (int, error) {
+func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail specs.CreateProfileRequest, userID int) (profileID int, err error) {
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
 	var profileRepo repository.ProfileRepo
 	profileRepo.Name = profileDetail.Profile.Name
 	profileRepo.Email = profileDetail.Profile.Email
@@ -80,11 +92,10 @@ func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail spec
 	profileRepo.CareerObjectives = profileDetail.Profile.CareerObjectives
 	profileRepo.CreatedAt = today
 	profileRepo.UpdatedAt = today
-	//TODO by context
-	profileRepo.CreatedByID = 1
-	profileRepo.UpdatedByID = 1
+	profileRepo.CreatedByID = userID
+	profileRepo.UpdatedByID = userID
 
-	profileID, err := profileSvc.ProfileRepo.CreateProfile(ctx, profileRepo)
+	profileID, err = profileSvc.ProfileRepo.CreateProfile(ctx, profileRepo, tx)
 	if err != nil {
 		zap.S().Error("Unable to create profile : ", err, " for profile id : ", profileID)
 		return 0, err
@@ -96,7 +107,16 @@ func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail spec
 
 // ListProfiles in the service layer retrieves a list of user profiles.
 func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.ResponseListProfiles, err error) {
-	profiles, err := profileSvc.ProfileRepo.ListProfiles(ctx)
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	profiles, err := profileSvc.ProfileRepo.ListProfiles(ctx, tx)
 	if err != nil {
 		zap.S().Error("Unable to list profile : ", err)
 		return []specs.ResponseListProfiles{}, err
@@ -123,7 +143,16 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 
 // ListSkills in the service layer retrieves a list of skills.
 func (profileSvc *service) ListSkills(ctx context.Context) (values specs.ListSkills, err error) {
-	values, err = profileSvc.ProfileRepo.ListSkills(ctx)
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	values, err = profileSvc.ProfileRepo.ListSkills(ctx, tx)
 	if err != nil {
 		zap.S().Error("Unable to list skills : ", err)
 		return specs.ListSkills{}, err
@@ -133,8 +162,16 @@ func (profileSvc *service) ListSkills(ctx context.Context) (values specs.ListSki
 
 // GetProfile in the service layer retrieves a list of user profiles.
 func (profileSvc *service) GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error) {
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
 
-	value, err = profileSvc.ProfileRepo.GetProfile(ctx, id)
+	value, err = profileSvc.ProfileRepo.GetProfile(ctx, id, tx)
 	if err != nil {
 		zap.S().Error("Unable to get profile : ", err, " for profile id : ", id)
 		return specs.ResponseProfile{}, err
@@ -143,7 +180,15 @@ func (profileSvc *service) GetProfile(ctx context.Context, id int) (value specs.
 }
 
 // UpdateProfile in the service layer updates user profile.
-func (profileSvc *service) UpdateProfile(ctx context.Context, id int, profileDetail specs.UpdateProfileRequest) (ID int, err error) {
+func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, userID int, profileDetail specs.UpdateProfileRequest) (ID int, err error) {
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
 
 	var profileRepo repository.UpdateProfileRepo
 	profileRepo.Name = profileDetail.Profile.Name
@@ -159,15 +204,14 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, id int, profileDet
 	profileRepo.GithubLink = profileDetail.Profile.GithubLink
 	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
 	profileRepo.UpdatedAt = today
-	//TODO by context
-	profileRepo.UpdatedByID = 1
+	profileRepo.UpdatedByID = userID
 
-	ID, err = profileSvc.ProfileRepo.UpdateProfile(ctx, id, profileRepo)
+	profileID, err = profileSvc.ProfileRepo.UpdateProfile(ctx, profileID, profileRepo, tx)
 	if err != nil {
-		zap.S().Error("Unable to update profile : ", err, " for profile id : ", id)
+		zap.S().Error("Unable to update profile : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
-	zap.S().Info("profile update with profile id : ", ID)
+	zap.S().Info("profile update with profile id : ", profileID)
 
-	return ID, nil
+	return profileID, nil
 }

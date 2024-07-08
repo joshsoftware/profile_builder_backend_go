@@ -27,8 +27,8 @@ type ProfileRepo struct {
 	CareerObjectives  string   `db:"career_objectives"`
 	CreatedAt         string   `db:"created_at"`
 	UpdatedAt         string   `db:"updated_at"`
-	CreatedByID       int64    `db:"created_by_id"`
-	UpdatedByID       int64    `db:"updated_by_id"`
+	CreatedByID       int      `db:"created_by_id"`
+	UpdatedByID       int      `db:"updated_by_id"`
 }
 
 // UpdateProfileRepo represents a data access object for profile information updation.
@@ -46,7 +46,7 @@ type UpdateProfileRepo struct {
 	GithubLink        string   `db:"github_link"`
 	LinkedinLink      string   `db:"linkedin_link"`
 	UpdatedAt         string   `db:"updated_at"`
-	UpdatedByID       int64    `db:"updated_by_id"`
+	UpdatedByID       int      `db:"updated_by_id"`
 }
 
 // EducationRepo represents a data access object for education-related information.
@@ -60,8 +60,8 @@ type EducationRepo struct {
 	PassingYear      string `db:"passing_year"`
 	CreatedAt        string `db:"created_at"`
 	UpdatedAt        string `db:"updated_at"`
-	CreatedByID      int64  `db:"created_by_id"`
-	UpdatedByID      int64  `db:"updated_by_id"`
+	CreatedByID      int    `db:"created_by_id"`
+	UpdatedByID      int    `db:"updated_by_id"`
 	ProfileID        int    `db:"profile_id"`
 }
 
@@ -73,7 +73,7 @@ type UpdateEducationRepo struct {
 	PercentageOrCgpa string `db:"percent_or_cgpa"`
 	PassingYear      string `db:"passing_year"`
 	UpdatedAt        string `db:"updated_at"`
-	UpdatedByID      int64  `db:"updated_by_id"`
+	UpdatedByID      int    `db:"updated_by_id"`
 }
 
 // ProjectRepo represents a data access object for project-related information.
@@ -91,8 +91,8 @@ type ProjectRepo struct {
 	Duration         string   `db:"duration"`
 	CreatedAt        string   `db:"created_at"`
 	UpdatedAt        string   `db:"updated_at"`
-	CreatedByID      int64    `db:"created_by_id"`
-	UpdatedByID      int64    `db:"updated_by_id"`
+	CreatedByID      int      `db:"created_by_id"`
+	UpdatedByID      int      `db:"updated_by_id"`
 	ProfileID        int      `db:"profile_id"`
 }
 
@@ -108,7 +108,7 @@ type UpdateProjectRepo struct {
 	WorkingEndDate   string   `db:"working_end_date"`
 	Duration         string   `db:"duration"`
 	UpdatedAt        string   `db:"updated_at"`
-	UpdatedByID      int64    `db:"updated_by_id"`
+	UpdatedByID      int      `db:"updated_by_id"`
 }
 
 // ExperienceRepo represents a data access object for experience-related information.
@@ -121,8 +121,8 @@ type ExperienceRepo struct {
 	ToDate      string `db:"to_date"`
 	CreatedAt   string `db:"created_at"`
 	UpdatedAt   string `db:"updated_at"`
-	CreatedByID int64  `db:"created_by_id"`
-	UpdatedByID int64  `db:"updated_by_id"`
+	CreatedByID int    `db:"created_by_id"`
+	UpdatedByID int    `db:"updated_by_id"`
 	ProfileID   int    `db:"profile_id"`
 }
 
@@ -133,7 +133,7 @@ type UpdateExperienceRepo struct {
 	FromDate    string `db:"from_date"`
 	ToDate      string `db:"to_date"`
 	UpdatedAt   string `db:"updated_at"`
-	UpdatedByID int64  `db:"updated_by_id"`
+	UpdatedByID int    `db:"updated_by_id"`
 }
 
 // CertificateRepo represents a data access object for certificates-related information.
@@ -148,8 +148,8 @@ type CertificateRepo struct {
 	ToDate           string `db:"to_date"`
 	CreatedAt        string `db:"created_at"`
 	UpdatedAt        string `db:"updated_at"`
-	CreatedByID      int64  `db:"created_by_id"`
-	UpdatedByID      int64  `db:"updated_by_id"`
+	CreatedByID      int    `db:"created_by_id"`
+	UpdatedByID      int    `db:"updated_by_id"`
 	ProfileID        int    `db:"profile_id"`
 }
 
@@ -162,7 +162,7 @@ type UpdateCertificateRepo struct {
 	FromDate         string `db:"from_date"`
 	ToDate           string `db:"to_date"`
 	UpdatedAt        string `db:"updated_at"`
-	UpdatedByID      int64  `db:"updated_by_id"`
+	UpdatedByID      int    `db:"updated_by_id"`
 }
 
 // AchievementRepo represents a data access object for achievements-related information.
@@ -173,8 +173,8 @@ type AchievementRepo struct {
 	Description string `db:"description"`
 	CreatedAt   string `db:"created_at"`
 	UpdatedAt   string `db:"updated_at"`
-	CreatedByID int64  `db:"created_by_id"`
-	UpdatedByID int64  `db:"updated_by_id"`
+	CreatedByID int    `db:"created_by_id"`
+	UpdatedByID int    `db:"updated_by_id"`
 	ProfileID   int    `db:"profile_id"`
 }
 
@@ -183,5 +183,5 @@ type UpdateAchievementRepo struct {
 	Name        string `db:"name"`
 	Description string `db:"description"`
 	UpdatedAt   string `db:"updated_at"`
-	UpdatedByID int64  `db:"updated_by_id"`
+	UpdatedByID int    `db:"updated_by_id"`
 }

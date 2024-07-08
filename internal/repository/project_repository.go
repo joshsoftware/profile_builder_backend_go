@@ -19,9 +19,9 @@ type ProjectStore struct {
 
 // ProjectStorer defines methods to interact with user profile data.
 type ProjectStorer interface {
-	CreateProject(ctx context.Context, values []ProjectRepo) error
-	GetProjects(ctx context.Context, profileID int) (values []specs.ProjectResponse, err error)
-	UpdateProject(ctx context.Context, profileID int, eduID int, req UpdateProjectRepo) (int, error)
+	CreateProject(ctx context.Context, values []ProjectRepo, tx pgx.Tx) error
+	ListProjects(ctx context.Context, profileID int, filter specs.ListProjectsFilter, tx pgx.Tx) (values []specs.ProjectResponse, err error)
+	UpdateProject(ctx context.Context, profileID int, eduID int, req UpdateProjectRepo, tx pgx.Tx) (int, error)
 }
 
 // NewProjectRepo creates a new instance of ProfileRepo.
@@ -32,7 +32,7 @@ func NewProjectRepo(db *pgx.Conn) ProjectStorer {
 }
 
 // CreateProject inserts project details into the database.
-func (projectStore *ProjectStore) CreateProject(ctx context.Context, values []ProjectRepo) error {
+func (projectStore *ProjectStore) CreateProject(ctx context.Context, values []ProjectRepo, tx pgx.Tx) error {
 
 	insertBuilder := psql.Insert("projects").
 		Columns(constants.CreateProjectColumns...)
@@ -50,7 +50,7 @@ func (projectStore *ProjectStore) CreateProject(ctx context.Context, values []Pr
 		zap.S().Error("Error generating project insert query: ", err)
 		return err
 	}
-	_, err = projectStore.db.Exec(ctx, insertQuery, args...)
+	_, err = tx.Exec(ctx, insertQuery, args...)
 	if err != nil {
 		if helpers.IsDuplicateKeyError(err) {
 			return errors.ErrDuplicateKey
@@ -65,16 +65,24 @@ func (projectStore *ProjectStore) CreateProject(ctx context.Context, values []Pr
 	return nil
 }
 
-// GetProjects returns a details projects in the Database that are currently available for perticular ID
-func (projectStore *ProjectStore) GetProjects(ctx context.Context, profileID int) (values []specs.ProjectResponse, err error) {
-	sql, args, err := psql.Select(constants.ResponseProjectsColumns...).From("projects").
-		Where(sq.Eq{"profile_id": profileID}).ToSql()
-	if err != nil {
-		zap.S().Error("Error generating get projects select query: ", err)
-		return []specs.ProjectResponse{}, err
+// ListProjects returns a details projects in the Database that are currently available for perticular profile ID
+func (projectStore *ProjectStore) ListProjects(ctx context.Context, profileID int, filter specs.ListProjectsFilter, tx pgx.Tx) (values []specs.ProjectResponse, err error) {
+
+	queryBuilder := sq.Select(constants.ResponseProjectsColumns...).From("projects").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar)
+
+	if len(filter.ProjectsIDs) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.ProjectsIDs})
+	}
+	if len(filter.Names) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"name": filter.Names})
 	}
 
-	rows, err := projectStore.db.Query(ctx, sql, args...)
+	sql, args, err := queryBuilder.ToSql()
+	if err != nil {
+		zap.S().Error("Error generating get projects query: ", err)
+		return []specs.ProjectResponse{}, err
+	}
+	rows, err := tx.Query(ctx, sql, args...)
 	if err != nil {
 		zap.S().Error("Error executing get projects query: ", err)
 		return []specs.ProjectResponse{}, err
@@ -91,16 +99,11 @@ func (projectStore *ProjectStore) GetProjects(ctx context.Context, profileID int
 		values = append(values, value)
 	}
 
-	if len(values) == 0 {
-		zap.S().Info("No project found for profileID: ", profileID)
-		return []specs.ProjectResponse{}, errors.ErrNoRecordFound
-	}
-
 	return values, nil
 }
 
 // UpdateProject updates projects details into the database.
-func (projectStore *ProjectStore) UpdateProject(ctx context.Context, profileID int, eduID int, req UpdateProjectRepo) (int, error) {
+func (projectStore *ProjectStore) UpdateProject(ctx context.Context, profileID int, eduID int, req UpdateProjectRepo, tx pgx.Tx) (int, error) {
 	updateQuery, args, err := psql.Update("projects").
 		SetMap(map[string]interface{}{
 			"name": req.Name, "description": req.Description,
@@ -116,7 +119,7 @@ func (projectStore *ProjectStore) UpdateProject(ctx context.Context, profileID i
 		return 0, err
 	}
 
-	res, err := projectStore.db.Exec(ctx, updateQuery, args...)
+	res, err := tx.Exec(ctx, updateQuery, args...)
 	if err != nil {
 		if helpers.IsInvalidProfileError(err) {
 			return 0, errors.ErrInvalidProfile

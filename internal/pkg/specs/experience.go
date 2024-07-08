@@ -19,6 +19,12 @@ type Experience struct {
 	ToDate      string `json:"to_date"`
 }
 
+// ListExperiencesFilter used to filter experiences based on ids and names
+type ListExperiencesFilter struct {
+	ExperiencesIDs []int    `json:"experiences_ids"`
+	Names          []string `json:"names"`
+}
+
 // ExperienceResponse struct represents details of an experiences as response.
 type ExperienceResponse struct {
 	ID          int    `json:"id"`

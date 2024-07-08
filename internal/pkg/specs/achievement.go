@@ -6,6 +6,7 @@ import (
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
+// ListAchievementFilter used to filter achievements based on ids and names
 type ListAchievementFilter struct {
 	AchievementIDs []int    `json:"achievement_ids"`
 	Names          []string `json:"names"`
@@ -27,6 +28,7 @@ type Achievement struct {
 	Description string `json:"description"`
 }
 
+// AchievementResponse struct represents details of achievement response
 type AchievementResponse struct {
 	ID          int    `json:"id"`
 	ProfileID   int    `json:"profile_id"`
@@ -34,6 +36,7 @@ type AchievementResponse struct {
 	Description string `json:"description"`
 }
 
+// ResponseAchievement struct represents array of achievements which should be returned
 type ResponseAchievement struct {
 	Achievements []AchievementResponse `json:"achievements"`
 }

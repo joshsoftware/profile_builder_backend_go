@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -14,9 +16,16 @@ import (
 // CreateExperienceHandler handles HTTP requests to add experience details to a user profile.
 func CreateExperienceHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := helpers.GetParamsByID(r, "profile_id")
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
+
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)
 			return
 		}
@@ -35,7 +44,7 @@ func CreateExperienceHandler(ctx context.Context, profileSvc service.Service) fu
 			return
 		}
 
-		profileID, err := profileSvc.CreateExperience(ctx, req, id)
+		profileID, err = profileSvc.CreateExperience(ctx, req, profileID, userID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to create experiences : ", err, "for profile id : ", profileID)
@@ -52,22 +61,33 @@ func CreateExperienceHandler(ctx context.Context, profileSvc service.Service) fu
 // ListExperienceHandler returns an HTTP handler that particular experiences using profileSvc.
 func ListExperienceHandler(ctx context.Context, expSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, err := helpers.GetParamsByID(r, "profile_id")
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
 			return
 		}
 
-		values, err := expSvc.GetExperience(ctx, profileID)
+		filter, err := helpers.DecodeExperiencesRequest(r)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error("Unable to get experience : ", err, "for profile id : ", profileID)
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrDecodeRequest)
+			zap.S().Error(err)
 			return
 		}
 
+		expResp, err := expSvc.ListExperiences(ctx, profileID, filter)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailespecsFetch)
+			zap.S().Error("Unable to fetch experiences : ", err, "for profile id : ", profileID)
+			return
+		}
+
+		if len(expResp) == 0 {
+			expResp = []specs.ExperienceResponse{}
+		}
+
 		middleware.SuccessResponse(w, http.StatusOK, specs.ResponseExperience{
-			Experiences: values,
+			Experiences: expResp,
 		})
 	}
 }
@@ -75,9 +95,16 @@ func ListExperienceHandler(ctx context.Context, expSvc service.Service) func(htt
 // UpdateExperienceHandler returns an HTTP handler that updates experience using profileSvc.
 func UpdateExperienceHandler(ctx context.Context, eduSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, eduID, err := helpers.GetMultipleParams(r)
+		profileID, expID, err := helpers.GetMultipleParams(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
+
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)
 			return
 		}
@@ -96,10 +123,10 @@ func UpdateExperienceHandler(ctx context.Context, eduSvc service.Service) func(h
 			return
 		}
 
-		updatedResp, err := eduSvc.UpdateExperience(ctx, profileID, eduID, req)
+		updatedResp, err := eduSvc.UpdateExperience(ctx, profileID, expID, userID, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error("Unable to update experience : ", err, "for profile id : ", profileID)
+			zap.S().Error("Unable to update experience : ", err, "for profile id : ", profileID, "experience id : ", expID)
 			return
 		}
 

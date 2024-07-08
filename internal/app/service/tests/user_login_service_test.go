@@ -29,12 +29,12 @@ func TestUserLogin(t *testing.T) {
 	userLoginService := service.NewServices(repodeps)
 
 	tests := []struct {
-		Name          string
-		Email         string
-		MockSetup     func(*mocks.UserStorer, string)
-		MockTokenFunc func(int64, string) (string, error)
+		Name            string
+		Email           string
+		MockSetup       func(*mocks.UserStorer, string)
+		MockTokenFunc   func(int64, string) (string, error)
 		Expectespecsken string
-		ExpectedError error
+		ExpectedError   error
 	}{
 		{
 			Name:  "success_of_login",
@@ -46,7 +46,7 @@ func TestUserLogin(t *testing.T) {
 				return "valid_token", nil
 			},
 			Expectespecsken: "valid_token",
-			ExpectedError: nil,
+			ExpectedError:   nil,
 		},
 		{
 			Name:  "failed_GetUserIdByEmail",
@@ -54,9 +54,9 @@ func TestUserLogin(t *testing.T) {
 			MockSetup: func(mockUserStorer *mocks.UserStorer, email string) {
 				mockUserStorer.On("GetUserIdByEmail", mock.Anything, email).Return(int64(userID0), errors.New("repository error")).Once()
 			},
-			MockTokenFunc: nil,
+			MockTokenFunc:   nil,
 			Expectespecsken: "",
-			ExpectedError: errors.New("repository error"),
+			ExpectedError:   errors.New("repository error"),
 		},
 		{
 			Name:  "CreateToken_error",
@@ -68,7 +68,7 @@ func TestUserLogin(t *testing.T) {
 				return "", errors.New("token creation error")
 			},
 			Expectespecsken: "",
-			ExpectedError: errors.New("token creation error"),
+			ExpectedError:   errors.New("token creation error"),
 		},
 	}
 

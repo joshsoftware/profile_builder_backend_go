@@ -11,6 +11,12 @@ type CreateProjectRequest struct {
 	Projects []Project `json:"projects"`
 }
 
+// ListProjectsFilter used to filter projects based on ids and names
+type ListProjectsFilter struct {
+	ProjectsIDs []int    `json:"projects_ids"`
+	Names       []string `json:"names"`
+}
+
 // Project struct represents details of a project.
 type Project struct {
 	Name             string   `json:"name"`

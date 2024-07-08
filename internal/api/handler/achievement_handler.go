@@ -2,9 +2,11 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
@@ -15,12 +17,20 @@ import (
 // CreateAchievementHandler handles HTTP requests to add achievements details to a user profile.
 func CreateAchievementHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ID, err := helpers.GetParamsByID(r, "profile_id")
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error(err)
 			return
 		}
+		fmt.Println("start")
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+		fmt.Println("end")
 
 		req, err := decodeCreateAchievementRequest(r)
 		if err != nil {
@@ -36,7 +46,7 @@ func CreateAchievementHandler(ctx context.Context, profileSvc service.Service) f
 			return
 		}
 
-		profileID, err := profileSvc.CreateAchievement(ctx, req, ID)
+		profileID, err = profileSvc.CreateAchievement(ctx, req, profileID, userID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to create achievement : ", err, "for profile id : ", profileID)
@@ -53,9 +63,16 @@ func CreateAchievementHandler(ctx context.Context, profileSvc service.Service) f
 // UpdateAchievementHandler returns an HTTP handler that updates achievement using profileSvc.
 func UpdateAchievementHandler(ctx context.Context, achSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, eduID, err := helpers.GetMultipleParams(r)
+		profileID, achID, err := helpers.GetMultipleParams(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error(err)
+			return
+		}
+
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)
 			return
 		}
@@ -74,10 +91,10 @@ func UpdateAchievementHandler(ctx context.Context, achSvc service.Service) func(
 			return
 		}
 
-		updatedResp, err := achSvc.UpdateAchievement(ctx, profileID, eduID, req)
+		updatedResp, err := achSvc.UpdateAchievement(ctx, profileID, achID, userID, req)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
-			zap.S().Error("Unable to update achievement : ", err, "for profile id : ", profileID)
+			zap.S().Error("Unable to update achievement : ", err, " for profile id : ", profileID, "achievement id : ", achID)
 			return
 		}
 
@@ -88,14 +105,16 @@ func UpdateAchievementHandler(ctx context.Context, achSvc service.Service) func(
 	}
 }
 
+// ListAchievementsHandler returns an HTTP handler that particular achievements using profileSvc.
 func ListAchievementsHandler(ctx context.Context, achSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, err := helpers.GetParamsByID(r,"profile_id")
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrInvalidProfile)
 			zap.S().Error(err)
 			return
 		}
+
 		filter, err := helpers.DecodeAchievementRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrDecodeRequest)
@@ -111,8 +130,7 @@ func ListAchievementsHandler(ctx context.Context, achSvc service.Service) func(h
 		}
 
 		if len(achivementsResp) == 0 {
-			middleware.ErrorResponse(w, http.StatusNotFound, errors.ErrNoRecordFound)
-			return
+			achivementsResp = []specs.AchievementResponse{}
 		}
 
 		middleware.SuccessResponse(w, http.StatusOK, specs.ResponseAchievement{

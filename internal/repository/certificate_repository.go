@@ -19,9 +19,9 @@ type CertificateStore struct {
 
 // CertificateStorer defines methods to interact with user certificate ralated data.
 type CertificateStorer interface {
-	CreateCertificate(ctx context.Context, values []CertificateRepo) error
-	UpdateCertificate(ctx context.Context, profileID int, eduID int, req UpdateCertificateRepo) (int, error)
-	ListCertificates(ctx context.Context, profileID int, filter specs.ListCertificateFilter) ([]specs.CertificateResponse, error)
+	CreateCertificate(ctx context.Context, values []CertificateRepo, tx pgx.Tx) error
+	UpdateCertificate(ctx context.Context, profileID int, eduID int, req UpdateCertificateRepo, tx pgx.Tx) (int, error)
+	ListCertificates(ctx context.Context, profileID int, filter specs.ListCertificateFilter, tx pgx.Tx) ([]specs.CertificateResponse, error)
 }
 
 // NewCertificateRepo creates a new instance of CertificateRepo.
@@ -32,10 +32,9 @@ func NewCertificateRepo(db *pgx.Conn) CertificateStorer {
 }
 
 // CreateCertificate inserts certificate details into the database.
-func (profileStore *CertificateStore) CreateCertificate(ctx context.Context, values []CertificateRepo) error {
-	insertBuilder := sq.Insert("certificates").
-		Columns(constants.CreateCertificateColumns...).
-		PlaceholderFormat(sq.Dollar)
+func (certificateStore *CertificateStore) CreateCertificate(ctx context.Context, values []CertificateRepo, tx pgx.Tx) error {
+	insertBuilder := psql.Insert("certificates").
+		Columns(constants.CreateCertificateColumns...)
 
 	for _, value := range values {
 		insertBuilder = insertBuilder.Values(
@@ -50,7 +49,7 @@ func (profileStore *CertificateStore) CreateCertificate(ctx context.Context, val
 		zap.S().Error("Error generating certificate insert query: ", err)
 		return err
 	}
-	_, err = profileStore.db.Exec(ctx, insertQuery, args...)
+	_, err = tx.Exec(ctx, insertQuery, args...)
 	if err != nil {
 		if helpers.IsDuplicateKeyError(err) {
 			return errors.ErrDuplicateKey
@@ -66,7 +65,7 @@ func (profileStore *CertificateStore) CreateCertificate(ctx context.Context, val
 }
 
 // ListCertificates fetches certificates details from the database.
-func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, profileID int, filter specs.ListCertificateFilter) (values []specs.CertificateResponse, err error) {
+func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, profileID int, filter specs.ListCertificateFilter, tx pgx.Tx) (values []specs.CertificateResponse, err error) {
 	queryBuilder := sq.Select(constants.ResponseCertificatesColumns...).From("certificates").Where(sq.Eq{"profile_id": profileID})
 	if len(filter.CertificateIDs) > 0 {
 		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.CertificateIDs})
@@ -80,7 +79,7 @@ func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, 
 		return []specs.CertificateResponse{}, err
 	}
 
-	rows, err := certificateStore.db.Query(ctx, sql, args...)
+	rows, err := tx.Query(ctx, sql, args...)
 	if err != nil {
 		zap.S().Error("Error executing get certificates query: ", err)
 		return []specs.CertificateResponse{}, err
@@ -97,16 +96,11 @@ func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, 
 		values = append(values, val)
 	}
 
-	if len(values) == 0 {
-		zap.S().Info("No certificates found for profile id: ", profileID)
-		return []specs.CertificateResponse{}, nil
-	}
-
 	return values, nil
 }
 
 // UpdateCertificate updates certificates details into the database.
-func (certificateStore *CertificateStore) UpdateCertificate(ctx context.Context, profileID int, eduID int, req UpdateCertificateRepo) (int, error) {
+func (certificateStore *CertificateStore) UpdateCertificate(ctx context.Context, profileID int, eduID int, req UpdateCertificateRepo, tx pgx.Tx) (int, error) {
 	updateQuery, args, err := psql.Update("certificates").
 		SetMap(map[string]interface{}{
 			"name": req.Name, "organization_name": req.OrganizationName,
@@ -119,7 +113,7 @@ func (certificateStore *CertificateStore) UpdateCertificate(ctx context.Context,
 		return 0, err
 	}
 
-	res, err := certificateStore.db.Exec(ctx, updateQuery, args...)
+	res, err := tx.Exec(ctx, updateQuery, args...)
 	if err != nil {
 		if helpers.IsInvalidProfileError(err) {
 			return 0, errors.ErrInvalidProfile
