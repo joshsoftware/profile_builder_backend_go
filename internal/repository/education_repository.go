@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
