@@ -2,6 +2,7 @@ package constants
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/rs/cors"
 )
@@ -136,4 +137,15 @@ const (
 	UserIDKey        ContextKey = "user_id"
 	ProfileIDKey     ContextKey = "profile_id"
 	AchievementIDKey ContextKey = "achievement_id"
+)
+
+// define default values for the environment variables
+var (
+	// Default values for the environment variables
+	DefaultMaxConnections int32         = 10
+	DefaultMinConnections int32         = 0
+	DefaultConnLifeTime   time.Duration = 60 * 60 // 3600 seconds
+	DefaultConnIdleTime   time.Duration = 30 * 60 // 1800 seconds
+	DefaultHealthCheck    time.Duration = 1 * 60  // 60 seconds
+	DefaultConnectTimeout time.Duration = 5       // 5 seconds
 )
