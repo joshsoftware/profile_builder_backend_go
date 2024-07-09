@@ -8,8 +8,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Confuguration for the database
-
 // InitializeDatabase function used to initialize the database and returns the database object
 func InitializeDatabase(ctx context.Context) (*pgxpool.Pool, error) {
 	connPool, err := pgxpool.NewWithConfig(ctx, Config())
