@@ -43,7 +43,7 @@ func main() {
 		return
 	}
 	fmt.Println("Connected to Database!")
-
+	defer db.Close()
 	var repodeps = service.RepoDeps{
 		UserLoginDeps:   repository.NewUserLoginRepo(db),
 		ProfileDeps:     repository.NewProfileRepo(db),
@@ -87,8 +87,4 @@ func main() {
 	server.Shutdown(tc)
 	cancel()
 
-	//Shutdown any other resources here, e.g., database connections
-	if err := db.Close(ctx); err != nil {
-		logger.Error("Database close error: ", zap.Error(err))
-	}
 }

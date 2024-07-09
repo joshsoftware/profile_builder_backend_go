@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
 // BaseRepository implements the Trasanctions interface.
 type BaseRepository struct {
-	DB *pgx.Conn
+	DB *pgxpool.Pool
 }
 
 // Trasanctions defines methods to perform transactions.

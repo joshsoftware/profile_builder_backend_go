@@ -5,6 +5,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
@@ -14,7 +15,7 @@ import (
 
 // EducationStore implements the EducationStorer interface.
 type EducationStore struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 // EducationStorer defines methods to interact with user education related data.
@@ -25,7 +26,7 @@ type EducationStorer interface {
 }
 
 // NewEducationRepo creates a new instance of EducationRepo.
-func NewEducationRepo(db *pgx.Conn) EducationStorer {
+func NewEducationRepo(db *pgxpool.Pool) EducationStorer {
 	return &EducationStore{
 		db: db,
 	}

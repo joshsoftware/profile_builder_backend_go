@@ -6,6 +6,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
@@ -15,7 +16,7 @@ import (
 
 // ProfileStore implements the ProfileStorer interface.
 type ProfileStore struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 // ProfileStorer defines methods to interact with user profile data.
@@ -30,7 +31,7 @@ type ProfileStorer interface {
 }
 
 // NewProfileRepo creates a new instance of ProfileRepo.
-func NewProfileRepo(db *pgx.Conn) ProfileStorer {
+func NewProfileRepo(db *pgxpool.Pool) ProfileStorer {
 	return &ProfileStore{
 		db: db,
 	}

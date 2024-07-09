@@ -5,6 +5,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
@@ -14,11 +15,11 @@ import (
 
 // AchievementStore implements the AchievementStorer interface.
 type AchievementStore struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 // NewAchievementRepo creates a new instance of AchievementRepo.
-func NewAchievementRepo(db *pgx.Conn) AchievementStorer {
+func NewAchievementRepo(db *pgxpool.Pool) AchievementStorer {
 	return &AchievementStore{
 		db: db,
 	}

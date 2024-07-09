@@ -2,23 +2,25 @@ package repository
 
 import (
 	"context"
-	"os"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"go.uber.org/zap"
 )
 
 // InitializeDatabase function used to initialize the database and returns the database object
-func InitializeDatabase(ctx context.Context) (*pgx.Conn, error) {
-	db, err := pgx.Connect(ctx, os.Getenv("PSQL_INFO"))
+func InitializeDatabase(ctx context.Context) (*pgxpool.Pool, error) {
+	connPool, err := pgxpool.NewWithConfig(ctx, Config())
 	if err != nil {
+		zap.S().Error("Failed to create connection pool : ", err)
 		return nil, errors.ErrConnectionFailed
 	}
 
-	err = db.Ping(ctx)
+	err = connPool.Ping(ctx)
 	if err != nil {
-		panic(err)
+		zap.S().Error("Failed to ping the database : ", err)
+		return nil, errors.ErrConnectionFailed
 	}
 
-	return db, nil
+	return connPool, nil
 }

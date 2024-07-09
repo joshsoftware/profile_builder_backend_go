@@ -5,6 +5,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
@@ -14,7 +15,7 @@ import (
 
 // CertificateStore implements the CertificateStorer interface.
 type CertificateStore struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 // CertificateStorer defines methods to interact with user certificate ralated data.
@@ -25,7 +26,7 @@ type CertificateStorer interface {
 }
 
 // NewCertificateRepo creates a new instance of CertificateRepo.
-func NewCertificateRepo(db *pgx.Conn) CertificateStorer {
+func NewCertificateRepo(db *pgxpool.Pool) CertificateStorer {
 	return &CertificateStore{
 		db: db,
 	}

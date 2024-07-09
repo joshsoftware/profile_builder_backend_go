@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"go.uber.org/zap"
@@ -13,7 +13,7 @@ import (
 
 // UserStore implements the UserStorer interface.
 type UserStore struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 var (
@@ -25,8 +25,7 @@ type UserStorer interface {
 	GetUserIDByEmail(ctx context.Context, email string) (int64, error)
 }
 
-// NewUserLoginRepo used to initialize user repo.
-func NewUserLoginRepo(db *pgx.Conn) UserStorer {
+func NewUserLoginRepo(db *pgxpool.Pool) UserStorer {
 	return &UserStore{
 		db: db,
 	}
