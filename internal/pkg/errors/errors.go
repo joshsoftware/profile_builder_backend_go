@@ -26,6 +26,7 @@ var (
 	ErrVerifyToken          = errors.New("error in verifying token")
 	ErrFailespecsFetch      = errors.New("failed to fetch data")
 	ErrInvalidUserID        = errors.New("invalid user id")
+	ErrInvalidEnv           = errors.New("no env variable found")
 )
 
 // Profile Related variables
