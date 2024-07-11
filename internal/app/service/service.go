@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -28,6 +28,7 @@ type Service interface {
 	ListSkills(ctx context.Context) (values specs.ListSkills, err error)
 	GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, profileID int, userID int, profileDetail specs.UpdateProfileRequest) (ID int, err error)
+	DeleteProfile(ctx context.Context, profileID int) (err error)
 
 	UserLoginServive
 	EducationService
@@ -39,7 +40,6 @@ type Service interface {
 
 // RepoDeps is used to intialize repo dependencies
 type RepoDeps struct {
-	db              *pgx.Conn
 	UserLoginDeps   repository.UserStorer
 	ProfileDeps     repository.ProfileStorer
 	EducationDeps   repository.EducationStorer
@@ -59,7 +59,6 @@ func NewServices(rp RepoDeps) Service {
 		ProjectRepo:     rp.ProjectDeps,
 		CertificateRepo: rp.CertificateDeps,
 		AchievementRepo: rp.AchievementDeps,
-		//
 	}
 }
 
@@ -214,4 +213,28 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, use
 	zap.S().Info("profile update with profile id : ", profileID)
 
 	return profileID, nil
+}
+
+func (profileSvc *service) DeleteProfile(ctx context.Context, profileID int) (err error) {
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	err = profileSvc.ProfileRepo.DeleteProfile(ctx, profileID, tx)
+
+	if err != nil {
+		if err == errors.ErrNoData {
+			zap.S().Warn("No profile found to delete for profile id: ", profileID)
+			return err
+		}
+		zap.S().Error("Error deleting profile: ", err, " for profile id: ", profileID)
+		return err
+	}
+
+	return nil
 }

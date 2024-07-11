@@ -6,6 +6,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -144,6 +145,35 @@ func UpdateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponseWithID{
 			Message:   "Basic info updated successfully",
 			ProfileID: updatedResp,
+		})
+	}
+}
+
+// DeleteProfileHandler returns an HTTP handler that deletes profile using profileSvc.
+func DeleteProfileHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error("error while getting the IDs from request : ", err)
+			return
+		}
+
+		err = profileSvc.DeleteProfile(ctx, profileID)
+		if err != nil {
+			if err == errors.ErrNoData {
+				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+					Message: "No data found for deletion",
+				})
+				return
+			}
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToDelete)
+			zap.S().Error("error while deleting the profile: ", err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+			Message: "Profile deleted successfully",
 		})
 	}
 }

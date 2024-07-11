@@ -25,6 +25,7 @@ type ProfileStorer interface {
 	ListProfiles(ctx context.Context, tx pgx.Tx) (values []specs.ListProfiles, err error)
 	GetProfile(ctx context.Context, profileID int, tx pgx.Tx) (value specs.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, profileID int, pd UpdateProfileRepo, tx pgx.Tx) (int, error)
+	DeleteProfile(ctx context.Context, profileID int, tx pgx.Tx) (err error)
 	ListSkills(ctx context.Context, tx pgx.Tx) (values specs.ListSkills, err error)
 	BeginTransaction(ctx context.Context) (tx pgx.Tx, err error)
 	HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error)
@@ -194,6 +195,25 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 	}
 
 	return profileID, nil
+}
+
+func (profileStore *ProfileStore) DeleteProfile(ctx context.Context, profileID int, tx pgx.Tx) (err error) {
+	deleteQuery, args, err := psql.Delete("profiles").Where(sq.Eq{"id": profileID}).ToSql()
+	if err != nil {
+		zap.S().With("profile_id", profileID).Error("Error generating profile delete query: ", err)
+		return err
+	}
+
+	result, err := tx.Exec(ctx, deleteQuery, args...)
+	if err != nil {
+		zap.S().With("query", deleteQuery, "args", args).Error("Error executing delete profile query", zap.Error(err))
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.ErrNoData
+	}
+	return nil
 }
 
 // BeginTransaction used to begin transaction while each task
