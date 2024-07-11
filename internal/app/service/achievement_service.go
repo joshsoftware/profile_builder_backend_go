@@ -14,6 +14,7 @@ type AchievementService interface {
 	CreateAchievement(ctx context.Context, cDetail specs.CreateAchievementRequest, profileID int, userID int) (ID int, err error)
 	UpdateAchievement(ctx context.Context, profileID int, achID int, userID int, req specs.UpdateAchievementRequest) (ID int, err error)
 	ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) (value []specs.AchievementResponse, err error)
+	DeleteAchievement(ctx context.Context, req specs.DeleteAchievementRequest) error
 }
 
 // CreateAchievement : Service layer function adds achievement details to a user profile.
@@ -99,4 +100,27 @@ func (achSvc *service) ListAchievements(ctx context.Context, profileID int, filt
 		return []specs.AchievementResponse{}, err
 	}
 	return value, nil
+}
+
+func (achSvc *service) DeleteAchievement(ctx context.Context, req specs.DeleteAchievementRequest) (err error) {
+	tx, _ := achSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := achSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	err = achSvc.AchievementRepo.DeleteAchievement(ctx, req, tx)
+
+	if err != nil {
+		if err == errors.ErrNoData {
+			zap.S().Warn("No achievement found to delete for achievement id: ", req.AchievementID, " for profile id: ", req.ProfileID)
+			return err
+		}
+		zap.S().Error("Error deleting achievement: ", err, " for achievement id: ", req.AchievementID, " for profile id: ", req.ProfileID)
+		return err
+	}
+	return nil
 }

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
@@ -23,15 +22,12 @@ func CreateAchievementHandler(ctx context.Context, profileSvc service.Service) f
 			zap.S().Error(err)
 			return
 		}
-		fmt.Println("start")
 		userID, err := helpers.GetUserIDFromContext(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)
 			return
 		}
-		fmt.Println("end")
-
 		req, err := decodeCreateAchievementRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -135,6 +131,38 @@ func ListAchievementsHandler(ctx context.Context, achSvc service.Service) func(h
 
 		middleware.SuccessResponse(w, http.StatusOK, specs.ResponseAchievement{
 			Achievements: achivementsResp,
+		})
+	}
+}
+
+// DeleteAchievementHandler returns an HTTP handler that deletes particular achievement using profileSvc.
+func DeleteAchievementHandler(ctx context.Context, achSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		profileID, achID, err := helpers.GetMultipleParams(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error("error while getting the IDs from request")
+			return
+		}
+		// Decode into the struct
+		req := decodeDeleteAchievementRequest(profileID, achID)
+
+		// call the service
+		err = achSvc.DeleteAchievement(ctx, req)
+		if err != nil {
+			if err == errors.ErrNoData {
+				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+					Message: "No data found for deletion",
+				})
+				return
+			}
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToDelete)
+			zap.S().Error("error while deleting the achievements: ", err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+			Message: "Achievement deleted successfully",
 		})
 	}
 }

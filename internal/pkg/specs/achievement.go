@@ -74,3 +74,8 @@ func (req *UpdateAchievementRequest) Validate() error {
 
 	return nil
 }
+
+type DeleteAchievementRequest struct {
+	ProfileID     int `json:"profile_id"`
+	AchievementID int `json:"id"`
+}
