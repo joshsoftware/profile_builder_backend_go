@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
@@ -261,6 +262,84 @@ func TestUpdateEducation(t *testing.T) {
 
 			_, err := eduService.UpdateEducation(context.TODO(), test.profileID, test.educationID, test.userID, test.input)
 
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+func TestDeleteEducationService(t *testing.T) {
+	mockEducationSvc := new(mocks.EducationStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
+	var repoDeps = service.RepoDeps{
+		EducationDeps: mockEducationSvc,
+		ProfileDeps:   mockProfileRepo,
+	}
+	educationSvc := service.NewServices(repoDeps)
+
+	tests := []struct {
+		name            string
+		req             specs.DeleteEducationRequest
+		setup           func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name: "Success_for_delete_education",
+			req: specs.DeleteEducationRequest{
+				EducationID: 1,
+				ProfileID:   1,
+			},
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				educationMock.On("DeleteEducation", mock.Anything, mock.AnythingOfType("specs.DeleteEducationRequest"), nil).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name: "Failed_because_delete_education_returns_an_error",
+			req: specs.DeleteEducationRequest{
+				EducationID: 2,
+				ProfileID:   1,
+			},
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				educationMock.On("DeleteEducation", mock.Anything, mock.AnythingOfType("specs.DeleteEducationRequest"), nil).Return(errs.ErrNoData).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_because_DeleteEducation_returns_an_error",
+			req: specs.DeleteEducationRequest{
+				EducationID: 3,
+				ProfileID:   1,
+			},
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				educationMock.On("DeleteEducation", mock.Anything, mock.AnythingOfType("specs.DeleteEducationRequest"), nil).Return(errs.ErrFailedToDelete).Once()
+				profileMock.On("HandleTransaction", mock.Anything, nil, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		// {
+		// 	name: "Failed_because_BeginTransaction_returns_an_error",
+		// 	req: specs.DeleteAchievementRequest{
+		// 		AchievementID: 4,
+		// 		ProfileID:     1,
+		// 	},
+		// 	setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("error")).Once()
+		// 	},
+		// 	isErrorExpected: true,
+		// },
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockEducationSvc, mockProfileRepo)
+			err := educationSvc.DeleteEducation(context.Background(), test.req)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
