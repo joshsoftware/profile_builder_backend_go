@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
 )
@@ -368,6 +371,82 @@ func TestUpdateProfileHandler(t *testing.T) {
 
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+		})
+	}
+}
+
+func TestDeleteProfileHandler(t *testing.T) {
+	profileSvc := new(mocks.Service)
+
+	tests := []struct {
+		name               string
+		profileID          string
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+		expectedResponse   string
+	}{
+		{
+			name:      "Success_for_deleting_profile",
+			profileID: "1",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteProfile", mock.Anything, 1).Return(nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   "Profile deleted successfully",
+		},
+		{
+			name:      "No_data_found_for_deletion",
+			profileID: "2",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteProfile", mock.Anything, 2).Return(errs.ErrNoData).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   "No data found for deletion",
+		},
+		{
+			name:      "Error_while_deleting_profile",
+			profileID: "3",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteProfile", mock.Anything, 3).Return(errs.ErrFailedToDelete).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "failed to delete",
+		},
+		{
+			name:               "Error_while_getting_IDs",
+			profileID:          "invalid",
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "invalid request data",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(profileSvc)
+			reqPath := "/profiles/" + tt.profileID
+			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
+			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID})
+			rr := httptest.NewRecorder()
+
+			handler := handler.DeleteProfileHandler(context.Background(), profileSvc)
+			handler(rr, req)
+
+			res := rr.Result()
+			defer res.Body.Close()
+
+			if res.StatusCode != tt.expectedStatusCode {
+				t.Errorf("expected status %d, got %d", tt.expectedStatusCode, res.StatusCode)
+			}
+
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatalf("could not read response: %v", err)
+			}
+
+			if !strings.Contains(string(body), tt.expectedResponse) {
+				t.Errorf("expected response to contain %q, got %q", tt.expectedResponse, string(body))
 			}
 		})
 	}

@@ -183,6 +183,114 @@ func (_m *Service) CreateProject(ctx context.Context, projDetail specs.CreatePro
 	return r0, r1
 }
 
+// DeleteAchievement provides a mock function with given fields: ctx, req
+func (_m *Service) DeleteAchievement(ctx context.Context, req specs.DeleteAchievementRequest) error {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteAchievement")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteAchievementRequest) error); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteCertificate provides a mock function with given fields: ctx, req
+func (_m *Service) DeleteCertificate(ctx context.Context, req specs.DeleteCertificateRequest) error {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteCertificate")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteCertificateRequest) error); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteEducation provides a mock function with given fields: ctx, req
+func (_m *Service) DeleteEducation(ctx context.Context, req specs.DeleteEducationRequest) error {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteEducation")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteEducationRequest) error); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteExperience provides a mock function with given fields: ctx, req
+func (_m *Service) DeleteExperience(ctx context.Context, req specs.DeleteExperienceRequest) error {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteExperience")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteExperienceRequest) error); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteProfile provides a mock function with given fields: ctx, profileID
+func (_m *Service) DeleteProfile(ctx context.Context, profileID int) error {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteProfile")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteProject provides a mock function with given fields: ctx, req
+func (_m *Service) DeleteProject(ctx context.Context, req specs.DeleteProjectRequest) error {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteProject")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteProjectRequest) error); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GenerateLoginToken provides a mock function with given fields: ctx, email
 func (_m *Service) GenerateLoginToken(ctx context.Context, email string) (string, error) {
 	ret := _m.Called(ctx, email)
