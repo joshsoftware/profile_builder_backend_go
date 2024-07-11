@@ -36,6 +36,24 @@ func (_m *AchievementStorer) CreateAchievement(ctx context.Context, values []rep
 	return r0
 }
 
+// DeleteAchievement provides a mock function with given fields: ctx, req, tx
+func (_m *AchievementStorer) DeleteAchievement(ctx context.Context, req specs.DeleteAchievementRequest, tx pgx.Tx) error {
+	ret := _m.Called(ctx, req, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteAchievement")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteAchievementRequest, pgx.Tx) error); ok {
+		r0 = rf(ctx, req, tx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ListAchievements provides a mock function with given fields: ctx, profileID, filter, tx
 func (_m *AchievementStorer) ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter, tx pgx.Tx) ([]specs.AchievementResponse, error) {
 	ret := _m.Called(ctx, profileID, filter, tx)

@@ -4,14 +4,17 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
@@ -309,6 +312,98 @@ func TestListAchievementsHandler(t *testing.T) {
 
 			if resp.Code != tt.expectedStatusCode {
 				t.Errorf("Expected status code %d but got %d", tt.expectedStatusCode, resp.Code)
+			}
+		})
+	}
+
+}
+
+func TestDeleteAchievementHandler(t *testing.T) {
+	achSvc := new(mocks.Service)
+
+	tests := []struct {
+		name               string
+		profileID          string
+		achievementID      string
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+		expectedResponse   string
+	}{
+		{
+			name:          "Success_for_achievement_delete",
+			profileID:     "1",
+			achievementID: "1",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteAchievement", mock.Anything, mock.AnythingOfType("specs.DeleteAchievementRequest")).Return(nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   "Achievement deleted successfully",
+		},
+		{
+			name:          "No_data_found_for_deletion",
+			profileID:     "1",
+			achievementID: "2",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteAchievement", mock.Anything, mock.AnythingOfType("specs.DeleteAchievementRequest")).Return(errs.ErrNoData).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   "No data found for deletion",
+		},
+		{
+			name:          "Error_while_deleting_achievement",
+			profileID:     "1",
+			achievementID: "3",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteAchievement", mock.Anything, mock.AnythingOfType("specs.DeleteAchievementRequest")).Return(errs.ErrFailedToDelete).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "failed to delete",
+		},
+		{
+			name:               "Error_while_getting_IDs",
+			profileID:          "invalid",
+			achievementID:      "invalid",
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "invalid request data",
+		},
+		{
+			name:          "Fail_for_internal_error",
+			profileID:     "1",
+			achievementID: "1",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteAchievement", mock.Anything, mock.AnythingOfType("specs.DeleteAchievementRequest")).Return(errs.ErrFailedToDelete).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "failed to delete",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(achSvc)
+			reqPath := "/profiles/" + tt.profileID + "/achievement/" + tt.achievementID
+			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
+			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.achievementID})
+			rr := httptest.NewRecorder()
+
+			handler := handler.DeleteAchievementHandler(context.Background(), achSvc)
+			handler(rr, req)
+
+			res := rr.Result()
+			defer res.Body.Close()
+
+			if res.StatusCode != tt.expectedStatusCode {
+				t.Errorf("expected status %d, got %d", tt.expectedStatusCode, res.StatusCode)
+			}
+
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatalf("could not read response: %v", err)
+			}
+
+			if !strings.Contains(string(body), tt.expectedResponse) {
+				t.Errorf("expected response to contain %q, got %q", tt.expectedResponse, body)
 			}
 		})
 	}
