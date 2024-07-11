@@ -36,6 +36,24 @@ func (_m *ExperienceStorer) CreateExperience(ctx context.Context, values []repos
 	return r0
 }
 
+// DeleteExperience provides a mock function with given fields: ctx, req, tx
+func (_m *ExperienceStorer) DeleteExperience(ctx context.Context, req specs.DeleteExperienceRequest, tx pgx.Tx) error {
+	ret := _m.Called(ctx, req, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteExperience")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteExperienceRequest, pgx.Tx) error); ok {
+		r0 = rf(ctx, req, tx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ListExperiences provides a mock function with given fields: ctx, profileID, filter, tx
 func (_m *ExperienceStorer) ListExperiences(ctx context.Context, profileID int, filter specs.ListExperiencesFilter, tx pgx.Tx) ([]specs.ExperienceResponse, error) {
 	ret := _m.Called(ctx, profileID, filter, tx)
