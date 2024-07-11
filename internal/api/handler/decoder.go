@@ -165,3 +165,38 @@ func decodeUpdateAchievementRequest(r *http.Request) (specs.UpdateAchievementReq
 
 	return req, nil
 }
+
+func decodeDeleteAchievementRequest(profileID, achID int) specs.DeleteAchievementRequest {
+	return specs.DeleteAchievementRequest{
+		ProfileID:     profileID,
+		AchievementID: achID,
+	}
+}
+
+func decodeDeleteCertificateRequest(profileID, certID int) specs.DeleteCertificateRequest {
+	return specs.DeleteCertificateRequest{
+		ProfileID:     profileID,
+		CertificateID: certID,
+	}
+}
+
+func decondeDeleteEducationRequest(profileID, educationID int) specs.DeleteEducationRequest {
+	return specs.DeleteEducationRequest{
+		ProfileID:   profileID,
+		EducationID: educationID,
+	}
+}
+
+func decodeDeleteExperienceRequest(profileID, expID int) specs.DeleteExperienceRequest {
+	return specs.DeleteExperienceRequest{
+		ProfileID:    profileID,
+		ExperienceID: expID,
+	}
+}
+
+func decodeDeleteProjectRequest(profileID, projectID int) specs.DeleteProjectRequest {
+	return specs.DeleteProjectRequest{
+		ProfileID: profileID,
+		ProjectID: projectID,
+	}
+}
