@@ -14,6 +14,7 @@ type ProjectService interface {
 	CreateProject(ctx context.Context, projDetail specs.CreateProjectRequest, profileID int, userID int) (ID int, err error)
 	ListProjects(ctx context.Context, profileID int, filter specs.ListProjectsFilter) (values []specs.ProjectResponse, err error)
 	UpdateProject(ctx context.Context, profileID int, projID int, userID int, req specs.UpdateProjectRequest) (ID int, err error)
+	DeleteProject(ctx context.Context, req specs.DeleteProjectRequest) error
 }
 
 // CreateProject : Service layer function adds project details to a user profile.
@@ -115,4 +116,28 @@ func (projSvc *service) UpdateProject(ctx context.Context, profileID int, projID
 	zap.S().Info("project(s) update with profile id : ", profileID)
 
 	return profileID, nil
+}
+
+func (projSvc *service) DeleteProject(ctx context.Context, req specs.DeleteProjectRequest) (err error) {
+	tx, _ := projSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := projSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	err = projSvc.ProjectRepo.DeleteProject(ctx, req, tx)
+
+	if err != nil {
+		if err == errors.ErrNoData {
+			zap.S().Warn("No project found to delete for project id: ", req.ProjectID, " for profile id: ", req.ProfileID)
+			return err
+		}
+		zap.S().Error("Error deleting project: ", err, " for project id: ", req.ProjectID, " for profile id: ", req.ProfileID)
+		return err
+	}
+
+	return nil
 }

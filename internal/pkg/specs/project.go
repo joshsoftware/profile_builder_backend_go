@@ -124,3 +124,8 @@ func (p *UpdateProjectRequest) Validate() error {
 
 	return nil
 }
+
+type DeleteProjectRequest struct {
+	ProfileID int `json:"profile_id"`
+	ProjectID int `json:"id"`
+}

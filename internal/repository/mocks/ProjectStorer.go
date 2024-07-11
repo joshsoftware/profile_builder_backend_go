@@ -36,6 +36,24 @@ func (_m *ProjectStorer) CreateProject(ctx context.Context, values []repository.
 	return r0
 }
 
+// DeleteProject provides a mock function with given fields: ctx, req, tx
+func (_m *ProjectStorer) DeleteProject(ctx context.Context, req specs.DeleteProjectRequest, tx pgx.Tx) error {
+	ret := _m.Called(ctx, req, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteProject")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteProjectRequest, pgx.Tx) error); ok {
+		r0 = rf(ctx, req, tx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ListProjects provides a mock function with given fields: ctx, profileID, filter, tx
 func (_m *ProjectStorer) ListProjects(ctx context.Context, profileID int, filter specs.ListProjectsFilter, tx pgx.Tx) ([]specs.ProjectResponse, error) {
 	ret := _m.Called(ctx, profileID, filter, tx)

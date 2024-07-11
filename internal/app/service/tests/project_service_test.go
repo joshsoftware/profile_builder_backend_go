@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
@@ -278,6 +279,84 @@ func TestUpdateProject(t *testing.T) {
 
 			_, err := projService.UpdateProject(context.TODO(), test.profileID, test.projectID, test.userID, test.input)
 
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+func TestDeleteProjectService(t *testing.T) {
+	mockProjectSvc := new(mocks.ProjectStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
+	var repoDeps = service.RepoDeps{
+		ProjectDeps: mockProjectSvc,
+		ProfileDeps: mockProfileRepo,
+	}
+	projectSvc := service.NewServices(repoDeps)
+
+	tests := []struct {
+		name            string
+		req             specs.DeleteProjectRequest
+		setup           func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name: "Success_for_delete_project",
+			req: specs.DeleteProjectRequest{
+				ProjectID: 1,
+				ProfileID: 1,
+			},
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				projectMock.On("DeleteProject", mock.Anything, mock.AnythingOfType("specs.DeleteProjectRequest"), nil).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name: "Failed_because_delete_project_returns_an_error",
+			req: specs.DeleteProjectRequest{
+				ProjectID: 2,
+				ProfileID: 1,
+			},
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				projectMock.On("DeleteProject", mock.Anything, mock.AnythingOfType("specs.DeleteProjectRequest"), nil).Return(errs.ErrNoData).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_because_DeleteProject_returns_an_error",
+			req: specs.DeleteProjectRequest{
+				ProjectID: 3,
+				ProfileID: 1,
+			},
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				projectMock.On("DeleteProject", mock.Anything, mock.AnythingOfType("specs.DeleteProjectRequest"), nil).Return(errs.ErrFailedToDelete).Once()
+				profileMock.On("HandleTransaction", mock.Anything, nil, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		// {
+		// 	name: "Failed_because_BeginTransaction_returns_an_error",
+		// 	req: specs.DeleteAchievementRequest{
+		// 		AchievementID: 4,
+		// 		ProfileID:     1,
+		// 	},
+		// 	setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("error")).Once()
+		// 	},
+		// 	isErrorExpected: true,
+		// },
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProjectSvc, mockProfileRepo)
+			err := projectSvc.DeleteProject(context.Background(), test.req)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
