@@ -23,6 +23,7 @@ type CertificateStorer interface {
 	CreateCertificate(ctx context.Context, values []CertificateRepo, tx pgx.Tx) error
 	UpdateCertificate(ctx context.Context, profileID int, eduID int, req UpdateCertificateRepo, tx pgx.Tx) (int, error)
 	ListCertificates(ctx context.Context, profileID int, filter specs.ListCertificateFilter, tx pgx.Tx) ([]specs.CertificateResponse, error)
+	DeleteCertificate(ctx context.Context, req specs.DeleteCertificateRequest, tx pgx.Tx) error
 }
 
 // NewCertificateRepo creates a new instance of CertificateRepo.
@@ -129,4 +130,21 @@ func (certificateStore *CertificateStore) UpdateCertificate(ctx context.Context,
 	}
 
 	return profileID, nil
+}
+
+func (certificateStore *CertificateStore) DeleteCertificate(ctx context.Context, req specs.DeleteCertificateRequest, tx pgx.Tx) error {
+	deleteQuery, args, err := psql.Delete("certificates").Where(sq.Eq{"id": req.CertificateID, "profile_id": req.ProfileID}).ToSql()
+	if err != nil {
+		zap.S().With("profile_id", req.ProfileID, "certificate_id ", req.CertificateID).Error("Error generating delete certificate query: ", zap.Error(err))
+		return err
+	}
+	result, err := tx.Exec(ctx, deleteQuery, args...)
+	if err != nil {
+		zap.S().With("query", deleteQuery, "args", args).Error("Error executing delete certificate query", zap.Error(err))
+		return err
+	}
+	if result.RowsAffected() == 0 {
+		return errors.ErrNoData
+	}
+	return nil
 }
