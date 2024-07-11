@@ -14,6 +14,7 @@ type EducationService interface {
 	CreateEducation(ctx context.Context, eduDetail specs.CreateEducationRequest, profileID int, userID int) (ID int, err error)
 	ListEducations(ctx context.Context, id int, filter specs.ListEducationsFilter) (value []specs.EducationResponse, err error)
 	UpdateEducation(ctx context.Context, profileID int, eduID int, userID int, req specs.UpdateEducationRequest) (ID int, err error)
+	DeleteEducation(ctx context.Context, req specs.DeleteEducationRequest) error
 }
 
 // CreateEducation : Service layer function adds education details to a user profile.
@@ -107,4 +108,26 @@ func (eduSvc *service) UpdateEducation(ctx context.Context, profileID int, eduID
 	zap.S().Info("education(s) update with profile id : ", profileID)
 
 	return profileID, nil
+}
+
+func (eduSvc *service) DeleteEducation(ctx context.Context, req specs.DeleteEducationRequest) (err error) {
+	tx, _ := eduSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := eduSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+	err = eduSvc.EducationRepo.DeleteEducation(ctx, req, tx)
+	if err != nil {
+		if err == errors.ErrNoData {
+			zap.S().Warn("No education found to delete for education id : ", req.EducationID, "for profile id : ", req.ProfileID)
+			return
+		}
+
+		zap.S().Error("Error deleting education : ", err, "for education id : ", req.EducationID, "for profile id : ", req.ProfileID)
+		return err
+	}
+	return nil
 }

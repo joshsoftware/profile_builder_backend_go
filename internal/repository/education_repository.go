@@ -23,6 +23,7 @@ type EducationStorer interface {
 	CreateEducation(ctx context.Context, values []EducationRepo, tx pgx.Tx) error
 	ListEducations(ctx context.Context, profileID int, filter specs.ListEducationsFilter, tx pgx.Tx) (values []specs.EducationResponse, err error)
 	UpdateEducation(ctx context.Context, profileID int, eduID int, req UpdateEducationRepo, tx pgx.Tx) (int, error)
+	DeleteEducation(ctx context.Context, req specs.DeleteEducationRequest, tx pgx.Tx) error
 }
 
 // NewEducationRepo creates a new instance of EducationRepo.
@@ -130,4 +131,23 @@ func (eduStore *EducationStore) UpdateEducation(ctx context.Context, profileID i
 	}
 
 	return profileID, nil
+}
+
+func (eduStore *EducationStore) DeleteEducation(ctx context.Context, req specs.DeleteEducationRequest, tx pgx.Tx) error {
+	deleteQuery, args, err := psql.Delete("educations").Where(sq.Eq{"id": req.EducationID, "profile_id": req.ProfileID}).ToSql()
+	if err != nil {
+		zap.S().With("profile_id", req.ProfileID, "education_id ; ", req.EducationID).Error("Error generating delete education query : ", zap.Error(err))
+		return err
+	}
+
+	result, err := tx.Exec(ctx, deleteQuery, args...)
+	if err != nil {
+		zap.S().With("query", deleteQuery, "args", args).Error("Error executing delete education query : ", zap.Error(err))
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.ErrNoData
+	}
+	return nil
 }

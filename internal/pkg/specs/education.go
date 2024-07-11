@@ -98,3 +98,8 @@ func (req *UpdateEducationRequest) Validate() error {
 
 	return nil
 }
+
+type DeleteEducationRequest struct {
+	ProfileID   int `json:"profile_id"`
+	EducationID int `json:"id"`
+}
