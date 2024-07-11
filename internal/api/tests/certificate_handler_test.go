@@ -4,14 +4,17 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
@@ -324,4 +327,96 @@ func TestUpdateCertificateHandler(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDeleteCertificateHandler(t *testing.T) {
+	certificateSvc := new(mocks.Service)
+
+	tests := []struct {
+		name               string
+		profileID          string
+		certificateID      string
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+		expectedResponse   string
+	}{
+		{
+			name:          "Success_for_certificate_delete",
+			profileID:     "1",
+			certificateID: "1",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest")).Return(nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   "Certificate deleted successfully",
+		},
+		{
+			name:          "No_data_found_for_deletion",
+			profileID:     "1",
+			certificateID: "2",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest")).Return(errs.ErrNoData).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   "No data found for deletion",
+		},
+		{
+			name:          "Error_while_deleting_certificate",
+			profileID:     "1",
+			certificateID: "3",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest")).Return(errs.ErrFailedToDelete).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "failed to delete",
+		},
+		{
+			name:               "Error_while_getting_IDs",
+			profileID:          "invalid",
+			certificateID:      "invalid",
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "invalid request data",
+		},
+		{
+			name:          "Fail_for_internal_error",
+			profileID:     "1",
+			certificateID: "1",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest")).Return(errs.ErrFailedToDelete).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "failed to delete",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(certificateSvc)
+			reqPath := "/profiles/" + tt.profileID + "/certificate/" + tt.certificateID
+			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
+			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.certificateID})
+			rr := httptest.NewRecorder()
+
+			handler := handler.DeleteCertificatesHandler(context.Background(), certificateSvc)
+			handler(rr, req)
+
+			res := rr.Result()
+			defer res.Body.Close()
+
+			if res.StatusCode != tt.expectedStatusCode {
+				t.Errorf("expected status %d, got %d", tt.expectedStatusCode, res.StatusCode)
+			}
+
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatalf("could not read response: %v", err)
+			}
+
+			if !strings.Contains(string(body), tt.expectedResponse) {
+				t.Errorf("expected response to contain %q, got %q", tt.expectedResponse, body)
+			}
+		})
+	}
+
 }
