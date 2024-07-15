@@ -14,7 +14,7 @@ type ExperienceService interface {
 	CreateExperience(ctx context.Context, expDetail specs.CreateExperienceRequest, profileID int, userID int) (ID int, err error)
 	ListExperiences(ctx context.Context, id int, filter specs.ListExperiencesFilter) (values []specs.ExperienceResponse, err error)
 	UpdateExperience(ctx context.Context, profileID int, expID int, userID int, req specs.UpdateExperienceRequest) (ID int, err error)
-	DeleteExperience(ctx context.Context, req specs.DeleteExperienceRequest) error
+	DeleteExperience(ctx context.Context, profileID, experienceID int) error
 }
 
 // CreateExperience : Service layer function adds experiences details to a user profile.
@@ -108,7 +108,7 @@ func (expSvc *service) UpdateExperience(ctx context.Context, profileID int, expI
 	return profileID, nil
 }
 
-func (expSvc *service) DeleteExperience(ctx context.Context, req specs.DeleteExperienceRequest) (err error) {
+func (expSvc *service) DeleteExperience(ctx context.Context, profileID, experienceID int) (err error) {
 	tx, _ := expSvc.ProfileRepo.BeginTransaction(ctx)
 	defer func() {
 		txErr := expSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
@@ -118,14 +118,15 @@ func (expSvc *service) DeleteExperience(ctx context.Context, req specs.DeleteExp
 		}
 	}()
 
-	err = expSvc.ExperienceRepo.DeleteExperience(ctx, req, tx)
+	err = expSvc.ExperienceRepo.DeleteExperience(ctx, profileID, experienceID, tx)
 	if err != nil {
 		if err == errors.ErrNoData {
-			zap.S().Warn("No experience found to delete for experience id: ", req.ExperienceID, " for profile id: ", req.ProfileID)
+			zap.S().Warn("No experience found to delete for experience id: ", experienceID, " for profile id: ", profileID)
 			return err
 		}
-		zap.S().Error("Error deleting experience: ", err, " for experience id: ", req.ExperienceID, " for profile id: ", req.ProfileID)
+		zap.S().Error("Error deleting experience: ", err, " for experience id: ", experienceID, " for profile id: ", profileID)
 		return err
 	}
+	zap.S().Info("experience deleted successfully for experience id: ", experienceID, " for profile id: ", profileID)
 	return nil
 }

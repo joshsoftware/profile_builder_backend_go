@@ -139,21 +139,19 @@ func UpdateExperienceHandler(ctx context.Context, eduSvc service.Service) func(h
 
 func DeleteExperienceHandler(ctx context.Context, expSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, expID, err := helpers.GetMultipleParams(r)
+		profileID, experienceID, err := helpers.GetMultipleParams(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("error while getting the IDs from request : ", err)
 			return
 		}
 
-		req := decodeDeleteExperienceRequest(profileID, expID)
-
-		err = expSvc.DeleteExperience(ctx, req)
+		err = expSvc.DeleteExperience(ctx, profileID, experienceID)
 
 		if err != nil {
 			if err == errors.ErrNoData {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: "No data found for deletion",
+					Message: constants.NoResourceFound,
 				})
 				return
 			}

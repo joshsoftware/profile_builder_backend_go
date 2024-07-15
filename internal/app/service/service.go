@@ -235,6 +235,6 @@ func (profileSvc *service) DeleteProfile(ctx context.Context, profileID int) (er
 		zap.S().Error("Error deleting profile: ", err, " for profile id: ", profileID)
 		return err
 	}
-
+	zap.S().Info("profile deleted with profile_id : ", profileID)
 	return nil
 }

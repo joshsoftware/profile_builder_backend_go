@@ -14,7 +14,7 @@ type AchievementService interface {
 	CreateAchievement(ctx context.Context, cDetail specs.CreateAchievementRequest, profileID int, userID int) (ID int, err error)
 	UpdateAchievement(ctx context.Context, profileID int, achID int, userID int, req specs.UpdateAchievementRequest) (ID int, err error)
 	ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) (value []specs.AchievementResponse, err error)
-	DeleteAchievement(ctx context.Context, req specs.DeleteAchievementRequest) error
+	DeleteAchievement(ctx context.Context, profileID, achievementID int) error
 }
 
 // CreateAchievement : Service layer function adds achievement details to a user profile.
@@ -53,6 +53,7 @@ func (achSvc *service) CreateAchievement(ctx context.Context, cDetail specs.Crea
 		zap.S().Error("Unable to create achievement : ", err, "for profile id : ", profileID)
 		return 0, err
 	}
+	zap.S().Info("achievement(s) added with profile id : ", profileID)
 
 	return profileID, nil
 }
@@ -102,7 +103,7 @@ func (achSvc *service) ListAchievements(ctx context.Context, profileID int, filt
 	return value, nil
 }
 
-func (achSvc *service) DeleteAchievement(ctx context.Context, req specs.DeleteAchievementRequest) (err error) {
+func (achSvc *service) DeleteAchievement(ctx context.Context, profileID, achievementID int) (err error) {
 	tx, _ := achSvc.ProfileRepo.BeginTransaction(ctx)
 	defer func() {
 		txErr := achSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
@@ -112,15 +113,16 @@ func (achSvc *service) DeleteAchievement(ctx context.Context, req specs.DeleteAc
 		}
 	}()
 
-	err = achSvc.AchievementRepo.DeleteAchievement(ctx, req, tx)
+	err = achSvc.AchievementRepo.DeleteAchievement(ctx, profileID, achievementID, tx)
 
 	if err != nil {
 		if err == errors.ErrNoData {
-			zap.S().Warn("No achievement found to delete for achievement id: ", req.AchievementID, " for profile id: ", req.ProfileID)
+			zap.S().Warn("No achievement found to delete for achievement id: ", achievementID, " for profile id: ", profileID)
 			return err
 		}
-		zap.S().Error("Error deleting achievement: ", err, " for achievement id: ", req.AchievementID, " for profile id: ", req.ProfileID)
+		zap.S().Error("Error deleting achievement: ", err, " for achievement id: ", achievementID, " for profile id: ", profileID)
 		return err
 	}
+	zap.S().Info("Achievement deleted successfully for achievement id: ", achievementID, " for profile id: ", profileID)
 	return nil
 }

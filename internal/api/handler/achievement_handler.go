@@ -138,21 +138,19 @@ func ListAchievementsHandler(ctx context.Context, achSvc service.Service) func(h
 // DeleteAchievementHandler returns an HTTP handler that deletes particular achievement using profileSvc.
 func DeleteAchievementHandler(ctx context.Context, achSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		profileID, achID, err := helpers.GetMultipleParams(r)
+		profileID, achievementID, err := helpers.GetMultipleParams(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("error while getting the IDs from request")
 			return
 		}
-		// Decode into the struct
-		req := decodeDeleteAchievementRequest(profileID, achID)
 
 		// call the service
-		err = achSvc.DeleteAchievement(ctx, req)
+		err = achSvc.DeleteAchievement(ctx, profileID, achievementID)
 		if err != nil {
 			if err == errors.ErrNoData {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: "No data found for deletion",
+					Message: constants.NoResourceFound,
 				})
 				return
 			}
@@ -165,4 +163,5 @@ func DeleteAchievementHandler(ctx context.Context, achSvc service.Service) func(
 			Message: "Achievement deleted successfully",
 		})
 	}
+
 }

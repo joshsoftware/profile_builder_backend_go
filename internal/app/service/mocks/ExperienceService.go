@@ -43,17 +43,17 @@ func (_m *ExperienceService) CreateExperience(ctx context.Context, expDetail spe
 	return r0, r1
 }
 
-// DeleteExperience provides a mock function with given fields: ctx, req
-func (_m *ExperienceService) DeleteExperience(ctx context.Context, req specs.DeleteExperienceRequest) error {
-	ret := _m.Called(ctx, req)
+// DeleteExperience provides a mock function with given fields: ctx, profileID, experienceID
+func (_m *ExperienceService) DeleteExperience(ctx context.Context, profileID int, experienceID int) error {
+	ret := _m.Called(ctx, profileID, experienceID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteExperience")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteExperienceRequest) error); ok {
-		r0 = rf(ctx, req)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, experienceID)
 	} else {
 		r0 = ret.Error(0)
 	}

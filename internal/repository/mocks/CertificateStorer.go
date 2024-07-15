@@ -36,17 +36,17 @@ func (_m *CertificateStorer) CreateCertificate(ctx context.Context, values []rep
 	return r0
 }
 
-// DeleteCertificate provides a mock function with given fields: ctx, req, tx
-func (_m *CertificateStorer) DeleteCertificate(ctx context.Context, req specs.DeleteCertificateRequest, tx pgx.Tx) error {
-	ret := _m.Called(ctx, req, tx)
+// DeleteCertificate provides a mock function with given fields: ctx, profileID, certificateID, tx
+func (_m *CertificateStorer) DeleteCertificate(ctx context.Context, profileID int, certificateID int, tx pgx.Tx) error {
+	ret := _m.Called(ctx, profileID, certificateID, tx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteCertificate")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteCertificateRequest, pgx.Tx) error); ok {
-		r0 = rf(ctx, req, tx)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, pgx.Tx) error); ok {
+		r0 = rf(ctx, profileID, certificateID, tx)
 	} else {
 		r0 = ret.Error(0)
 	}

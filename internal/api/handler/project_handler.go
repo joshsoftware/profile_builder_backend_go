@@ -145,13 +145,11 @@ func DeleteProjectHandler(ctx context.Context, projSvc service.Service) func(htt
 			return
 		}
 
-		req := decodeDeleteProjectRequest(profileID, projectID)
-
-		err = projSvc.DeleteProject(ctx, req)
+		err = projSvc.DeleteProject(ctx, profileID, projectID)
 		if err != nil {
 			if err == errors.ErrNoData {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: "No data found for deletion",
+					Message: constants.NoResourceFound,
 				})
 				return
 			}

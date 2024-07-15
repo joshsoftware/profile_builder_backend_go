@@ -345,7 +345,7 @@ func TestDeleteCertificateHandler(t *testing.T) {
 			profileID:     "1",
 			certificateID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest")).Return(nil).Once()
+				mockSvc.On("DeleteCertificate", mock.Anything, 1, 1).Return(nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "Certificate deleted successfully",
@@ -355,7 +355,7 @@ func TestDeleteCertificateHandler(t *testing.T) {
 			profileID:     "1",
 			certificateID: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest")).Return(errs.ErrNoData).Once()
+				mockSvc.On("DeleteCertificate", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "No data found for deletion",
@@ -365,7 +365,7 @@ func TestDeleteCertificateHandler(t *testing.T) {
 			profileID:     "1",
 			certificateID: "3",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteCertificate", mock.Anything, 1, 3).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -383,7 +383,7 @@ func TestDeleteCertificateHandler(t *testing.T) {
 			profileID:     "1",
 			certificateID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteCertificate", mock.Anything, 1, 1).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -393,7 +393,7 @@ func TestDeleteCertificateHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup(certificateSvc)
-			reqPath := "/profiles/" + tt.profileID + "/certificate/" + tt.certificateID
+			reqPath := "/profiles/" + tt.profileID + "/certificates/" + tt.certificateID
 			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.certificateID})
 			rr := httptest.NewRecorder()

@@ -144,13 +144,11 @@ func DeleteEducationHandler(ctx context.Context, eduSvc service.Service) func(ht
 			zap.S().Error("error while getting the IDs from request : ", err)
 			return
 		}
-
-		req := decondeDeleteEducationRequest(profileID, educationID)
-		err = eduSvc.DeleteEducation(ctx, req)
+		err = eduSvc.DeleteEducation(ctx, profileID, educationID)
 		if err != nil {
 			if err == errors.ErrNoData {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: "No data found for deletion",
+					Message: constants.NoResourceFound,
 				})
 				return
 			}

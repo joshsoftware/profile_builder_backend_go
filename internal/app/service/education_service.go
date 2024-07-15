@@ -14,7 +14,7 @@ type EducationService interface {
 	CreateEducation(ctx context.Context, eduDetail specs.CreateEducationRequest, profileID int, userID int) (ID int, err error)
 	ListEducations(ctx context.Context, id int, filter specs.ListEducationsFilter) (value []specs.EducationResponse, err error)
 	UpdateEducation(ctx context.Context, profileID int, eduID int, userID int, req specs.UpdateEducationRequest) (ID int, err error)
-	DeleteEducation(ctx context.Context, req specs.DeleteEducationRequest) error
+	DeleteEducation(ctx context.Context, profileID, educationID int) error
 }
 
 // CreateEducation : Service layer function adds education details to a user profile.
@@ -57,7 +57,6 @@ func (eduSvc *service) CreateEducation(ctx context.Context, eduDetail specs.Crea
 		return 0, err
 	}
 	zap.S().Info("education(s) created with profile id : ", profileID)
-
 	return profileID, nil
 }
 
@@ -106,11 +105,10 @@ func (eduSvc *service) UpdateEducation(ctx context.Context, profileID int, eduID
 		return 0, err
 	}
 	zap.S().Info("education(s) update with profile id : ", profileID)
-
 	return profileID, nil
 }
 
-func (eduSvc *service) DeleteEducation(ctx context.Context, req specs.DeleteEducationRequest) (err error) {
+func (eduSvc *service) DeleteEducation(ctx context.Context, profileID, educationID int) (err error) {
 	tx, _ := eduSvc.ProfileRepo.BeginTransaction(ctx)
 	defer func() {
 		txErr := eduSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
@@ -119,15 +117,16 @@ func (eduSvc *service) DeleteEducation(ctx context.Context, req specs.DeleteEduc
 			return
 		}
 	}()
-	err = eduSvc.EducationRepo.DeleteEducation(ctx, req, tx)
+	err = eduSvc.EducationRepo.DeleteEducation(ctx, profileID, educationID, tx)
 	if err != nil {
 		if err == errors.ErrNoData {
-			zap.S().Warn("No education found to delete for education id : ", req.EducationID, "for profile id : ", req.ProfileID)
+			zap.S().Warn("No education found to delete for education id : ", educationID, "for profile id : ", profileID)
 			return
 		}
 
-		zap.S().Error("Error deleting education : ", err, "for education id : ", req.EducationID, "for profile id : ", req.ProfileID)
+		zap.S().Error("Error deleting education : ", err, "for education id : ", educationID, "for profile id : ", profileID)
 		return err
 	}
+	zap.S().Info("education deleted with education_id : ", educationID, "profile id : ", profileID)
 	return nil
 }

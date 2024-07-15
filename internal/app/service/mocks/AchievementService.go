@@ -43,17 +43,17 @@ func (_m *AchievementService) CreateAchievement(ctx context.Context, cDetail spe
 	return r0, r1
 }
 
-// DeleteAchievement provides a mock function with given fields: ctx, req
-func (_m *AchievementService) DeleteAchievement(ctx context.Context, req specs.DeleteAchievementRequest) error {
-	ret := _m.Called(ctx, req)
+// DeleteAchievement provides a mock function with given fields: ctx, profileID, achievementID
+func (_m *AchievementService) DeleteAchievement(ctx context.Context, profileID int, achievementID int) error {
+	ret := _m.Called(ctx, profileID, achievementID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteAchievement")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteAchievementRequest) error); ok {
-		r0 = rf(ctx, req)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, achievementID)
 	} else {
 		r0 = ret.Error(0)
 	}

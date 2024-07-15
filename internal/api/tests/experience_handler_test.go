@@ -259,7 +259,7 @@ func TestDeleteExperienceHandler(t *testing.T) {
 			profileID:    "1",
 			experienceID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteExperience", mock.Anything, mock.AnythingOfType("specs.DeleteExperienceRequest")).Return(nil).Once()
+				mockSvc.On("DeleteExperience", mock.Anything, 1, 1).Return(nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "Experience deleted successfully",
@@ -269,7 +269,7 @@ func TestDeleteExperienceHandler(t *testing.T) {
 			profileID:    "1",
 			experienceID: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteExperience", mock.Anything, mock.AnythingOfType("specs.DeleteExperienceRequest")).Return(errs.ErrNoData).Once()
+				mockSvc.On("DeleteExperience", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "No data found for deletion",
@@ -279,7 +279,7 @@ func TestDeleteExperienceHandler(t *testing.T) {
 			profileID:    "1",
 			experienceID: "3",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteExperience", mock.Anything, mock.AnythingOfType("specs.DeleteExperienceRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteExperience", mock.Anything, 1, 3).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -297,7 +297,7 @@ func TestDeleteExperienceHandler(t *testing.T) {
 			profileID:    "1",
 			experienceID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteExperience", mock.Anything, mock.AnythingOfType("specs.DeleteExperienceRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteExperience", mock.Anything, 1, 1).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -307,7 +307,7 @@ func TestDeleteExperienceHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup(expSvc)
-			reqPath := "/profiles/" + tt.profileID + "/experience/" + tt.experienceID
+			reqPath := "/profiles/" + tt.profileID + "/experiences/" + tt.experienceID
 			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.experienceID})
 			rr := httptest.NewRecorder()

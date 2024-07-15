@@ -306,55 +306,48 @@ func TestDeleteCertificateService(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		req             specs.DeleteCertificateRequest
+		certificateID   int
+		profileID       int
 		setup           func(certificateMock *mocks.CertificateStorer, profileMock *mocks.ProfileStorer)
 		isErrorExpected bool
 	}{
 		{
-			name: "Success_for_delete_certificate",
-			req: specs.DeleteCertificateRequest{
-				CertificateID: 1,
-				ProfileID:     1,
-			},
+			name:          "Success_for_delete_certificate",
+			certificateID: 1,
+			profileID:     1,
 			setup: func(certificateMock *mocks.CertificateStorer, profileMock *mocks.ProfileStorer) {
 				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
-				certificateMock.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest"), nil).Return(nil).Once()
+				certificateMock.On("DeleteCertificate", mock.Anything, 1, 1, nil).Return(nil).Once()
 				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
 		{
-			name: "Failed_because_delete_certificate_returns_an_error",
-			req: specs.DeleteCertificateRequest{
-				CertificateID: 2,
-				ProfileID:     1,
-			},
+			name:          "Failed_because_delete_certificate_returns_an_error",
+			certificateID: 2,
+			profileID:     1,
 			setup: func(certificateMock *mocks.CertificateStorer, profileMock *mocks.ProfileStorer) {
 				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
-				certificateMock.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest"), nil).Return(errs.ErrNoData).Once()
+				certificateMock.On("DeleteCertificate", mock.Anything, 1, 2, nil).Return(errs.ErrNoData).Once()
 				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
-			name: "Failed_because_DeleteCertificate_returns_an_error",
-			req: specs.DeleteCertificateRequest{
-				CertificateID: 3,
-				ProfileID:     1,
-			},
+			name:          "Failed_because_DeleteCertificate_returns_an_error",
+			certificateID: 3,
+			profileID:     1,
 			setup: func(certificateMock *mocks.CertificateStorer, profileMock *mocks.ProfileStorer) {
 				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
-				certificateMock.On("DeleteCertificate", mock.Anything, mock.AnythingOfType("specs.DeleteCertificateRequest"), nil).Return(errs.ErrFailedToDelete).Once()
+				certificateMock.On("DeleteCertificate", mock.Anything, 1, 3, nil).Return(errs.ErrFailedToDelete).Once()
 				profileMock.On("HandleTransaction", mock.Anything, nil, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: true,
 		},
 		// {
 		// 	name: "Failed_because_BeginTransaction_returns_an_error",
-		// 	req: specs.DeleteAchievementRequest{
-		// 		AchievementID: 4,
-		// 		ProfileID:     1,
-		// 	},
+		// 		achievementID: 4,
+		// 		profileID:     1,
 		// 	setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
 		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("error")).Once()
 		// 	},
@@ -365,7 +358,7 @@ func TestDeleteCertificateService(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockCertificateSvc, mockProfileRepo)
-			err := certificateSvc.DeleteCertificate(context.Background(), test.req)
+			err := certificateSvc.DeleteCertificate(context.Background(), test.profileID, test.certificateID)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}

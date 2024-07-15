@@ -260,7 +260,7 @@ func TestDeleteProjectHandler(t *testing.T) {
 			profileID: "1",
 			projectID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteProject", mock.Anything, mock.AnythingOfType("specs.DeleteProjectRequest")).Return(nil).Once()
+				mockSvc.On("DeleteProject", mock.Anything, 1, 1).Return(nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "Project deleted successfully",
@@ -270,7 +270,7 @@ func TestDeleteProjectHandler(t *testing.T) {
 			profileID: "1",
 			projectID: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteProject", mock.Anything, mock.AnythingOfType("specs.DeleteProjectRequest")).Return(errs.ErrNoData).Once()
+				mockSvc.On("DeleteProject", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "No data found for deletion",
@@ -280,7 +280,7 @@ func TestDeleteProjectHandler(t *testing.T) {
 			profileID: "1",
 			projectID: "3",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteProject", mock.Anything, mock.AnythingOfType("specs.DeleteProjectRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteProject", mock.Anything, 1, 3).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -298,7 +298,7 @@ func TestDeleteProjectHandler(t *testing.T) {
 			profileID: "1",
 			projectID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteProject", mock.Anything, mock.AnythingOfType("specs.DeleteProjectRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteProject", mock.Anything, 1, 1).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -308,7 +308,7 @@ func TestDeleteProjectHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup(projectSvc)
-			reqPath := "/profiles/" + tt.profileID + "/project/" + tt.projectID
+			reqPath := "/profiles/" + tt.profileID + "/projects/" + tt.projectID
 			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.projectID})
 			rr := httptest.NewRecorder()

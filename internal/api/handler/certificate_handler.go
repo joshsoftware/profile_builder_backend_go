@@ -146,20 +146,17 @@ func DeleteCertificatesHandler(ctx context.Context, certificateSvc service.Servi
 			zap.S().Error("Error getting profile id and certificate id : ", err)
 			return
 		}
-
-		req := decodeDeleteCertificateRequest(profileID, certificateID)
-
 		// call the service
-		err = certificateSvc.DeleteCertificate(ctx, req)
+		err = certificateSvc.DeleteCertificate(ctx, profileID, certificateID)
 		if err != nil {
 			if err == errors.ErrNoData {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: "No data found for deletion",
+					Message: constants.NoResourceFound,
 				})
 				return
 			}
 			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToDelete)
-			zap.S().Error("Unable to delete certificate : ", err, "for profile id : ", req.ProfileID, "certificate id : ", req.CertificateID)
+			zap.S().Error("Unable to delete certificate : ", err, "for profile id : ", profileID, "certificate id : ", certificateID)
 			return
 		}
 

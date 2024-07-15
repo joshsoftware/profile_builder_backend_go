@@ -163,7 +163,7 @@ func DeleteProfileHandler(ctx context.Context, profileSvc service.Service) func(
 		if err != nil {
 			if err == errors.ErrNoData {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: "No data found for deletion",
+					Message: constants.NoResourceFound,
 				})
 				return
 			}

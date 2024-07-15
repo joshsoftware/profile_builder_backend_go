@@ -36,17 +36,17 @@ func (_m *EducationStorer) CreateEducation(ctx context.Context, values []reposit
 	return r0
 }
 
-// DeleteEducation provides a mock function with given fields: ctx, req, tx
-func (_m *EducationStorer) DeleteEducation(ctx context.Context, req specs.DeleteEducationRequest, tx pgx.Tx) error {
-	ret := _m.Called(ctx, req, tx)
+// DeleteEducation provides a mock function with given fields: ctx, profileID, educationID, tx
+func (_m *EducationStorer) DeleteEducation(ctx context.Context, profileID int, educationID int, tx pgx.Tx) error {
+	ret := _m.Called(ctx, profileID, educationID, tx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteEducation")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteEducationRequest, pgx.Tx) error); ok {
-		r0 = rf(ctx, req, tx)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, pgx.Tx) error); ok {
+		r0 = rf(ctx, profileID, educationID, tx)
 	} else {
 		r0 = ret.Error(0)
 	}

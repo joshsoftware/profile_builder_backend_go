@@ -14,7 +14,7 @@ type CertificateService interface {
 	CreateCertificate(ctx context.Context, cDetail specs.CreateCertificateRequest, profileID int, userID int) (ID int, err error)
 	UpdateCertificate(ctx context.Context, profileID int, certID int, userID int, req specs.UpdateCertificateRequest) (ID int, err error)
 	ListCertificates(ctx context.Context, profileID int, fitler specs.ListCertificateFilter) (value []specs.CertificateResponse, err error)
-	DeleteCertificate(ctx context.Context, req specs.DeleteCertificateRequest) error
+	DeleteCertificate(ctx context.Context, profileID, certitificateID int) error
 }
 
 // CreateCerticate : Service layer function adds certicates details to a user profile.
@@ -57,7 +57,7 @@ func (certificateSvc *service) CreateCertificate(ctx context.Context, cDetail sp
 		zap.S().Error("Unable to create Certificate : ", err, " for profile id : ", profileID)
 		return 0, err
 	}
-
+	zap.S().Info("Certificate(s) added with profile id : ", profileID)
 	return profileID, nil
 }
 
@@ -111,7 +111,7 @@ func (certificateSvc *service) ListCertificates(ctx context.Context, profileID i
 	return value, nil
 }
 
-func (certificateSvc *service) DeleteCertificate(ctx context.Context, req specs.DeleteCertificateRequest) (err error) {
+func (certificateSvc *service) DeleteCertificate(ctx context.Context, profileID, certificateID int) (err error) {
 	tx, _ := certificateSvc.ProfileRepo.BeginTransaction(ctx)
 	defer func() {
 		txErr := certificateSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
@@ -121,15 +121,15 @@ func (certificateSvc *service) DeleteCertificate(ctx context.Context, req specs.
 		}
 	}()
 
-	err = certificateSvc.CertificateRepo.DeleteCertificate(ctx, req, tx)
+	err = certificateSvc.CertificateRepo.DeleteCertificate(ctx, profileID, certificateID, tx)
 	if err != nil {
 		if err == errors.ErrNoData {
-			zap.S().Warn("No certificate found to delete for certificate id: ", req.CertificateID, " for profile id: ", req.ProfileID)
+			zap.S().Warn("No certificate found to delete for certificate id: ", certificateID, " for profile id: ", profileID)
 			return err
 		}
-		zap.S().Error("error to delete certificate : ", err, " for certificate id : ", req.CertificateID, " for profile id : ", req.ProfileID)
+		zap.S().Error("error to delete certificate : ", err, " for certificate id : ", certificateID, " for profile id : ", profileID)
 		return err
 	}
-
+	zap.S().Info("certificate deleted with certificate id : ", certificateID, " for profile id : ", profileID)
 	return nil
 }

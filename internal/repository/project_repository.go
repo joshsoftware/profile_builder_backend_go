@@ -23,7 +23,7 @@ type ProjectStorer interface {
 	CreateProject(ctx context.Context, values []ProjectRepo, tx pgx.Tx) error
 	ListProjects(ctx context.Context, profileID int, filter specs.ListProjectsFilter, tx pgx.Tx) (values []specs.ProjectResponse, err error)
 	UpdateProject(ctx context.Context, profileID int, eduID int, req UpdateProjectRepo, tx pgx.Tx) (int, error)
-	DeleteProject(ctx context.Context, req specs.DeleteProjectRequest, tx pgx.Tx) error
+	DeleteProject(ctx context.Context, profileID, projectID int, tx pgx.Tx) error
 }
 
 // NewProjectRepo creates a new instance of ProfileRepo.
@@ -138,10 +138,10 @@ func (projectStore *ProjectStore) UpdateProject(ctx context.Context, profileID i
 	return profileID, nil
 }
 
-func (projectStore *ProjectStore) DeleteProject(ctx context.Context, req specs.DeleteProjectRequest, tx pgx.Tx) error {
-	deleteQuery, args, err := psql.Delete("projects").Where(sq.Eq{"id": req.ProjectID, "profile_id": req.ProfileID}).ToSql()
+func (projectStore *ProjectStore) DeleteProject(ctx context.Context, profileID, projectID int, tx pgx.Tx) error {
+	deleteQuery, args, err := psql.Delete("projects").Where(sq.Eq{"id": projectID, "profile_id": profileID}).ToSql()
 	if err != nil {
-		zap.S().With("profile_id", req.ProfileID, "project_id ", req.ProjectID).Error("Error generating delete project query: ", zap.Error(err))
+		zap.S().With("profile_id", profileID, "project_id ", projectID).Error("Error generating delete project query: ", zap.Error(err))
 		return err
 	}
 

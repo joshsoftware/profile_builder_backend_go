@@ -334,7 +334,7 @@ func TestDeleteAchievementHandler(t *testing.T) {
 			profileID:     "1",
 			achievementID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteAchievement", mock.Anything, mock.AnythingOfType("specs.DeleteAchievementRequest")).Return(nil).Once()
+				mockSvc.On("DeleteAchievement", mock.Anything, 1, 1).Return(nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "Achievement deleted successfully",
@@ -344,7 +344,7 @@ func TestDeleteAchievementHandler(t *testing.T) {
 			profileID:     "1",
 			achievementID: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteAchievement", mock.Anything, mock.AnythingOfType("specs.DeleteAchievementRequest")).Return(errs.ErrNoData).Once()
+				mockSvc.On("DeleteAchievement", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "No data found for deletion",
@@ -354,7 +354,7 @@ func TestDeleteAchievementHandler(t *testing.T) {
 			profileID:     "1",
 			achievementID: "3",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteAchievement", mock.Anything, mock.AnythingOfType("specs.DeleteAchievementRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteAchievement", mock.Anything, 1, 3).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -372,7 +372,7 @@ func TestDeleteAchievementHandler(t *testing.T) {
 			profileID:     "1",
 			achievementID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteAchievement", mock.Anything, mock.AnythingOfType("specs.DeleteAchievementRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteAchievement", mock.Anything, 1, 1).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -382,7 +382,7 @@ func TestDeleteAchievementHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup(achSvc)
-			reqPath := "/profiles/" + tt.profileID + "/achievement/" + tt.achievementID
+			reqPath := "/profiles/" + tt.profileID + "/achievements/" + tt.achievementID
 			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.achievementID})
 			rr := httptest.NewRecorder()

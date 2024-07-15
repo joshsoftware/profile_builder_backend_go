@@ -276,7 +276,7 @@ func TestDeleteEducationHandler(t *testing.T) {
 			profileID:   "1",
 			educationID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteEducation", mock.Anything, mock.AnythingOfType("specs.DeleteEducationRequest")).Return(nil).Once()
+				mockSvc.On("DeleteEducation", mock.Anything, 1, 1).Return(nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "Education deleted successfully",
@@ -286,7 +286,7 @@ func TestDeleteEducationHandler(t *testing.T) {
 			profileID:   "1",
 			educationID: "2",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteEducation", mock.Anything, mock.AnythingOfType("specs.DeleteEducationRequest")).Return(errs.ErrNoData).Once()
+				mockSvc.On("DeleteEducation", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "No data found for deletion",
@@ -296,7 +296,7 @@ func TestDeleteEducationHandler(t *testing.T) {
 			profileID:   "1",
 			educationID: "3",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteEducation", mock.Anything, mock.AnythingOfType("specs.DeleteEducationRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteEducation", mock.Anything, 1, 3).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -314,7 +314,7 @@ func TestDeleteEducationHandler(t *testing.T) {
 			profileID:   "1",
 			educationID: "1",
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("DeleteEducation", mock.Anything, mock.AnythingOfType("specs.DeleteEducationRequest")).Return(errs.ErrFailedToDelete).Once()
+				mockSvc.On("DeleteEducation", mock.Anything, 1, 1).Return(errs.ErrFailedToDelete).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   "failed to delete",
@@ -324,7 +324,7 @@ func TestDeleteEducationHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup(educationSvc)
-			reqPath := "/profiles/" + tt.profileID + "/education/" + tt.educationID
+			reqPath := "/profiles/" + tt.profileID + "/educations/" + tt.educationID
 			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.educationID})
 			rr := httptest.NewRecorder()

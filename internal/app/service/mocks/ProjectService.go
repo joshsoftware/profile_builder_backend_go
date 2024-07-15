@@ -43,17 +43,17 @@ func (_m *ProjectService) CreateProject(ctx context.Context, projDetail specs.Cr
 	return r0, r1
 }
 
-// DeleteProject provides a mock function with given fields: ctx, req
-func (_m *ProjectService) DeleteProject(ctx context.Context, req specs.DeleteProjectRequest) error {
-	ret := _m.Called(ctx, req)
+// DeleteProject provides a mock function with given fields: ctx, profileID, projectID
+func (_m *ProjectService) DeleteProject(ctx context.Context, profileID int, projectID int) error {
+	ret := _m.Called(ctx, profileID, projectID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteProject")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, specs.DeleteProjectRequest) error); ok {
-		r0 = rf(ctx, req)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, projectID)
 	} else {
 		r0 = ret.Error(0)
 	}

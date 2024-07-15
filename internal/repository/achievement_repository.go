@@ -30,7 +30,7 @@ type AchievementStorer interface {
 	CreateAchievement(ctx context.Context, values []AchievementRepo, tx pgx.Tx) error
 	UpdateAchievement(ctx context.Context, profileID int, achID int, req UpdateAchievementRepo, tx pgx.Tx) (int, error)
 	ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter, tx pgx.Tx) ([]specs.AchievementResponse, error)
-	DeleteAchievement(ctx context.Context, req specs.DeleteAchievementRequest, tx pgx.Tx) error
+	DeleteAchievement(ctx context.Context, profileID, achievementID int, tx pgx.Tx) error
 }
 
 // CreateAchievement inserts achievements details into the database.
@@ -131,10 +131,10 @@ func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileI
 	return values, nil
 }
 
-func (achStore *AchievementStore) DeleteAchievement(ctx context.Context, req specs.DeleteAchievementRequest, tx pgx.Tx) error {
-	deleteQuery, args, err := psql.Delete("achievements").Where(sq.Eq{"id": req.AchievementID, "profile_id": req.ProfileID}).ToSql()
+func (achStore *AchievementStore) DeleteAchievement(ctx context.Context, profileID, achievementID int, tx pgx.Tx) error {
+	deleteQuery, args, err := psql.Delete("achievements").Where(sq.Eq{"id": achievementID, "profile_id": profileID}).ToSql()
 	if err != nil {
-		zap.S().With("profile_id", req.ProfileID, "achievement_id ", req.AchievementID).Error("Error generating delete achievement query: ", zap.Error(err))
+		zap.S().With("profile_id", profileID, "achievement_id ", achievementID).Error("Error generating delete achievement query: ", zap.Error(err))
 		return err
 	}
 	result, err := tx.Exec(ctx, deleteQuery, args...)

@@ -23,7 +23,7 @@ type ExperienceStorer interface {
 	CreateExperience(ctx context.Context, values []ExperienceRepo, tx pgx.Tx) error
 	ListExperiences(ctx context.Context, profileID int, filter specs.ListExperiencesFilter, tx pgx.Tx) (values []specs.ExperienceResponse, err error)
 	UpdateExperience(ctx context.Context, profileID int, eduID int, req UpdateExperienceRepo, tx pgx.Tx) (int, error)
-	DeleteExperience(ctx context.Context, req specs.DeleteExperienceRequest, tx pgx.Tx) error
+	DeleteExperience(ctx context.Context, profileID, experienceID int, tx pgx.Tx) error
 }
 
 // NewExperienceRepo creates a new instance of ExperienceRepo.
@@ -131,8 +131,8 @@ func (expStore *ExperienceStore) UpdateExperience(ctx context.Context, profileID
 	return profileID, nil
 }
 
-func (expStore *ExperienceStore) DeleteExperience(ctx context.Context, req specs.DeleteExperienceRequest, tx pgx.Tx) error {
-	deleteQuery, args, err := psql.Delete("experiences").Where(sq.Eq{"id": req.ExperienceID, "profile_id": req.ProfileID}).ToSql()
+func (expStore *ExperienceStore) DeleteExperience(ctx context.Context, profileID, experienceID int, tx pgx.Tx) error {
+	deleteQuery, args, err := psql.Delete("experiences").Where(sq.Eq{"id": experienceID, "profile_id": profileID}).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating experience delete query: ", err)
 		return err
