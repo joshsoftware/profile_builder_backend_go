@@ -32,31 +32,31 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/educations", handler.CreateEducationHandler(ctx, svc)).Methods(http.MethodPost)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/educations", handler.ListEducationHandler(ctx, svc)).Methods(http.MethodGet)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/educations/{id}", handler.UpdateEducationHandler(ctx, svc)).Methods(http.MethodPut)
-	profileSubrouter.HandleFunc("/profiles/{profile_id}/education/{id}", handler.DeleteEducationHandler(ctx, svc)).Methods(http.MethodDelete)
+	profileSubrouter.HandleFunc("/profiles/{profile_id}/educations/{id}", handler.DeleteEducationHandler(ctx, svc)).Methods(http.MethodDelete)
 
 	// Certificates APIs
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/certificates", handler.CreateCertificateHandler(ctx, svc)).Methods(http.MethodPost)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/certificates", handler.ListCertificatesHandler(ctx, svc)).Methods(http.MethodGet)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/certificates/{id}", handler.UpdateCertificateHandler(ctx, svc)).Methods(http.MethodPut)
-	profileSubrouter.HandleFunc("/profiles/{profile_id}/certificate/{id}", handler.DeleteCertificatesHandler(ctx, svc)).Methods(http.MethodDelete)
+	profileSubrouter.HandleFunc("/profiles/{profile_id}/certificates/{id}", handler.DeleteCertificatesHandler(ctx, svc)).Methods(http.MethodDelete)
 
 	// Projects APIs
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/projects", handler.CreateProjectHandler(ctx, svc)).Methods(http.MethodPost)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/projects", handler.ListProjectHandler(ctx, svc)).Methods(http.MethodGet)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/projects/{id}", handler.UpdateProjectHandler(ctx, svc)).Methods(http.MethodPut)
-	profileSubrouter.HandleFunc("/profiles/{profile_id}/project/{id}", handler.DeleteProjectHandler(ctx, svc)).Methods(http.MethodDelete)
+	profileSubrouter.HandleFunc("/profiles/{profile_id}/projects/{id}", handler.DeleteProjectHandler(ctx, svc)).Methods(http.MethodDelete)
 
 	// Experiences APIs
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/experiences", handler.CreateExperienceHandler(ctx, svc)).Methods(http.MethodPost)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/experiences", handler.ListExperienceHandler(ctx, svc)).Methods(http.MethodGet)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/experiences/{id}", handler.UpdateExperienceHandler(ctx, svc)).Methods(http.MethodPut)
-	profileSubrouter.HandleFunc("/profiles/{profile_id}/experience/{id}", handler.DeleteExperienceHandler(ctx, svc)).Methods(http.MethodDelete)
+	profileSubrouter.HandleFunc("/profiles/{profile_id}/experiences/{id}", handler.DeleteExperienceHandler(ctx, svc)).Methods(http.MethodDelete)
 
 	// Achievements APIs
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/achievements", handler.CreateAchievementHandler(ctx, svc)).Methods(http.MethodPost)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/achievements", handler.ListAchievementsHandler(ctx, svc)).Methods(http.MethodGet)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/achievements/{id}", handler.UpdateAchievementHandler(ctx, svc)).Methods(http.MethodPut)
-	profileSubrouter.HandleFunc("/profiles/{profile_id}/achievement/{id}", handler.DeleteAchievementHandler(ctx, svc)).Methods(http.MethodDelete)
+	profileSubrouter.HandleFunc("/profiles/{profile_id}/achievements/{id}", handler.DeleteAchievementHandler(ctx, svc)).Methods(http.MethodDelete)
 
 	return router
 }
