@@ -152,5 +152,5 @@ var (
 
 // Constant Message
 var (
-	NoResourceFound = "Resource with requested ID not found"
+	ResourceNotFound = "Resource not found for the given request ID"
 )

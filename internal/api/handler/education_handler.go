@@ -148,7 +148,7 @@ func DeleteEducationHandler(ctx context.Context, eduSvc service.Service) func(ht
 		if err != nil {
 			if err == errors.ErrNoData {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: constants.NoResourceFound,
+					Message: constants.ResourceNotFound,
 				})
 				return
 			}

@@ -151,7 +151,7 @@ func DeleteExperienceHandler(ctx context.Context, expSvc service.Service) func(h
 		if err != nil {
 			if err == errors.ErrNoData {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: constants.NoResourceFound,
+					Message: constants.ResourceNotFound,
 				})
 				return
 			}

@@ -149,7 +149,7 @@ func DeleteProjectHandler(ctx context.Context, projSvc service.Service) func(htt
 		if err != nil {
 			if err == errors.ErrNoData {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: constants.NoResourceFound,
+					Message: constants.ResourceNotFound,
 				})
 				return
 			}
