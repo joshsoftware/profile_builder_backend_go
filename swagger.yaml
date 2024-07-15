@@ -1,8 +1,7 @@
 openapi: 3.0.3
 info:
   title: Profile Builder API
-  description: API documentation for Creating a Profile Builder Application with Admin Control and some advanced features.
-    
+  description: API documentation for Creating a Profile Builder Application with Admin Control and some advanced features.s
   version: 1.0.0
 servers:
   - url: http://localhost:3001
@@ -22,13 +21,17 @@ paths:
   /api/profiles:
     get:
       summary: List of Profiles
+      tags:
+        - Profiles
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Successful response
     post:
       summary: Create Profile
+      tags:
+        - Profiles
       security:
         - bearerAuth: []
       requestBody:
@@ -71,21 +74,25 @@ paths:
                     career_objectives:
                       type: string
       responses:
-        '201':
+        "201":
           description: Profile created
 
   /api/skills:
     get:
       summary: List of Skills
+      tags:
+        - Skills
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Successful response
 
   /api/profiles/{profileId}:
     get:
       summary: Get Profile by ID
+      tags:
+        - Profiles
       security:
         - bearerAuth: []
       parameters:
@@ -95,12 +102,14 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful response
 
   /api/profiles/{profileId}/educations:
     get:
       summary: Get Educations by Profile ID
+      tags:
+        - Educations
       security:
         - bearerAuth: []
       parameters:
@@ -110,10 +119,12 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful response
     post:
       summary: Create Educations
+      tags:
+        - Educations
       security:
         - bearerAuth: []
       parameters:
@@ -144,12 +155,14 @@ paths:
                       passing_year:
                         type: string
       responses:
-        '201':
+        "201":
           description: Education created
 
   /api/profiles/{profileId}/projects:
     get:
       summary: Get Projects by Profile ID
+      tags:
+        - Projects
       security:
         - bearerAuth: []
       parameters:
@@ -159,10 +172,12 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful response
     post:
       summary: Create Projects
+      tags:
+        - Projects
       security:
         - bearerAuth: []
       parameters:
@@ -205,12 +220,14 @@ paths:
                       duration:
                         type: string
       responses:
-        '201':
+        "201":
           description: Project created
 
   /api/profiles/{profileId}/experiences:
     get:
       summary: Get Experiences by Profile ID
+      tags:
+        - Experiences
       security:
         - bearerAuth: []
       parameters:
@@ -220,10 +237,12 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful response
     post:
       summary: Create Experiences
+      tags:
+        - Experiences
       security:
         - bearerAuth: []
       parameters:
@@ -252,12 +271,14 @@ paths:
                       to_date:
                         type: string
       responses:
-        '201':
+        "201":
           description: Experience created
 
   /api/profiles/{profileId}/achievements:
     get:
       summary: Get Achievements by Profile ID
+      tags:
+        - Achievements
       security:
         - bearerAuth: []
       parameters:
@@ -267,10 +288,12 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful response
     post:
       summary: Create Achievements
+      tags:
+        - Achievements
       security:
         - bearerAuth: []
       parameters:
@@ -295,12 +318,14 @@ paths:
                       description:
                         type: string
       responses:
-        '201':
+        "201":
           description: Achievement created
 
   /api/profiles/{profileId}/certificates:
     get:
       summary: Get Certificates by Profile ID
+      tags:
+        - Certificates
       security:
         - bearerAuth: []
       parameters:
@@ -310,10 +335,12 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful response
     post:
       summary: Create Certificates
+      tags:
+        - Certificates
       security:
         - bearerAuth: []
       parameters:
@@ -346,12 +373,14 @@ paths:
                       to_date:
                         type: string
       responses:
-        '201':
+        "201":
           description: Certificate created
 
   /login:
     post:
       summary: User Login
+      tags:
+        - Login/Logout
       requestBody:
         content:
           application/json:
@@ -361,12 +390,14 @@ paths:
                 access_token:
                   type: string
       responses:
-        '200':
+        "200":
           description: Successful login
 
   /api/profiles/{profileId}/educations/{educationId}:
     put:
       summary: Update Education of Specific ID
+      tags:
+        - Educations
       security:
         - bearerAuth: []
       parameters:
@@ -400,12 +431,14 @@ paths:
                     passing_year:
                       type: string
       responses:
-        '200':
+        "200":
           description: Education updated
 
   /api/profiles/{profileId}/experiences/{experienceId}:
     put:
       summary: Update Experience of Specific ID
+      tags:
+        - Experiences
       security:
         - bearerAuth: []
       parameters:
@@ -437,12 +470,14 @@ paths:
                     to_date:
                       type: string
       responses:
-        '200':
+        "200":
           description: Experience updated
 
   /api/profiles/{profileId}/projects/{projectId}:
     put:
       summary: Update Project of Specific ID
+      tags:
+        - Projects
       security:
         - bearerAuth: []
       parameters:
@@ -488,12 +523,14 @@ paths:
                     duration:
                       type: string
       responses:
-        '200':
+        "200":
           description: Project updated
 
   /api/profiles/{profileId}/certificates/{certificateId}:
     put:
       summary: Update Certificate of Specific ID
+      tags:
+        - Certificates
       security:
         - bearerAuth: []
       parameters:
@@ -529,12 +566,14 @@ paths:
                     to_date:
                       type: string
       responses:
-        '200':
+        "200":
           description: Certificate updated
 
   /api/profiles/{profileId}/achievements/{achievementId}:
     put:
       summary: Update Achievement of Specific ID
+      tags:
+        - Achievements
       security:
         - bearerAuth: []
       parameters:
@@ -562,5 +601,500 @@ paths:
                     description:
                       type: string
       responses:
-        '200':
+        "200":
           description: Achievement updated
+
+  /api/profiles/{profile_id}/achievements/{id}:
+    delete:
+      summary: Delete User Achievement
+      tags:
+        - Achievements
+      description: Delete a achievement by specifying its ID and the profile ID.
+      operationId: deleteAchievement
+      parameters:
+        - name: profile_id
+          in: path
+          description: The ID of the profile from which the achievement will be deleted.
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: The ID of the achievement that needs to be deleted.
+          required: true
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Achievement deletion response.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Achievement deleted successfully.
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Resource not found for the given request ID.
+
+        "401":
+          description: Unauthorized user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 401
+                  error_message:
+                    type: string
+                    example: invalid token
+
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 500
+                  error_message:
+                    type: string
+                    example: internal server error
+        "502":
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 502
+                  error_message:
+                    type: string
+                    example: invalid request data
+
+  /api/profiles/{profile_id}/certificates/{id}:
+    delete:
+      summary: Delete User Certificate
+      tags:
+        - Certificates
+      description: Delete a certificate by specifying its ID and the profile ID.
+      operationId: deleteCertificate
+      parameters:
+        - name: profile_id
+          in: path
+          description: The ID of the profile from which the certificate will be deleted.
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: The ID of the certificate that needs to be deleted.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Certificate deletion response.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Certificate deleted successfully.
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Resource not found for the given request ID.
+        "401":
+          description: Unauthorized user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 401
+                  error_message:
+                    type: string
+                    example: invalid token
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 500
+                  error_message:
+                    type: string
+                    example: internal server error
+        "502":
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 502
+                  error_message:
+                    type: string
+                    example: invalid request data
+
+  /api/profiles/{profile_id}/educations/{id}:
+    delete:
+      summary: Delete User Education
+      tags:
+        - Educations
+      description: Delete a education by specifying its ID and the profile ID.
+      operationId: deleteEducation
+      parameters:
+        - name: profile_id
+          in: path
+          description: The ID of the profile from which the education will be deleted.
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: The ID of the education that needs to be deleted.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Education deletion response.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Education deleted successfully.
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Resource not found for the given request ID.
+        "401":
+          description: Unauthorized user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 401
+                  error_message:
+                    type: string
+                    example: invalid token
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 500
+                  error_message:
+                    type: string
+                    example: internal server error
+        "502":
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 502
+                  error_message:
+                    type: string
+                    example: invalid request data
+
+  /api/profiles/{profile_id}/experiences/{id}:
+    delete:
+      summary: Delete User Experience
+      tags:
+        - Experiences
+      description: Delete a experience by specifying its ID and the profile ID.
+      operationId: deleteExperience
+      parameters:
+        - name: profile_id
+          in: path
+          description: The ID of the profile from which the experience will be deleted.
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: The ID of the experience that needs to be deleted.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Experience deletion response.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Experience deleted successfully.
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Resource not found for the given request ID.
+        "401":
+          description: Unauthorized user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 401
+                  error_message:
+                    type: string
+                    example: invalid token
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 500
+                  error_message:
+                    type: string
+                    example: internal server error
+        "502":
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 502
+                  error_message:
+                    type: string
+                    example: invalid request data
+
+  /api/profiles/{profile_id}/projects/{id}:
+    delete:
+      summary: Delete User Project
+      tags:
+        - Projects
+      description: Delete a project by specifying its ID and the profile ID.
+      operationId: deleteProject
+      parameters:
+        - name: profile_id
+          in: path
+          description: The ID of the profile from which the project will be deleted.
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: The ID of the project that needs to be deleted.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Project deletion response.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Project deleted successfully.
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Resource not found for the given request ID.
+        "401":
+          description: Unauthorized user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 401
+                  error_message:
+                    type: string
+                    example: invalid token
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 500
+                  error_message:
+                    type: string
+                    example: internal server error
+        "502":
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 502
+                  error_message:
+                    type: string
+                    example: invalid request data
+
+  /api/profiles/{profile_id}:
+    delete:
+      summary: Delete User Profile
+      tags:
+        - Profiles
+      description: Delete a profile using specific profile ID.
+      operationId: deleteProfile
+      parameters:
+        - name: profile_id
+          in: path
+          description: The ID of the profile to be deleted.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Profile deletion response.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Profile deleted successfully.
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message:
+                            type: string
+                            example: Resource not found for the given profile ID.
+        "401":
+          description: Unauthorized user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 401
+                  error_message:
+                    type: string
+                    example: invalid token
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 500
+                  error_message:
+                    type: string
+                    example: internal server error
+        "502":
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 502
+                  error_message:
+                    type: string
+                    example: invalid request data
