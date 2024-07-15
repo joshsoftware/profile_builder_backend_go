@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
@@ -353,6 +354,81 @@ func TestUpdateProfile(t *testing.T) {
 
 			_, err := profileService.UpdateProfile(context.TODO(), test.profileID, test.userID, test.input)
 
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+func TestProfileDeleteService(t *testing.T) {
+	mockProfileRepo := new(mocks.ProfileStorer)
+	var repoDeps = service.RepoDeps{
+		ProfileDeps: mockProfileRepo,
+	}
+
+	profileSvc := service.NewServices(repoDeps)
+
+	tests := []struct {
+		name            string
+		profileID       int
+		setup           func(profileMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name:      "Success_for_delete_profile",
+			profileID: 1,
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("DeleteProfile", mock.Anything, 1, mock.Anything).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, nil).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name:      "Failed_because_DeleteProfile_returns_ErrNoData",
+			profileID: 2,
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("DeleteProfile", mock.Anything, 2, mock.Anything).Return(errs.ErrNoData).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:      "Failed_because_DeleteProfile_returns_an_error",
+			profileID: 3,
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("DeleteProfile", mock.Anything, 3, mock.Anything).Return(errs.ErrFailedToDelete).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:      "Failed_because_HandleTransaction_returns_an_error",
+			profileID: 5,
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("DeleteProfile", mock.Anything, 5, mock.Anything).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, nil).Return(errors.New("handle transaction error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		// {
+		// 	name:      "Failed_because_BeginTransaction_returns_an_error",
+		// 	profileID: 4,
+		// 	setup: func(profileMock *mocks.ProfileStorer) {
+		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("transaction error")).Once()
+		// 	},
+		// 	isErrorExpected: true,
+		// },
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProfileRepo)
+			err := profileSvc.DeleteProfile(context.Background(), test.profileID)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}

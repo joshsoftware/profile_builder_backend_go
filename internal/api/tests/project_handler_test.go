@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
 )
@@ -239,4 +242,96 @@ func TestUpdateProjectHandler(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDeleteProjectHandler(t *testing.T) {
+	projectSvc := new(mocks.Service)
+
+	tests := []struct {
+		name               string
+		profileID          string
+		projectID          string
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+		expectedResponse   string
+	}{
+		{
+			name:      "Success_for_project_delete",
+			profileID: "1",
+			projectID: "1",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteProject", mock.Anything, 1, 1).Return(nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   "Project deleted successfully",
+		},
+		{
+			name:      "No_data_found_for_deletion",
+			profileID: "1",
+			projectID: "2",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteProject", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   "No data found for deletion",
+		},
+		{
+			name:      "Error_while_deleting_project",
+			profileID: "1",
+			projectID: "3",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteProject", mock.Anything, 1, 3).Return(errs.ErrFailedToDelete).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "failed to delete",
+		},
+		{
+			name:               "Error_while_getting_IDs",
+			profileID:          "invalid",
+			projectID:          "invalid",
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "invalid request data",
+		},
+		{
+			name:      "Fail_for_internal_error",
+			profileID: "1",
+			projectID: "1",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("DeleteProject", mock.Anything, 1, 1).Return(errs.ErrFailedToDelete).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   "failed to delete",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(projectSvc)
+			reqPath := "/profiles/" + tt.profileID + "/projects/" + tt.projectID
+			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
+			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.projectID})
+			rr := httptest.NewRecorder()
+
+			handler := handler.DeleteProjectHandler(context.Background(), projectSvc)
+			handler(rr, req)
+
+			res := rr.Result()
+			defer res.Body.Close()
+
+			if res.StatusCode != tt.expectedStatusCode {
+				t.Errorf("expected status %d, got %d", tt.expectedStatusCode, res.StatusCode)
+			}
+
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatalf("could not read response: %v", err)
+			}
+
+			if !strings.Contains(string(body), tt.expectedResponse) {
+				t.Errorf("expected response to contain %q, got %q", tt.expectedResponse, body)
+			}
+		})
+	}
+
 }

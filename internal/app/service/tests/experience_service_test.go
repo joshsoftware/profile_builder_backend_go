@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
@@ -263,6 +264,77 @@ func TestUpdateExperience(t *testing.T) {
 
 			_, err := expService.UpdateExperience(context.TODO(), test.profileID, test.experienceID, test.userID, test.input)
 
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
+			}
+		})
+	}
+}
+
+func TestDeleteExperienceService(t *testing.T) {
+	mockExperienceSvc := new(mocks.ExperienceStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
+	var repoDeps = service.RepoDeps{
+		ExperienceDeps: mockExperienceSvc,
+		ProfileDeps:    mockProfileRepo,
+	}
+	experienceSvc := service.NewServices(repoDeps)
+
+	tests := []struct {
+		name            string
+		experienceID    int
+		profileID       int
+		setup           func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name:         "Success_for_delete_experience",
+			experienceID: 1,
+			profileID:    1,
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				experienceMock.On("DeleteExperience", mock.Anything, 1, 1, nil).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name:         "Failed_because_delete_experience_returns_an_error",
+			experienceID: 2,
+			profileID:    1,
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				experienceMock.On("DeleteExperience", mock.Anything, 1, 2, nil).Return(errs.ErrNoData).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:         "Failed_because_DeleteExperience_returns_an_error",
+			experienceID: 3,
+			profileID:    1,
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				experienceMock.On("DeleteExperience", mock.Anything, 1, 3, nil).Return(errs.ErrFailedToDelete).Once()
+				profileMock.On("HandleTransaction", mock.Anything, nil, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		// {
+		// 	name: "Failed_because_BeginTransaction_returns_an_error",
+		// 		achievementID: 4,
+		// 		profileID:     1,
+		// 	setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("error")).Once()
+		// 	},
+		// 	isErrorExpected: true,
+		// },
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockExperienceSvc, mockProfileRepo)
+			err := experienceSvc.DeleteExperience(context.Background(), test.profileID, test.experienceID)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}

@@ -105,3 +105,8 @@ func (req *UpdateCertificateRequest) Validate() error {
 
 	return nil
 }
+
+type DeleteCertificateRequest struct {
+	ProfileID     int `json:"profile_id"`
+	CertificateID int `json:"id"`
+}

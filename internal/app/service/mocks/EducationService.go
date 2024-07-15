@@ -43,6 +43,24 @@ func (_m *EducationService) CreateEducation(ctx context.Context, eduDetail specs
 	return r0, r1
 }
 
+// DeleteEducation provides a mock function with given fields: ctx, profileID, educationID
+func (_m *EducationService) DeleteEducation(ctx context.Context, profileID int, educationID int) error {
+	ret := _m.Called(ctx, profileID, educationID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteEducation")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, educationID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ListEducations provides a mock function with given fields: ctx, id, filter
 func (_m *EducationService) ListEducations(ctx context.Context, id int, filter specs.ListEducationsFilter) ([]specs.EducationResponse, error) {
 	ret := _m.Called(ctx, id, filter)

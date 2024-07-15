@@ -27,6 +27,8 @@ var (
 	ErrFailespecsFetch      = errors.New("failed to fetch data")
 	ErrInvalidUserID        = errors.New("invalid user id")
 	ErrInvalidEnv           = errors.New("no env variable found")
+	ErrFailedToDelete       = errors.New("failed to delete")
+	ErrNoData               = errors.New("no data found")
 )
 
 // Profile Related variables

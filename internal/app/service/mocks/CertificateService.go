@@ -43,6 +43,24 @@ func (_m *CertificateService) CreateCertificate(ctx context.Context, cDetail spe
 	return r0, r1
 }
 
+// DeleteCertificate provides a mock function with given fields: ctx, profileID, certitificateID
+func (_m *CertificateService) DeleteCertificate(ctx context.Context, profileID int, certitificateID int) error {
+	ret := _m.Called(ctx, profileID, certitificateID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteCertificate")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, certitificateID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ListCertificates provides a mock function with given fields: ctx, profileID, fitler
 func (_m *CertificateService) ListCertificates(ctx context.Context, profileID int, fitler specs.ListCertificateFilter) ([]specs.CertificateResponse, error) {
 	ret := _m.Called(ctx, profileID, fitler)

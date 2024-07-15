@@ -149,3 +149,8 @@ var (
 	DefaultHealthCheck    time.Duration = 1 * 60  // 60 seconds
 	DefaultConnectTimeout time.Duration = 5       // 5 seconds
 )
+
+// Constant Message
+var (
+	ResourceNotFound = "Resource not found for the given request ID"
+)

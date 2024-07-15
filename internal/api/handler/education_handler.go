@@ -135,3 +135,31 @@ func UpdateEducationHandler(ctx context.Context, eduSvc service.Service) func(ht
 		})
 	}
 }
+
+func DeleteEducationHandler(ctx context.Context, eduSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		profileID, educationID, err := helpers.GetMultipleParams(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error("error while getting the IDs from request : ", err)
+			return
+		}
+		err = eduSvc.DeleteEducation(ctx, profileID, educationID)
+		if err != nil {
+			if err == errors.ErrNoData {
+				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+					Message: constants.ResourceNotFound,
+				})
+				return
+			}
+
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToDelete)
+			zap.S().Error("error while deleting the education : ", err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+			Message: "Education deleted successfully",
+		})
+	}
+}

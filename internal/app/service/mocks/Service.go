@@ -183,6 +183,114 @@ func (_m *Service) CreateProject(ctx context.Context, projDetail specs.CreatePro
 	return r0, r1
 }
 
+// DeleteAchievement provides a mock function with given fields: ctx, profileID, achievementID
+func (_m *Service) DeleteAchievement(ctx context.Context, profileID int, achievementID int) error {
+	ret := _m.Called(ctx, profileID, achievementID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteAchievement")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, achievementID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteCertificate provides a mock function with given fields: ctx, profileID, certitificateID
+func (_m *Service) DeleteCertificate(ctx context.Context, profileID int, certitificateID int) error {
+	ret := _m.Called(ctx, profileID, certitificateID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteCertificate")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, certitificateID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteEducation provides a mock function with given fields: ctx, profileID, educationID
+func (_m *Service) DeleteEducation(ctx context.Context, profileID int, educationID int) error {
+	ret := _m.Called(ctx, profileID, educationID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteEducation")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, educationID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteExperience provides a mock function with given fields: ctx, profileID, experienceID
+func (_m *Service) DeleteExperience(ctx context.Context, profileID int, experienceID int) error {
+	ret := _m.Called(ctx, profileID, experienceID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteExperience")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, experienceID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteProfile provides a mock function with given fields: ctx, profileID
+func (_m *Service) DeleteProfile(ctx context.Context, profileID int) error {
+	ret := _m.Called(ctx, profileID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteProfile")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, profileID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteProject provides a mock function with given fields: ctx, profileID, projectID
+func (_m *Service) DeleteProject(ctx context.Context, profileID int, projectID int) error {
+	ret := _m.Called(ctx, profileID, projectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteProject")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, profileID, projectID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GenerateLoginToken provides a mock function with given fields: ctx, email
 func (_m *Service) GenerateLoginToken(ctx context.Context, email string) (string, error) {
 	ret := _m.Called(ctx, email)
