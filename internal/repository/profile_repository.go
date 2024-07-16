@@ -81,7 +81,7 @@ func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileR
 
 // ListProfiles returns a list of all profiles in the Database that are currently available
 func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) (values []specs.ListProfiles, err error) {
-	sql, args, err := psql.Select(constants.ListProfilesColumns...).From("profiles").ToSql()
+	sql, args, err := psql.Select(constants.ListProfilesColumns...).From("profiles").OrderBy("created_at DESC").ToSql()
 	if err != nil {
 		zap.S().Error("Error generating list project select query: ", err)
 		return []specs.ListProfiles{}, err
