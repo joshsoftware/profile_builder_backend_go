@@ -68,10 +68,6 @@ func (req *UpdateEducationRequest) Validate() error {
 
 	fields := map[string]string{
 		"degree":             req.Education.Degree,
-		"university name":    req.Education.UniversityName,
-		"place":              req.Education.Place,
-		"percentage or cgpa": req.Education.PercentageOrCgpa,
-		"passing year":       req.Education.PassingYear,
 	}
 
 	for fieldName, fieldValue := range fields {

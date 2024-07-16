@@ -74,11 +74,7 @@ func (req *UpdateCertificateRequest) Validate() error {
 
 	fields := map[string]string{
 		"name":              req.Certificate.Name,
-		"organization name": req.Certificate.OrganizationName,
-		"decsription":       req.Certificate.Description,
 		"issued date":       req.Certificate.IssuedDate,
-		"from date":         req.Certificate.FromDate,
-		"to date":           req.Certificate.ToDate,
 	}
 
 	for fieldName, fieldValue := range fields {

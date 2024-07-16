@@ -94,11 +94,7 @@ func (p *UpdateProjectRequest) Validate() error {
 	fields := map[string]string{
 		"name":               p.Project.Name,
 		"description":        p.Project.Description,
-		"role":               p.Project.Role,
 		"responsibilities":   p.Project.Responsibilities,
-		"working start date": p.Project.WorkingStartDate,
-		"working end date":   p.Project.WorkingEndDate,
-		"duration":           p.Project.Duration,
 	}
 
 	for fieldName, fieldValue := range fields {
