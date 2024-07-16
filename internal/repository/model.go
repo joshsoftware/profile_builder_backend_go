@@ -185,3 +185,8 @@ type UpdateAchievementRepo struct {
 	UpdatedAt   string `db:"updated_at"`
 	UpdatedByID int    `db:"updated_by_id"`
 }
+
+type UpdateProfileStatusRepo struct {
+	IsCurrentEmployee string `db:"is_current_employee , omitempty"`
+	IsActive          string `db:"is_active , omitempty"`
+}

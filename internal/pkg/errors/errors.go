@@ -29,6 +29,7 @@ var (
 	ErrInvalidEnv           = errors.New("no env variable found")
 	ErrFailedToDelete       = errors.New("failed to delete")
 	ErrNoData               = errors.New("no data found")
+	ErrFailedToUpdate       = errors.New("failed to update status")
 )
 
 // Profile Related variables
