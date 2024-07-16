@@ -56,29 +56,13 @@ func (req *CreateCertificateRequest) Validate() error {
 		return fmt.Errorf("%s : certificates ", errors.ErrEmptyPayload.Error())
 	}
 
-	for _, edu := range req.Certificates {
-		if edu.Name == "" {
+	for _, cert := range req.Certificates {
+		if cert.Name == "" {
 			return fmt.Errorf("%s : certificate name", errors.ErrParameterMissing.Error())
 		}
 
-		if edu.OrganizationName == "" {
-			return fmt.Errorf("%s : organization name", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.Description == "" {
-			return fmt.Errorf("%s : decsription", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.IssuedDate == "" {
+		if cert.IssuedDate == "" {
 			return fmt.Errorf("%s : issued date", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.FromDate == "" {
-			return fmt.Errorf("%s : from date", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.ToDate == "" {
-			return fmt.Errorf("%s : to date", errors.ErrParameterMissing.Error())
 		}
 	}
 

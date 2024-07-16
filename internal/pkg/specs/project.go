@@ -79,26 +79,11 @@ func (p *Project) Validate() error {
 	if p.Description == "" {
 		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
 	}
-	if p.Role == "" {
-		return fmt.Errorf("%s : role ", errors.ErrParameterMissing.Error())
-	}
 	if p.Responsibilities == "" {
 		return fmt.Errorf("%s : responsibilities ", errors.ErrParameterMissing.Error())
 	}
-	if len(p.Technologies) == 0 {
-		return fmt.Errorf("%s : technologies ", errors.ErrParameterMissing.Error())
-	}
 	if len(p.TechWorkedOn) == 0 {
 		return fmt.Errorf("%s : techonology worked on ", errors.ErrParameterMissing.Error())
-	}
-	if p.WorkingStartDate == "" {
-		return fmt.Errorf("%s : working startv date ", errors.ErrParameterMissing.Error())
-	}
-	if p.WorkingEndDate == "" {
-		return fmt.Errorf("%s : working end date ", errors.ErrParameterMissing.Error())
-	}
-	if p.Duration == "" {
-		return fmt.Errorf("%s : duration ", errors.ErrParameterMissing.Error())
 	}
 	return nil
 }

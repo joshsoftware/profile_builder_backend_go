@@ -58,22 +58,6 @@ func (req *CreateEducationRequest) Validate() error {
 		if edu.Degree == "" {
 			return fmt.Errorf("%s : degree ", errors.ErrParameterMissing.Error())
 		}
-
-		if edu.UniversityName == "" {
-			return fmt.Errorf("%s : university name ", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.Place == "" {
-			return fmt.Errorf("%s : place ", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.PercentageOrCgpa == "" {
-			return fmt.Errorf("%s : percentage or cgpa ", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.PassingYear == "" {
-			return fmt.Errorf("%s : passing year ", errors.ErrParameterMissing.Error())
-		}
 	}
 
 	return nil

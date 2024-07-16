@@ -114,10 +114,6 @@ func (req *CreateProfileRequest) Validate() error {
 		return fmt.Errorf("%s : mobile ", errors.ErrInvalidFormat.Error())
 	}
 
-	if req.Profile.Designation == "" {
-		return fmt.Errorf("%s : designation ", errors.ErrParameterMissing.Error())
-	}
-
 	if req.Profile.Title == "" {
 		return fmt.Errorf("%s : title ", errors.ErrParameterMissing.Error())
 	}
@@ -125,16 +121,9 @@ func (req *CreateProfileRequest) Validate() error {
 	if req.Profile.YearsOfExperience < 0.0 {
 		return fmt.Errorf("%s : years of experiences", errors.ErrParameterMissing.Error())
 	}
-
-	if len(req.Profile.PrimarySkills) == 0 {
-		return fmt.Errorf("%s : primary skills ", errors.ErrParameterMissing.Error())
-	}
-
-	if len(req.Profile.SecondarySkills) == 0 {
-		return fmt.Errorf("%s : secondary skills ", errors.ErrParameterMissing.Error())
-	}
-	if req.Profile.CareerObjectives == "" {
-		return fmt.Errorf("%s : career objectives ", errors.ErrParameterMissing.Error())
+	
+	if req.Profile.Description == "" {
+		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
 	}
 
 	return nil
@@ -165,10 +154,6 @@ func (req *UpdateProfileRequest) Validate() error {
 		return fmt.Errorf("%s : mobile ", errors.ErrInvalidFormat.Error())
 	}
 
-	if req.Profile.Designation == "" {
-		return fmt.Errorf("%s : designation ", errors.ErrParameterMissing.Error())
-	}
-
 	if req.Profile.Title == "" {
 		return fmt.Errorf("%s : title ", errors.ErrParameterMissing.Error())
 	}
@@ -177,12 +162,8 @@ func (req *UpdateProfileRequest) Validate() error {
 		return fmt.Errorf("%s : years of experiences", errors.ErrParameterMissing.Error())
 	}
 
-	if len(req.Profile.PrimarySkills) == 0 {
-		return fmt.Errorf("%s : primary skills ", errors.ErrParameterMissing.Error())
-	}
-
-	if len(req.Profile.SecondarySkills) == 0 {
-		return fmt.Errorf("%s : secondary skills ", errors.ErrParameterMissing.Error())
+	if req.Profile.Description == "" {
+		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
 	}
 
 	return nil

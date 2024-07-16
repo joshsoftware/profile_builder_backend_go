@@ -52,10 +52,6 @@ func (req *CreateAchievementRequest) Validate() error {
 		if edu.Name == "" {
 			return fmt.Errorf("%s : name ", errors.ErrParameterMissing.Error())
 		}
-
-		if edu.Description == "" {
-			return fmt.Errorf("%s : decsription ", errors.ErrParameterMissing.Error())
-		}
 	}
 
 	return nil
@@ -67,11 +63,6 @@ func (req *UpdateAchievementRequest) Validate() error {
 	if req.Achievement.Name == "" {
 		return fmt.Errorf("%s : name ", errors.ErrParameterMissing.Error())
 	}
-
-	if req.Achievement.Description == "" {
-		return fmt.Errorf("%s : decsription ", errors.ErrParameterMissing.Error())
-	}
-
 	return nil
 }
 

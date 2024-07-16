@@ -64,10 +64,6 @@ func (req *CreateExperienceRequest) Validate() error {
 		if edu.FromDate == "" {
 			return fmt.Errorf("%s : from date ", errors.ErrParameterMissing.Error())
 		}
-
-		if edu.ToDate == "" {
-			return fmt.Errorf("%s : to date ", errors.ErrParameterMissing.Error())
-		}
 	}
 
 	return nil
@@ -87,11 +83,6 @@ func (req *UpdateExperienceRequest) Validate() error {
 	if req.Experience.FromDate == "" {
 		return fmt.Errorf("%s : from date ", errors.ErrParameterMissing.Error())
 	}
-
-	if req.Experience.ToDate == "" {
-		return fmt.Errorf("%s : to date ", errors.ErrParameterMissing.Error())
-	}
-
 	return nil
 }
 
