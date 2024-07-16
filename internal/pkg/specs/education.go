@@ -58,22 +58,6 @@ func (req *CreateEducationRequest) Validate() error {
 		if edu.Degree == "" {
 			return fmt.Errorf("%s : degree ", errors.ErrParameterMissing.Error())
 		}
-
-		if edu.UniversityName == "" {
-			return fmt.Errorf("%s : university name ", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.Place == "" {
-			return fmt.Errorf("%s : place ", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.PercentageOrCgpa == "" {
-			return fmt.Errorf("%s : percentage or cgpa ", errors.ErrParameterMissing.Error())
-		}
-
-		if edu.PassingYear == "" {
-			return fmt.Errorf("%s : passing year ", errors.ErrParameterMissing.Error())
-		}
 	}
 
 	return nil
@@ -84,10 +68,6 @@ func (req *UpdateEducationRequest) Validate() error {
 
 	fields := map[string]string{
 		"degree":             req.Education.Degree,
-		"university name":    req.Education.UniversityName,
-		"place":              req.Education.Place,
-		"percentage or cgpa": req.Education.PercentageOrCgpa,
-		"passing year":       req.Education.PassingYear,
 	}
 
 	for fieldName, fieldValue := range fields {
