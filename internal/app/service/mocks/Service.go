@@ -695,6 +695,24 @@ func (_m *Service) UpdateProfile(ctx context.Context, profileID int, userID int,
 	return r0, r1
 }
 
+// UpdateProfileStatus provides a mock function with given fields: ctx, profileID, req
+func (_m *Service) UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) error {
+	ret := _m.Called(ctx, profileID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProfileStatus")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.UpdateProfileStatus) error); ok {
+		r0 = rf(ctx, profileID, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateProject provides a mock function with given fields: ctx, profileID, projID, userID, req
 func (_m *Service) UpdateProject(ctx context.Context, profileID int, projID int, userID int, req specs.UpdateProjectRequest) (int, error) {
 	ret := _m.Called(ctx, profileID, projID, userID, req)
