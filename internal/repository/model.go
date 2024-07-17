@@ -187,6 +187,6 @@ type UpdateAchievementRepo struct {
 }
 
 type UpdateProfileStatusRepo struct {
-	IsCurrentEmployee string `db:"is_current_employee , omitempty"`
-	IsActive          string `db:"is_active , omitempty"`
+	IsCurrentEmployee *int `db:"is_current_employee , omitempty"`
+	IsActive          *int `db:"is_active , omitempty"`
 }
