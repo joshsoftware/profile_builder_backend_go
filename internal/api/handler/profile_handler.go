@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
@@ -187,16 +186,19 @@ func UpdateProfileStatusHandler(ctx context.Context, profileSvc service.Service)
 			zap.S().Error("error while getting the IDs from request : ", err)
 			return
 		}
-		fmt.Println("profileID in handler layer ; ", profileID)
-		fmt.Println("r in handler layer : ", r.Body)
 		req, err := decodeProfileStatusRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error("error while decoding the request : ", err)
 			return
 		}
-		fmt.Println("req in handler layer for the status update :", req.ProfileStatus.IsCurrentEmployee)
-		fmt.Println("req in handler layer for the status update :", req.ProfileStatus.IsActive)
+
+		err = req.ProfileStatus.Validate()
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error("error while validating the request : ", err)
+			return
+		}
 
 		err = profileSvc.UpdateProfileStatus(ctx, profileID, req)
 		if err != nil {
