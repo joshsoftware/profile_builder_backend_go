@@ -216,31 +216,19 @@ func (profileStore *ProfileStore) DeleteProfile(ctx context.Context, profileID i
 	return nil
 }
 
-func (profileStore *ProfileStore) UpdateProfileStatus(ctx context.Context, profileID int, updateProfileStatus UpdateProfileStatusRepo, tx pgx.Tx) error {
+func (profileStore *ProfileStore) UpdateProfileStatus(ctx context.Context, profileID int, updateRequest UpdateProfileStatusRepo, tx pgx.Tx) error {
 	updateQuery := psql.Update("profiles")
-	if updateProfileStatus.IsCurrentEmployee != "" {
-		isCurrentEmployee := 0
-		if updateProfileStatus.IsCurrentEmployee == "YES" {
-			isCurrentEmployee = 1
-		}
-		updateQuery = updateQuery.Set("is_current_employee", isCurrentEmployee)
+
+	if updateRequest.IsCurrentEmployee != nil {
+		updateQuery = updateQuery.Set("is_current_employee", *updateRequest.IsCurrentEmployee)
 	}
 
-	if updateProfileStatus.IsActive != "" {
-		isActive := 0
-		if updateProfileStatus.IsActive == "YES" {
-			isActive = 1
-		}
-		updateQuery = updateQuery.Set("is_active", isActive)
+	if updateRequest.IsActive != nil {
+		updateQuery = updateQuery.Set("is_active", *updateRequest.IsActive)
 	}
 
 	updateQuery = updateQuery.Where(sq.Eq{"id": profileID})
-
 	query, args, err := updateQuery.ToSql()
-
-	fmt.Println("query in update profile status : ", query)
-	fmt.Println("args in update profile status : ", args)
-	fmt.Println("err in update profile status : ", err)
 	if err != nil {
 		zap.S().Error("Error generating update profile status query: ", err)
 		return err
@@ -257,7 +245,6 @@ func (profileStore *ProfileStore) UpdateProfileStatus(ctx context.Context, profi
 		zap.S().Error("Error while executing update query: ", err)
 		return err
 	}
-	fmt.Println("result in update profile status : ", res)
 
 	if res.RowsAffected() == 0 {
 		zap.S().Warn("invalid request for update : profile status")
