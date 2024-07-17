@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
@@ -28,6 +29,7 @@ type Service interface {
 	ListSkills(ctx context.Context) (values specs.ListSkills, err error)
 	GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, profileID int, userID int, profileDetail specs.UpdateProfileRequest) (ID int, err error)
+	UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error)
 	DeleteProfile(ctx context.Context, profileID int) (err error)
 
 	UserLoginServive
@@ -122,9 +124,14 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 	}
 
 	for _, profile := range profiles {
-		isCurrentEmployee := "No"
+		isCurrentEmployee := "NO"
 		if profile.IsCurrentEmployee == 1 {
 			isCurrentEmployee = "YES"
+		}
+
+		isActive := "NO"
+		if profile.IsActive == 1 {
+			isActive = "YES"
 		}
 
 		values = append(values, specs.ResponseListProfiles{
@@ -134,6 +141,7 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 			YearsOfExperience: profile.YearsOfExperience,
 			PrimarySkills:     profile.PrimarySkills,
 			IsCurrentEmployee: isCurrentEmployee,
+			IsActive:          isActive,
 		})
 	}
 
@@ -236,5 +244,46 @@ func (profileSvc *service) DeleteProfile(ctx context.Context, profileID int) (er
 		return err
 	}
 	zap.S().Info("profile deleted with profile_id : ", profileID)
+	return nil
+}
+
+func (profileSvc *service) UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error) {
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	var isCurrentEmployee, isActive *int
+	if req.ProfileStatus.IsCurrentEmployee != "" {
+		value := 0
+		if strings.EqualFold(req.ProfileStatus.IsCurrentEmployee, "YES") {
+			value = 1
+		}
+		isCurrentEmployee = &value
+	}
+
+	if req.ProfileStatus.IsActive != "" {
+		value := 0
+		if strings.EqualFold(req.ProfileStatus.IsActive, "YES") {
+			value = 1
+		}
+		isActive = &value
+	}
+
+	profileStatusRepo := repository.UpdateProfileStatusRepo{
+		IsCurrentEmployee: isCurrentEmployee,
+		IsActive:          isActive,
+	}
+
+	err = profileSvc.ProfileRepo.UpdateProfileStatus(ctx, profileID, profileStatusRepo, tx)
+	if err != nil {
+		zap.S().Error("Unable to update profile status : ", err, " for profile id : ", profileID)
+		return err
+	}
+	zap.S().Info("profile status updated with profile id : ", profileID)
 	return nil
 }

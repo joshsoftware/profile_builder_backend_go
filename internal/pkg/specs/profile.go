@@ -3,6 +3,7 @@ package specs
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -44,6 +45,7 @@ type ListProfiles struct {
 	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
 	IsCurrentEmployee int      `json:"is_current_employee"`
+	IsActive          int      `json:"is_active"`
 }
 
 // ResponseListProfiles struct represents response of user profiles for listing.
@@ -54,6 +56,7 @@ type ResponseListProfiles struct {
 	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
 	IsCurrentEmployee string   `json:"is_current_employee"`
+	IsActive          string   `json:"is_active"`
 }
 
 // ListSkills struct represents details of skills for listing.
@@ -89,6 +92,15 @@ type ResponseProfile struct {
 	CareerObjectives  string   `json:"career_objectives"`
 }
 
+type UpdateProfileStatus struct {
+	ProfileStatus UpdateProfileStatusRequest `json:"profile_status"`
+}
+
+type UpdateProfileStatusRequest struct {
+	IsCurrentEmployee string `json:"is_current_employee,omitempty"`
+	IsActive          string `json:"is_active,omitempty"`
+}
+
 // Validate func checks if the CreateProfileRequest is valid.
 func (req *CreateProfileRequest) Validate() error {
 
@@ -114,10 +126,6 @@ func (req *CreateProfileRequest) Validate() error {
 		return fmt.Errorf("%s : mobile ", errors.ErrInvalidFormat.Error())
 	}
 
-	if req.Profile.Designation == "" {
-		return fmt.Errorf("%s : designation ", errors.ErrParameterMissing.Error())
-	}
-
 	if req.Profile.Title == "" {
 		return fmt.Errorf("%s : title ", errors.ErrParameterMissing.Error())
 	}
@@ -126,15 +134,8 @@ func (req *CreateProfileRequest) Validate() error {
 		return fmt.Errorf("%s : years of experiences", errors.ErrParameterMissing.Error())
 	}
 
-	if len(req.Profile.PrimarySkills) == 0 {
-		return fmt.Errorf("%s : primary skills ", errors.ErrParameterMissing.Error())
-	}
-
-	if len(req.Profile.SecondarySkills) == 0 {
-		return fmt.Errorf("%s : secondary skills ", errors.ErrParameterMissing.Error())
-	}
-	if req.Profile.CareerObjectives == "" {
-		return fmt.Errorf("%s : career objectives ", errors.ErrParameterMissing.Error())
+	if req.Profile.Description == "" {
+		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
 	}
 
 	return nil
@@ -165,10 +166,6 @@ func (req *UpdateProfileRequest) Validate() error {
 		return fmt.Errorf("%s : mobile ", errors.ErrInvalidFormat.Error())
 	}
 
-	if req.Profile.Designation == "" {
-		return fmt.Errorf("%s : designation ", errors.ErrParameterMissing.Error())
-	}
-
 	if req.Profile.Title == "" {
 		return fmt.Errorf("%s : title ", errors.ErrParameterMissing.Error())
 	}
@@ -177,13 +174,30 @@ func (req *UpdateProfileRequest) Validate() error {
 		return fmt.Errorf("%s : years of experiences", errors.ErrParameterMissing.Error())
 	}
 
-	if len(req.Profile.PrimarySkills) == 0 {
-		return fmt.Errorf("%s : primary skills ", errors.ErrParameterMissing.Error())
+	if req.Profile.Description == "" {
+		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
 	}
 
-	if len(req.Profile.SecondarySkills) == 0 {
-		return fmt.Errorf("%s : secondary skills ", errors.ErrParameterMissing.Error())
+	return nil
+}
+
+func (req *UpdateProfileStatusRequest) Validate() error {
+	if req.IsCurrentEmployee == "" && req.IsActive == "" {
+		return fmt.Errorf("%s : at least one of is_current_employee or is_active must be provided", errors.ErrParameterMissing.Error())
 	}
 
+	if req.IsCurrentEmployee != "" {
+		normalizedValue := strings.ToUpper(req.IsCurrentEmployee)
+		if !(normalizedValue == "YES" || normalizedValue == "NO") {
+			return fmt.Errorf("%s : is_current_employee must be 'YES' or 'NO'", errors.ErrInvalidBody.Error())
+		}
+	}
+
+	if req.IsActive != "" {
+		normalizedValue := strings.ToUpper(req.IsActive)
+		if !(normalizedValue == "YES" || normalizedValue == "NO") {
+			return fmt.Errorf("%s : is_active must be 'YES' or 'NO'", errors.ErrInvalidBody.Error())
+		}
+	}
 	return nil
 }

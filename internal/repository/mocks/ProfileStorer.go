@@ -226,6 +226,24 @@ func (_m *ProfileStorer) UpdateProfile(ctx context.Context, profileID int, pd re
 	return r0, r1
 }
 
+// UpdateProfileStatus provides a mock function with given fields: ctx, profileID, updateProfileStatus, tx
+func (_m *ProfileStorer) UpdateProfileStatus(ctx context.Context, profileID int, updateProfileStatus repository.UpdateProfileStatusRepo, tx pgx.Tx) error {
+	ret := _m.Called(ctx, profileID, updateProfileStatus, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProfileStatus")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, repository.UpdateProfileStatusRepo, pgx.Tx) error); ok {
+		r0 = rf(ctx, profileID, updateProfileStatus, tx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewProfileStorer creates a new instance of ProfileStorer. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewProfileStorer(t interface {

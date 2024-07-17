@@ -177,3 +177,38 @@ func DeleteProfileHandler(ctx context.Context, profileSvc service.Service) func(
 		})
 	}
 }
+
+func UpdateProfileStatusHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error("error while getting the IDs from request : ", err)
+			return
+		}
+		req, err := decodeProfileStatusRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error("error while decoding the request : ", err)
+			return
+		}
+
+		err = req.ProfileStatus.Validate()
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error("error while validating the request : ", err)
+			return
+		}
+
+		err = profileSvc.UpdateProfileStatus(ctx, profileID, req)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToUpdate)
+			zap.S().Error("error while updating the profile status: ", err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+			Message: "Profile status updated successfully",
+		})
+	}
+}

@@ -165,3 +165,13 @@ func decodeUpdateAchievementRequest(r *http.Request) (specs.UpdateAchievementReq
 
 	return req, nil
 }
+
+func decodeProfileStatusRequest(r *http.Request) (specs.UpdateProfileStatus, error) {
+	var req specs.UpdateProfileStatus
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		zap.S().Error(err)
+		return specs.UpdateProfileStatus{}, errors.ErrInvalidBody
+	}
+	return req, nil
+}
