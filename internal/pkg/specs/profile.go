@@ -3,6 +3,7 @@ package specs
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -132,7 +133,7 @@ func (req *CreateProfileRequest) Validate() error {
 	if req.Profile.YearsOfExperience < 0.0 {
 		return fmt.Errorf("%s : years of experiences", errors.ErrParameterMissing.Error())
 	}
-	
+
 	if req.Profile.Description == "" {
 		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
 	}
@@ -177,5 +178,26 @@ func (req *UpdateProfileRequest) Validate() error {
 		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
 	}
 
+	return nil
+}
+
+func (req *UpdateProfileStatusRequest) Validate() error {
+	if req.IsCurrentEmployee == "" && req.IsActive == "" {
+		return fmt.Errorf("%s : at least one of is_current_employee or is_active must be provided", errors.ErrParameterMissing.Error())
+	}
+
+	if req.IsCurrentEmployee != "" {
+		normalizedValue := strings.ToUpper(req.IsCurrentEmployee)
+		if !(normalizedValue == "YES" || normalizedValue == "NO") {
+			return fmt.Errorf("%s : is_current_employee must be 'YES' or 'NO'", errors.ErrInvalidBody.Error())
+		}
+	}
+
+	if req.IsActive != "" {
+		normalizedValue := strings.ToUpper(req.IsActive)
+		if !(normalizedValue == "YES" || normalizedValue == "NO") {
+			return fmt.Errorf("%s : is_active must be 'YES' or 'NO'", errors.ErrInvalidBody.Error())
+		}
+	}
 	return nil
 }
