@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
@@ -257,11 +257,27 @@ func (profileSvc *service) UpdateProfileStatus(ctx context.Context, profileID in
 		}
 	}()
 
-	var profileStatusRepo repository.UpdateProfileStatusRepo
-	profileStatusRepo.IsCurrentEmployee = req.ProfileStatus.IsCurrentEmployee
-	profileStatusRepo.IsActive = req.ProfileStatus.IsActive
+	var isCurrentEmployee, isActive *int
+	if req.ProfileStatus.IsCurrentEmployee != "" {
+		value := 0
+		if strings.EqualFold(req.ProfileStatus.IsCurrentEmployee, "YES") {
+			value = 1
+		}
+		isCurrentEmployee = &value
+	}
 
-	fmt.Println("profileStatusRepo in service layer : ", profileStatusRepo)
+	if req.ProfileStatus.IsActive != "" {
+		value := 0
+		if strings.EqualFold(req.ProfileStatus.IsActive, "YES") {
+			value = 1
+		}
+		isActive = &value
+	}
+
+	profileStatusRepo := repository.UpdateProfileStatusRepo{
+		IsCurrentEmployee: isCurrentEmployee,
+		IsActive:          isActive,
+	}
 
 	err = profileSvc.ProfileRepo.UpdateProfileStatus(ctx, profileID, profileStatusRepo, tx)
 	if err != nil {
