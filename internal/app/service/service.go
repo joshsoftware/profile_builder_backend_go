@@ -125,9 +125,14 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 	}
 
 	for _, profile := range profiles {
-		isCurrentEmployee := "No"
+		isCurrentEmployee := "NO"
 		if profile.IsCurrentEmployee == 1 {
 			isCurrentEmployee = "YES"
+		}
+
+		isActive := "NO"
+		if profile.IsActive == 1 {
+			isActive = "YES"
 		}
 
 		values = append(values, specs.ResponseListProfiles{
@@ -137,6 +142,7 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 			YearsOfExperience: profile.YearsOfExperience,
 			PrimarySkills:     profile.PrimarySkills,
 			IsCurrentEmployee: isCurrentEmployee,
+			IsActive:          isActive,
 		})
 	}
 

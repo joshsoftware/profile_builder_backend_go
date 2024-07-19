@@ -18,7 +18,7 @@ const (
 var CorsOptions = cors.Options{
 	AllowedOrigins:   []string{"*"},
 	AllowCredentials: true,
-	AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+	AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions, http.MethodPatch},
 	AllowedHeaders:   []string{"*"},
 }
 
@@ -59,7 +59,7 @@ var CreateAchievementColumns = []string{
 
 // ListProfilesColumns defines the columns required for listing user profiles.
 var ListProfilesColumns = []string{
-	"id", "name", "email", "years_of_experience", "primary_skills", "is_current_employee",
+	"id", "name", "email", "years_of_experience", "primary_skills", "is_current_employee", "is_active",
 }
 
 // ResponseProfileColumns defines the columns required for returning a specific user profile.

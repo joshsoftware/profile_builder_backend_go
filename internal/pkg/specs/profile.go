@@ -45,6 +45,7 @@ type ListProfiles struct {
 	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
 	IsCurrentEmployee int      `json:"is_current_employee"`
+	IsActive          int      `json:"is_active"`
 }
 
 // ResponseListProfiles struct represents response of user profiles for listing.
@@ -55,6 +56,7 @@ type ResponseListProfiles struct {
 	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
 	IsCurrentEmployee string   `json:"is_current_employee"`
+	IsActive          string   `json:"is_active"`
 }
 
 // ListSkills struct represents details of skills for listing.
@@ -102,10 +104,12 @@ type Component struct {
 	ComponentPriorities map[int]int `json:"component_priorities"`
 }
 
+// UpdateProfileStatus struct represents a request to update a status of profile.
 type UpdateProfileStatus struct {
 	ProfileStatus UpdateProfileStatusRequest `json:"profile_status"`
 }
 
+// UpdateProfileStatusRequest struct represents a request to update a status of profile.
 type UpdateProfileStatusRequest struct {
 	IsCurrentEmployee string `json:"is_current_employee,omitempty"`
 	IsActive          string `json:"is_active,omitempty"`
@@ -219,6 +223,7 @@ func (req *UpdateSequenceRequest) Validate() error {
 	return nil
 }
 
+// Validate func checks if the UpdateProfileStatusRequest is valid.
 func (req *UpdateProfileStatusRequest) Validate() error {
 	if req.IsCurrentEmployee == "" && req.IsActive == "" {
 		return fmt.Errorf("%s : at least one of is_current_employee or is_active must be provided", errors.ErrParameterMissing.Error())

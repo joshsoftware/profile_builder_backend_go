@@ -217,6 +217,7 @@ func UpdateSequenceHandler(ctx context.Context, profileSvc service.Service) func
 	}
 }
 
+// UpdateProfileStatusHandler returns an HTTP handler that updates profile status using profileSvc.
 func UpdateProfileStatusHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)

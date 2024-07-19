@@ -97,7 +97,7 @@ func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) (
 
 	for rows.Next() {
 		var value specs.ListProfiles
-		err := rows.Scan(&value.ID, &value.Name, &value.Email, &value.YearsOfExperience, &value.PrimarySkills, &value.IsCurrentEmployee)
+		err := rows.Scan(&value.ID, &value.Name, &value.Email, &value.YearsOfExperience, &value.PrimarySkills, &value.IsCurrentEmployee, &value.IsActive)
 		if err != nil {
 			zap.S().Error("error scanning row:", err)
 			return []specs.ListProfiles{}, err
@@ -105,7 +105,6 @@ func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) (
 		values = append(values, value)
 	}
 	defer rows.Close()
-
 	return values, nil
 }
 
@@ -276,6 +275,7 @@ func (profileStore *ProfileStore) UpdateSequence(ctx context.Context, us UpdateS
 	return us.ProfileID, nil
 }
 
+// UpdateProfileStatus updates an existing profile's status in the database.
 func (profileStore *ProfileStore) UpdateProfileStatus(ctx context.Context, profileID int, updateRequest UpdateProfileStatusRepo, tx pgx.Tx) error {
 	updateQuery := psql.Update("profiles")
 
