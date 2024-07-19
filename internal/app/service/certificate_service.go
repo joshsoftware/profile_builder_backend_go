@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -28,11 +29,12 @@ func (certificateSvc *service) CreateCertificate(ctx context.Context, cDetail sp
 		}
 	}()
 
-	if len(cDetail.Certificates) == 0 {
-		zap.S().Error("certificates payload can't be empty")
-		return 0, errors.ErrEmptyPayload
+	count, err := certificateSvc.ProfileRepo.CountRecords(ctx, profileID, constants.Achievements, tx)
+	if err != nil {
+		return 0, errors.ErrInvalidRequestData
 	}
 
+	count++
 	var value []repository.CertificateRepo
 	for _, certificate := range cDetail.Certificates {
 		val := repository.CertificateRepo{
@@ -43,12 +45,14 @@ func (certificateSvc *service) CreateCertificate(ctx context.Context, cDetail sp
 			IssuedDate:       certificate.IssuedDate,
 			FromDate:         certificate.FromDate,
 			ToDate:           certificate.ToDate,
+			Priorities:       count,
 			CreatedAt:        today,
 			UpdatedAt:        today,
 			CreatedByID:      userID,
 			UpdatedByID:      userID,
 		}
 
+		count++
 		value = append(value, val)
 	}
 

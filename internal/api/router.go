@@ -27,6 +27,7 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	profileSubrouter.HandleFunc("/profiles/{profile_id}", handler.GetProfileHandler(ctx, svc)).Methods(http.MethodGet)
 	profileSubrouter.HandleFunc("/skills", handler.SkillsListHandler(ctx, svc)).Methods(http.MethodGet)
 	profileSubrouter.HandleFunc("/profiles/{profile_id}", handler.DeleteProfileHandler(ctx, svc)).Methods(http.MethodDelete)
+	profileSubrouter.HandleFunc("/updateSequence", handler.UpdateSequenceHandler(ctx, svc)).Methods(http.MethodPut)
 
 	// Educations APIs
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/educations", handler.CreateEducationHandler(ctx, svc)).Methods(http.MethodPost)

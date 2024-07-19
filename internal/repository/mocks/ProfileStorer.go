@@ -48,6 +48,34 @@ func (_m *ProfileStorer) BeginTransaction(ctx context.Context) (pgx.Tx, error) {
 	return r0, r1
 }
 
+// CountRecords provides a mock function with given fields: ctx, ProfileID, ComponentName, tx
+func (_m *ProfileStorer) CountRecords(ctx context.Context, ProfileID int, ComponentName string, tx pgx.Tx) (int, error) {
+	ret := _m.Called(ctx, ProfileID, ComponentName, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CountRecords")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, pgx.Tx) (int, error)); ok {
+		return rf(ctx, ProfileID, ComponentName, tx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, pgx.Tx) int); ok {
+		r0 = rf(ctx, ProfileID, ComponentName, tx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, string, pgx.Tx) error); ok {
+		r1 = rf(ctx, ProfileID, ComponentName, tx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateProfile provides a mock function with given fields: ctx, pd, tx
 func (_m *ProfileStorer) CreateProfile(ctx context.Context, pd repository.ProfileRepo, tx pgx.Tx) (int, error) {
 	ret := _m.Called(ctx, pd, tx)
@@ -219,6 +247,34 @@ func (_m *ProfileStorer) UpdateProfile(ctx context.Context, profileID int, pd re
 
 	if rf, ok := ret.Get(1).(func(context.Context, int, repository.UpdateProfileRepo, pgx.Tx) error); ok {
 		r1 = rf(ctx, profileID, pd, tx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateSequence provides a mock function with given fields: ctx, us, tx
+func (_m *ProfileStorer) UpdateSequence(ctx context.Context, us repository.UpdateSequenceRequest, tx pgx.Tx) (int, error) {
+	ret := _m.Called(ctx, us, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateSequence")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, repository.UpdateSequenceRequest, pgx.Tx) (int, error)); ok {
+		return rf(ctx, us, tx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, repository.UpdateSequenceRequest, pgx.Tx) int); ok {
+		r0 = rf(ctx, us, tx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, repository.UpdateSequenceRequest, pgx.Tx) error); ok {
+		r1 = rf(ctx, us, tx)
 	} else {
 		r1 = ret.Error(1)
 	}

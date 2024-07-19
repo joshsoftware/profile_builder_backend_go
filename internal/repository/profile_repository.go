@@ -25,7 +25,9 @@ type ProfileStorer interface {
 	ListProfiles(ctx context.Context, tx pgx.Tx) (values []specs.ListProfiles, err error)
 	GetProfile(ctx context.Context, profileID int, tx pgx.Tx) (value specs.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, profileID int, pd UpdateProfileRepo, tx pgx.Tx) (int, error)
+	UpdateSequence(ctx context.Context, us UpdateSequenceRequest, tx pgx.Tx) (ID int, err error)
 	DeleteProfile(ctx context.Context, profileID int, tx pgx.Tx) (err error)
+	CountRecords(ctx context.Context, ProfileID int, ComponentName string, tx pgx.Tx) (Count int, err error)
 	ListSkills(ctx context.Context, tx pgx.Tx) (values specs.ListSkills, err error)
 	BeginTransaction(ctx context.Context) (tx pgx.Tx, err error)
 	HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error)
@@ -197,6 +199,7 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 	return profileID, nil
 }
 
+// DeleteProfile delete an existing user profile in the database.
 func (profileStore *ProfileStore) DeleteProfile(ctx context.Context, profileID int, tx pgx.Tx) (err error) {
 	deleteQuery, args, err := psql.Delete("profiles").Where(sq.Eq{"id": profileID}).ToSql()
 	if err != nil {
@@ -214,6 +217,62 @@ func (profileStore *ProfileStore) DeleteProfile(ctx context.Context, profileID i
 		return errors.ErrNoData
 	}
 	return nil
+}
+
+// CountRecords counts an existing user records for particular component in the database.
+func (profileStore *ProfileStore) CountRecords(ctx context.Context, ProfileID int, ComponentName string, tx pgx.Tx) (Count int, err error) {
+	countQuery, args, err := psql.Select("count(*)").
+		From(ComponentName).
+		Where(sq.Eq{"profile_id": ProfileID}).
+		ToSql()
+	if err != nil {
+		zap.S().Error("Error generating count query: ", err)
+		return 0, err
+	}
+
+	var currentCount int
+	err = tx.QueryRow(ctx, countQuery, args...).Scan(&currentCount)
+	if err != nil {
+		zap.S().Error("Error fetching current count: ", err)
+		return 0, err
+	}
+
+	return currentCount, nil
+}
+
+// UpdateSequence updates an existing component's priorities in the database.
+func (profileStore *ProfileStore) UpdateSequence(ctx context.Context, us UpdateSequenceRequest, tx pgx.Tx) (int, error) {
+
+	for compID, priority := range us.ComponentPriorities {
+		updateQuery, args, err := psql.Update(us.ComponentName).
+			Set("priorities", priority).
+			Set("updated_at", us.UpdatedAt).
+			Set("updated_by_id", us.UpdatedByID).
+			Where(sq.Eq{"id": compID, "profile_id": us.ProfileID}).
+			ToSql()
+		if err != nil {
+			zap.S().Error("Error constructing update query: ", err)
+			return 0, err
+		}
+
+		res, err := tx.Exec(ctx, updateQuery, args...)
+		if err != nil {
+			if helpers.IsDuplicateKeyError(err) {
+				return 0, errors.ErrDuplicateKey
+			}
+			if helpers.IsInvalidProfileError(err) {
+				return 0, errors.ErrInvalidProfile
+			}
+			zap.S().Error("Error executing update query: ", err)
+			return 0, err
+		}
+
+		if res.RowsAffected() == 0 {
+			zap.S().Infof("No rows affected for update component sequence : %s", us.ComponentName)
+		}
+	}
+
+	return us.ProfileID, nil
 }
 
 // BeginTransaction used to begin transaction while each task

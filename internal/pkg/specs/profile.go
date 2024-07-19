@@ -3,6 +3,7 @@ package specs
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -89,6 +90,18 @@ type ResponseProfile struct {
 	CareerObjectives  string   `json:"career_objectives"`
 }
 
+// UpdateSequenceRequest struct represents a request to update a sequence of component.
+type UpdateSequenceRequest struct {
+	ProfileID int `json:"id"`
+	Component `json:"component"`
+}
+
+// Component used while update request of sequence of component
+type Component struct {
+	CompName            string      `json:"comp_name"`
+	ComponentPriorities map[int]int `json:"component_priorities"`
+}
+
 // Validate func checks if the CreateProfileRequest is valid.
 func (req *CreateProfileRequest) Validate() error {
 
@@ -121,7 +134,7 @@ func (req *CreateProfileRequest) Validate() error {
 	if req.Profile.YearsOfExperience < 0.0 {
 		return fmt.Errorf("%s : years of experiences", errors.ErrParameterMissing.Error())
 	}
-	
+
 	if req.Profile.Description == "" {
 		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
 	}
@@ -164,6 +177,34 @@ func (req *UpdateProfileRequest) Validate() error {
 
 	if req.Profile.Description == "" {
 		return fmt.Errorf("%s : description ", errors.ErrParameterMissing.Error())
+	}
+
+	return nil
+}
+
+// Validate func checks if the UpdateSequenceRequest is valid.
+func (req *UpdateSequenceRequest) Validate() error {
+
+	if req.ProfileID <= 0 {
+		return fmt.Errorf("%s : profile id", errors.ErrParameterMissing.Error())
+	}
+
+	if req.Component.CompName == "" {
+		return fmt.Errorf("%s : component name", errors.ErrParameterMissing.Error())
+	}
+
+	if !constants.ComponentMap[strings.ToLower(req.Component.CompName)] {
+		return fmt.Errorf("%s : %s", errors.ErrComponentNotSuppoerted.Error(), req.Component.CompName)
+	}
+
+	if len(req.Component.ComponentPriorities) == 0 {
+		return fmt.Errorf("%s : component priorities", errors.ErrParameterMissing.Error())
+	}
+
+	for key, value := range req.Component.ComponentPriorities {
+		if key < 0 || value < 0 {
+			return fmt.Errorf("%s : component priorities (keys and values must be non-negative)", errors.ErrInvalidFormat.Error())
+		}
 	}
 
 	return nil

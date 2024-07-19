@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -28,11 +29,12 @@ func (projSvc *service) CreateProject(ctx context.Context, projDetail specs.Crea
 		}
 	}()
 
-	if len(projDetail.Projects) == 0 {
-		zap.S().Error("projects payload can't be empty")
-		return 0, errors.ErrEmptyPayload
+	count, err := projSvc.ProfileRepo.CountRecords(ctx, profileID, constants.Projects, tx)
+	if err != nil {
+		return 0, errors.ErrInvalidRequestData
 	}
 
+	count++
 	var value []repository.ProjectRepo
 	for _, project := range projDetail.Projects {
 		val := repository.ProjectRepo{
@@ -46,12 +48,14 @@ func (projSvc *service) CreateProject(ctx context.Context, projDetail specs.Crea
 			WorkingStartDate: project.WorkingStartDate,
 			WorkingEndDate:   project.WorkingEndDate,
 			Duration:         project.Duration,
+			Priorities:       count,
 			CreatedAt:        today,
 			UpdatedAt:        today,
 			CreatedByID:      userID,
 			UpdatedByID:      userID,
 		}
 
+		count++
 		value = append(value, val)
 	}
 

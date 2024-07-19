@@ -41,7 +41,7 @@ func (certificateStore *CertificateStore) CreateCertificate(ctx context.Context,
 	for _, value := range values {
 		insertBuilder = insertBuilder.Values(
 			value.Name, value.OrganizationName, value.Description, value.IssuedDate,
-			value.FromDate, value.ToDate, value.CreatedAt, value.UpdatedAt,
+			value.FromDate, value.ToDate, value.Priorities, value.CreatedAt, value.UpdatedAt,
 			value.CreatedByID, value.UpdatedByID, value.ProfileID,
 		)
 	}
@@ -68,7 +68,7 @@ func (certificateStore *CertificateStore) CreateCertificate(ctx context.Context,
 
 // ListCertificates fetches certificates details from the database.
 func (certificateStore *CertificateStore) ListCertificates(ctx context.Context, profileID int, filter specs.ListCertificateFilter, tx pgx.Tx) (values []specs.CertificateResponse, err error) {
-	queryBuilder := sq.Select(constants.ResponseCertificatesColumns...).From("certificates").Where(sq.Eq{"profile_id": profileID})
+	queryBuilder := psql.Select(constants.ResponseCertificatesColumns...).From("certificates").Where(sq.Eq{"profile_id": profileID}).OrderBy("priorities")
 	if len(filter.CertificateIDs) > 0 {
 		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.CertificateIDs})
 	}
@@ -132,6 +132,7 @@ func (certificateStore *CertificateStore) UpdateCertificate(ctx context.Context,
 	return profileID, nil
 }
 
+// DeleteCertificate deletes certificates details into the database.
 func (certificateStore *CertificateStore) DeleteCertificate(ctx context.Context, profileID, certificateID int, tx pgx.Tx) error {
 	deleteQuery, args, err := psql.Delete("certificates").Where(sq.Eq{"id": certificateID, "profile_id": profileID}).ToSql()
 	if err != nil {

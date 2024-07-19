@@ -46,6 +46,18 @@ func decodeUpdateProfileRequest(r *http.Request) (specs.UpdateProfileRequest, er
 	return req, nil
 }
 
+// Decodes the Sequnce of components updation object Request
+func decodeUpdateSequenceRequest(r *http.Request) (specs.UpdateSequenceRequest, error) {
+	var req specs.UpdateSequenceRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		zap.S().Error(err)
+		return specs.UpdateSequenceRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
 // Decodes the Profile Education object Request
 func decodeCreateEducationRequest(r *http.Request) (specs.CreateEducationRequest, error) {
 	var req specs.CreateEducationRequest

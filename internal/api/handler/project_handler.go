@@ -136,6 +136,7 @@ func UpdateProjectHandler(ctx context.Context, projSvc service.Service) func(htt
 	}
 }
 
+// DeleteProjectHandler returns an HTTP handler that updates projects using profileSvc.
 func DeleteProjectHandler(ctx context.Context, projSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		profileID, projectID, err := helpers.GetMultipleParams(r)

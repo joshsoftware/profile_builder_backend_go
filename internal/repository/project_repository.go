@@ -42,7 +42,7 @@ func (projectStore *ProjectStore) CreateProject(ctx context.Context, values []Pr
 		insertBuilder = insertBuilder.Values(
 			value.Name, value.Description, value.Role, value.Responsibilities,
 			value.Technologies, value.TechWorkedOn, value.WorkingStartDate,
-			value.WorkingEndDate, value.Duration, value.CreatedAt, value.UpdatedAt,
+			value.WorkingEndDate, value.Duration, value.Priorities, value.CreatedAt, value.UpdatedAt,
 			value.CreatedByID, value.UpdatedByID, value.ProfileID,
 		)
 	}
@@ -70,7 +70,7 @@ func (projectStore *ProjectStore) CreateProject(ctx context.Context, values []Pr
 // ListProjects returns a details projects in the Database that are currently available for perticular profile ID
 func (projectStore *ProjectStore) ListProjects(ctx context.Context, profileID int, filter specs.ListProjectsFilter, tx pgx.Tx) (values []specs.ProjectResponse, err error) {
 
-	queryBuilder := sq.Select(constants.ResponseProjectsColumns...).From("projects").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar)
+	queryBuilder := psql.Select(constants.ResponseProjectsColumns...).From("projects").Where(sq.Eq{"profile_id": profileID}).OrderBy("priorities")
 
 	if len(filter.ProjectsIDs) > 0 {
 		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.ProjectsIDs})
@@ -138,6 +138,7 @@ func (projectStore *ProjectStore) UpdateProject(ctx context.Context, profileID i
 	return profileID, nil
 }
 
+// DeleteProject deletes projects details into the database.
 func (projectStore *ProjectStore) DeleteProject(ctx context.Context, profileID, projectID int, tx pgx.Tx) error {
 	deleteQuery, args, err := psql.Delete("projects").Where(sq.Eq{"id": projectID, "profile_id": profileID}).ToSql()
 	if err != nil {

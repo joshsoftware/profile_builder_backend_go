@@ -92,9 +92,9 @@ func (p *Project) Validate() error {
 func (p *UpdateProjectRequest) Validate() error {
 
 	fields := map[string]string{
-		"name":               p.Project.Name,
-		"description":        p.Project.Description,
-		"responsibilities":   p.Project.Responsibilities,
+		"name":             p.Project.Name,
+		"description":      p.Project.Description,
+		"responsibilities": p.Project.Responsibilities,
 	}
 
 	for fieldName, fieldValue := range fields {
@@ -106,6 +106,7 @@ func (p *UpdateProjectRequest) Validate() error {
 	return nil
 }
 
+// DeleteProjectRequest represenst a Delete request of project
 type DeleteProjectRequest struct {
 	ProfileID int `json:"profile_id"`
 	ProjectID int `json:"id"`

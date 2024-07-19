@@ -136,6 +136,7 @@ func UpdateEducationHandler(ctx context.Context, eduSvc service.Service) func(ht
 	}
 }
 
+// DeleteEducationHandler returns an HTTP handler that deletes education using profileSvc.
 func DeleteEducationHandler(ctx context.Context, eduSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		profileID, educationID, err := helpers.GetMultipleParams(r)
