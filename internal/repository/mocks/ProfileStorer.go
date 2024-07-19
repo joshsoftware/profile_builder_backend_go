@@ -254,6 +254,24 @@ func (_m *ProfileStorer) UpdateProfile(ctx context.Context, profileID int, pd re
 	return r0, r1
 }
 
+// UpdateProfileStatus provides a mock function with given fields: ctx, profileID, updateRequest, tx
+func (_m *ProfileStorer) UpdateProfileStatus(ctx context.Context, profileID int, updateRequest repository.UpdateProfileStatusRepo, tx pgx.Tx) error {
+	ret := _m.Called(ctx, profileID, updateRequest, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProfileStatus")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, repository.UpdateProfileStatusRepo, pgx.Tx) error); ok {
+		r0 = rf(ctx, profileID, updateRequest, tx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateSequence provides a mock function with given fields: ctx, us, tx
 func (_m *ProfileStorer) UpdateSequence(ctx context.Context, us repository.UpdateSequenceRequest, tx pgx.Tx) (int, error) {
 	ret := _m.Called(ctx, us, tx)

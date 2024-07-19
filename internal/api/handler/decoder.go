@@ -58,6 +58,16 @@ func decodeUpdateSequenceRequest(r *http.Request) (specs.UpdateSequenceRequest, 
 	return req, nil
 }
 
+func decodeProfileStatusRequest(r *http.Request) (specs.UpdateProfileStatus, error) {
+	var req specs.UpdateProfileStatus
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		zap.S().Error(err)
+		return specs.UpdateProfileStatus{}, errors.ErrInvalidBody
+	}
+	return req, nil
+}
+
 // Decodes the Profile Education object Request
 func decodeCreateEducationRequest(r *http.Request) (specs.CreateEducationRequest, error) {
 	var req specs.CreateEducationRequest

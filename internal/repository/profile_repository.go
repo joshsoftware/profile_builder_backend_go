@@ -28,6 +28,7 @@ type ProfileStorer interface {
 	UpdateSequence(ctx context.Context, us UpdateSequenceRequest, tx pgx.Tx) (ID int, err error)
 	DeleteProfile(ctx context.Context, profileID int, tx pgx.Tx) (err error)
 	CountRecords(ctx context.Context, ProfileID int, ComponentName string, tx pgx.Tx) (Count int, err error)
+	UpdateProfileStatus(ctx context.Context, profileID int, updateRequest UpdateProfileStatusRepo, tx pgx.Tx) error
 	ListSkills(ctx context.Context, tx pgx.Tx) (values specs.ListSkills, err error)
 	BeginTransaction(ctx context.Context) (tx pgx.Tx, err error)
 	HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error)
@@ -273,6 +274,43 @@ func (profileStore *ProfileStore) UpdateSequence(ctx context.Context, us UpdateS
 	}
 
 	return us.ProfileID, nil
+}
+
+func (profileStore *ProfileStore) UpdateProfileStatus(ctx context.Context, profileID int, updateRequest UpdateProfileStatusRepo, tx pgx.Tx) error {
+	updateQuery := psql.Update("profiles")
+
+	if updateRequest.IsCurrentEmployee != nil {
+		updateQuery = updateQuery.Set("is_current_employee", *updateRequest.IsCurrentEmployee)
+	}
+
+	if updateRequest.IsActive != nil {
+		updateQuery = updateQuery.Set("is_active", *updateRequest.IsActive)
+	}
+
+	updateQuery = updateQuery.Where(sq.Eq{"id": profileID})
+	query, args, err := updateQuery.ToSql()
+	if err != nil {
+		zap.S().Error("Error generating update profile status query: ", err)
+		return err
+	}
+
+	res, err := tx.Exec(ctx, query, args...)
+	if err != nil {
+		if helpers.IsDuplicateKeyError(err) {
+			return errors.ErrDuplicateKey
+		}
+		if helpers.IsInvalidProfileError(err) {
+			return errors.ErrInvalidProfile
+		}
+		zap.S().Error("Error while executing update query: ", err)
+		return err
+	}
+
+	if res.RowsAffected() == 0 {
+		zap.S().Warn("invalid request for update : profile status")
+		return errors.ErrInvalidRequestData
+	}
+	return nil
 }
 
 // BeginTransaction used to begin transaction while each task

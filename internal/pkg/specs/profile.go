@@ -102,6 +102,15 @@ type Component struct {
 	ComponentPriorities map[int]int `json:"component_priorities"`
 }
 
+type UpdateProfileStatus struct {
+	ProfileStatus UpdateProfileStatusRequest `json:"profile_status"`
+}
+
+type UpdateProfileStatusRequest struct {
+	IsCurrentEmployee string `json:"is_current_employee,omitempty"`
+	IsActive          string `json:"is_active,omitempty"`
+}
+
 // Validate func checks if the CreateProfileRequest is valid.
 func (req *CreateProfileRequest) Validate() error {
 
@@ -207,5 +216,26 @@ func (req *UpdateSequenceRequest) Validate() error {
 		}
 	}
 
+	return nil
+}
+
+func (req *UpdateProfileStatusRequest) Validate() error {
+	if req.IsCurrentEmployee == "" && req.IsActive == "" {
+		return fmt.Errorf("%s : at least one of is_current_employee or is_active must be provided", errors.ErrParameterMissing.Error())
+	}
+
+	if req.IsCurrentEmployee != "" {
+		normalizedValue := strings.ToUpper(req.IsCurrentEmployee)
+		if !(normalizedValue == "YES" || normalizedValue == "NO") {
+			return fmt.Errorf("%s : is_current_employee must be 'YES' or 'NO'", errors.ErrInvalidBody.Error())
+		}
+	}
+
+	if req.IsActive != "" {
+		normalizedValue := strings.ToUpper(req.IsActive)
+		if !(normalizedValue == "YES" || normalizedValue == "NO") {
+			return fmt.Errorf("%s : is_active must be 'YES' or 'NO'", errors.ErrInvalidBody.Error())
+		}
+	}
 	return nil
 }
