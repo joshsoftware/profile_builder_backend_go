@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -28,23 +29,26 @@ func (achSvc *service) CreateAchievement(ctx context.Context, cDetail specs.Crea
 		}
 	}()
 
-	if len(cDetail.Achievements) == 0 {
-		zap.S().Error("achievements payload can't be empty")
-		return 0, errors.ErrEmptyPayload
+	count, err := achSvc.ProfileRepo.CountRecords(ctx, profileID, constants.Achievements, tx)
+	if err != nil {
+		return 0, errors.ErrInvalidRequestData
 	}
 
+	count++
 	var value []repository.AchievementRepo
 	for _, achievement := range cDetail.Achievements {
 		val := repository.AchievementRepo{
 			ProfileID:   profileID,
 			Name:        achievement.Name,
 			Description: achievement.Description,
+			Priorities:  count,
 			CreatedAt:   today,
 			UpdatedAt:   today,
 			CreatedByID: userID,
 			UpdatedByID: userID,
 		}
 
+		count++
 		value = append(value, val)
 	}
 

@@ -73,8 +73,8 @@ func (req *CreateCertificateRequest) Validate() error {
 func (req *UpdateCertificateRequest) Validate() error {
 
 	fields := map[string]string{
-		"name":              req.Certificate.Name,
-		"issued date":       req.Certificate.IssuedDate,
+		"name":        req.Certificate.Name,
+		"issued date": req.Certificate.IssuedDate,
 	}
 
 	for fieldName, fieldValue := range fields {
@@ -86,6 +86,7 @@ func (req *UpdateCertificateRequest) Validate() error {
 	return nil
 }
 
+// DeleteCertificateRequest represenst a Delete request of project
 type DeleteCertificateRequest struct {
 	ProfileID     int `json:"profile_id"`
 	CertificateID int `json:"id"`

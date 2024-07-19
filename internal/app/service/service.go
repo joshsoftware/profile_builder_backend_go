@@ -29,6 +29,7 @@ type Service interface {
 	ListSkills(ctx context.Context) (values specs.ListSkills, err error)
 	GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, profileID int, userID int, profileDetail specs.UpdateProfileRequest) (ID int, err error)
+	UpdateSequence(ctx context.Context, userID int, seqDetail specs.UpdateSequenceRequest) (ID int, err error)
 	UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error)
 	DeleteProfile(ctx context.Context, profileID int) (err error)
 
@@ -245,6 +246,46 @@ func (profileSvc *service) DeleteProfile(ctx context.Context, profileID int) (er
 	}
 	zap.S().Info("profile deleted with profile_id : ", profileID)
 	return nil
+}
+
+// UpdateSequence in the service layer updates sequence of components.
+func (profileSvc *service) UpdateSequence(ctx context.Context, userID int, seqDetail specs.UpdateSequenceRequest) (ID int, err error) {
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	Count, err := profileSvc.ProfileRepo.CountRecords(ctx, seqDetail.ProfileID, seqDetail.CompName, tx)
+	if err != nil {
+		return 0, errors.ErrInvalidRequestData
+	}
+
+	if Count != len(seqDetail.ComponentPriorities) {
+		if Count == 0 {
+			return 0, errors.ErrInvalidRequestData
+		}
+		return seqDetail.ProfileID, errors.ErrMisMatchParams
+	}
+
+	var sequenceReq repository.UpdateSequenceRequest
+	sequenceReq.ProfileID = seqDetail.ProfileID
+	sequenceReq.ComponentName = seqDetail.CompName
+	sequenceReq.ComponentPriorities = seqDetail.ComponentPriorities
+	sequenceReq.UpdatedAt = today
+	sequenceReq.UpdatedByID = userID
+
+	profileID, err := profileSvc.ProfileRepo.UpdateSequence(ctx, sequenceReq, tx)
+	if err != nil {
+		zap.S().Error("Unable to update sequence : ", err, " for profile id : ", profileID)
+		return 0, err
+	}
+	zap.S().Info("sequence update with profile id : ", profileID)
+
+	return profileID, nil
 }
 
 func (profileSvc *service) UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error) {

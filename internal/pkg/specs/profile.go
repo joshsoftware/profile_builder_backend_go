@@ -92,10 +92,24 @@ type ResponseProfile struct {
 	CareerObjectives  string   `json:"career_objectives"`
 }
 
+// UpdateSequenceRequest struct represents a request to update a sequence of component.
+type UpdateSequenceRequest struct {
+	ProfileID int `json:"id"`
+	Component `json:"component"`
+}
+
+// Component used while update request of sequence of component
+type Component struct {
+	CompName            string      `json:"comp_name"`
+	ComponentPriorities map[int]int `json:"component_priorities"`
+}
+
+// UpdateProfileStatus struct represents a request to update a status of profile.
 type UpdateProfileStatus struct {
 	ProfileStatus UpdateProfileStatusRequest `json:"profile_status"`
 }
 
+// UpdateProfileStatusRequest struct represents a request to update a status of profile.
 type UpdateProfileStatusRequest struct {
 	IsCurrentEmployee string `json:"is_current_employee,omitempty"`
 	IsActive          string `json:"is_active,omitempty"`
@@ -181,6 +195,35 @@ func (req *UpdateProfileRequest) Validate() error {
 	return nil
 }
 
+// Validate func checks if the UpdateSequenceRequest is valid.
+func (req *UpdateSequenceRequest) Validate() error {
+
+	if req.ProfileID <= 0 {
+		return fmt.Errorf("%s : profile id", errors.ErrParameterMissing.Error())
+	}
+
+	if req.Component.CompName == "" {
+		return fmt.Errorf("%s : component name", errors.ErrParameterMissing.Error())
+	}
+
+	if !constants.ComponentMap[strings.ToLower(req.Component.CompName)] {
+		return fmt.Errorf("%s : %s", errors.ErrComponentNotSuppoerted.Error(), req.Component.CompName)
+	}
+
+	if len(req.Component.ComponentPriorities) == 0 {
+		return fmt.Errorf("%s : component priorities", errors.ErrParameterMissing.Error())
+	}
+
+	for key, value := range req.Component.ComponentPriorities {
+		if key < 0 || value < 0 {
+			return fmt.Errorf("%s : component priorities (keys and values must be non-negative)", errors.ErrInvalidFormat.Error())
+		}
+	}
+
+	return nil
+}
+
+// Validate func checks if the UpdateProfileStatusRequest is valid.
 func (req *UpdateProfileStatusRequest) Validate() error {
 	if req.IsCurrentEmployee == "" && req.IsActive == "" {
 		return fmt.Errorf("%s : at least one of is_current_employee or is_active must be provided", errors.ErrParameterMissing.Error())

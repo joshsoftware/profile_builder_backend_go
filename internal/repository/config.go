@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Config defines configuration of pgxpool
 func Config() *pgxpool.Config {
 
 	dbConfig, err := pgxpool.ParseConfig(os.Getenv("PSQL_INFO"))
