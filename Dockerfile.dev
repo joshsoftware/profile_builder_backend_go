@@ -1,0 +1,20 @@
+# Use the same Go version for consistency
+FROM golang:1.22.0-alpine AS development
+
+WORKDIR /app
+
+# Copying only necessary files for dependency download
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the rest of the source code
+COPY . .
+COPY .env ./
+
+# Command to run the application
+ENTRYPOINT ["sh", "-c", "go run internal/db/migrate.go up"]
+# RUN make migrate-up
+CMD ["go", "run", "./cmd/main.go"]
+
+# Expose port
+EXPOSE 3001
