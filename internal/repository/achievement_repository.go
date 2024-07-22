@@ -41,7 +41,7 @@ func (achStore *AchievementStore) CreateAchievement(ctx context.Context, values 
 
 	for _, value := range values {
 		insertBuilder = insertBuilder.Values(
-			value.Name, value.Description, value.CreatedAt, value.UpdatedAt,
+			value.Name, value.Description, value.Priorities, value.CreatedAt, value.UpdatedAt,
 			value.CreatedByID, value.UpdatedByID, value.ProfileID,
 		)
 	}
@@ -97,7 +97,7 @@ func (achStore *AchievementStore) UpdateAchievement(ctx context.Context, profile
 
 // ListAchievements lists achievements from the database.
 func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter, tx pgx.Tx) (values []specs.AchievementResponse, err error) {
-	queryBuilder := sq.Select(constants.ResponseAchievementsColumns...).From("achievements").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar)
+	queryBuilder := psql.Select(constants.ResponseAchievementsColumns...).From("achievements").Where(sq.Eq{"profile_id": profileID}).OrderBy("priorities")
 
 	if len(filter.AchievementIDs) > 0 {
 		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.AchievementIDs})
@@ -131,6 +131,7 @@ func (achStore *AchievementStore) ListAchievements(ctx context.Context, profileI
 	return values, nil
 }
 
+// DeleteAchievement deletes achievements details into the database.
 func (achStore *AchievementStore) DeleteAchievement(ctx context.Context, profileID, achievementID int, tx pgx.Tx) error {
 	deleteQuery, args, err := psql.Delete("achievements").Where(sq.Eq{"id": achievementID, "profile_id": profileID}).ToSql()
 	if err != nil {

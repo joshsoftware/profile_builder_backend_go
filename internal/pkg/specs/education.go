@@ -67,7 +67,7 @@ func (req *CreateEducationRequest) Validate() error {
 func (req *UpdateEducationRequest) Validate() error {
 
 	fields := map[string]string{
-		"degree":             req.Education.Degree,
+		"degree": req.Education.Degree,
 	}
 
 	for fieldName, fieldValue := range fields {
@@ -79,6 +79,7 @@ func (req *UpdateEducationRequest) Validate() error {
 	return nil
 }
 
+// DeleteEducationRequest represenst a Delete request of project
 type DeleteEducationRequest struct {
 	ProfileID   int `json:"profile_id"`
 	EducationID int `json:"id"`

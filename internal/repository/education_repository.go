@@ -42,7 +42,7 @@ func (eduStore *EducationStore) CreateEducation(ctx context.Context, values []Ed
 	for _, value := range values {
 		insertBuilder = insertBuilder.Values(
 			value.Degree, value.UniversityName, value.Place, value.PercentageOrCgpa,
-			value.PassingYear, value.CreatedAt, value.UpdatedAt, value.CreatedByID,
+			value.PassingYear, value.Priorities, value.CreatedAt, value.UpdatedAt, value.CreatedByID,
 			value.UpdatedByID, value.ProfileID,
 		)
 	}
@@ -69,7 +69,7 @@ func (eduStore *EducationStore) CreateEducation(ctx context.Context, values []Ed
 
 // ListEducations returns a details education in the Database that are currently available for perticular ID
 func (eduStore *EducationStore) ListEducations(ctx context.Context, profileID int, filter specs.ListEducationsFilter, tx pgx.Tx) (values []specs.EducationResponse, err error) {
-	queryBuilder := sq.Select(constants.ResponseEducationColumns...).From("educations").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar)
+	queryBuilder := psql.Select(constants.ResponseEducationColumns...).From("educations").Where(sq.Eq{"profile_id": profileID}).OrderBy("priorities")
 
 	if len(filter.EduationsIDs) > 0 {
 		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.EduationsIDs})
@@ -133,6 +133,7 @@ func (eduStore *EducationStore) UpdateEducation(ctx context.Context, profileID i
 	return profileID, nil
 }
 
+// DeleteEducation deletes education details into the database.
 func (eduStore *EducationStore) DeleteEducation(ctx context.Context, profileID, educationID int, tx pgx.Tx) error {
 	deleteQuery, args, err := psql.Delete("educations").Where(sq.Eq{"id": educationID, "profile_id": profileID}).ToSql()
 	if err != nil {

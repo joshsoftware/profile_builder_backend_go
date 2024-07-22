@@ -137,6 +137,7 @@ func UpdateExperienceHandler(ctx context.Context, eduSvc service.Service) func(h
 	}
 }
 
+// DeleteExperienceHandler returns an HTTP handler that deletes experience using profileSvc.
 func DeleteExperienceHandler(ctx context.Context, expSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		profileID, experienceID, err := helpers.GetMultipleParams(r)

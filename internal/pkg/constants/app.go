@@ -30,31 +30,31 @@ var CreateUserColumns = []string{
 
 // CreateEducationColumns defines the columns required for creating education details.
 var CreateEducationColumns = []string{
-	"degree", "university_name", "place", "percent_or_cgpa", "passing_year", "created_at",
+	"degree", "university_name", "place", "percent_or_cgpa", "passing_year", "priorities", "created_at",
 	"updated_at", "created_by_id", "updated_by_id", "profile_id",
 }
 
 // CreateProjectColumns defines the columns required for creating project details.
 var CreateProjectColumns = []string{
 	"name", "description", "role", "responsibilities", "technologies", "tech_worked_on",
-	"working_start_date", "working_end_date", "duration", "created_at", "updated_at",
+	"working_start_date", "working_end_date", "duration", "priorities", "created_at", "updated_at",
 	"created_by_id", "updated_by_id", "profile_id",
 }
 
 // CreateExperienceColumns defines the columns required for creating experience details.
 var CreateExperienceColumns = []string{
-	"designation", "company_name", "from_date", "to_date", "created_at", "updated_at",
+	"designation", "company_name", "from_date", "to_date", "priorities", "created_at", "updated_at",
 	"created_by_id", "updated_by_id", "profile_id",
 }
 
 // CreateCertificateColumns defines the columns required for creating certificate details.
 var CreateCertificateColumns = []string{
-	"name", "organization_name", "description", "issued_date", "from_date", "to_date", "created_at", "updated_at", "created_by_id", "updated_by_id", "profile_id",
+	"name", "organization_name", "description", "issued_date", "from_date", "to_date", "priorities", "created_at", "updated_at", "created_by_id", "updated_by_id", "profile_id",
 }
 
 // CreateAchievementColumns defines the columns required for creating achievement details.
 var CreateAchievementColumns = []string{
-	"name", "description", "created_at", "updated_at", "created_by_id", "updated_by_id", "profile_id",
+	"name", "description", "priorities", "created_at", "updated_at", "created_by_id", "updated_by_id", "profile_id",
 }
 
 // ListProfilesColumns defines the columns required for listing user profiles.
@@ -128,8 +128,7 @@ var (
 	ProfileID = "profile_id"
 )
 
-// userID in context
-// Define a custom type for context key
+// ContextKey Define a custom type for context key
 type ContextKey string
 
 // Define constants for context keys
@@ -153,4 +152,24 @@ var (
 // Constant Message
 var (
 	ResourceNotFound = "Resource not found for the given request ID"
+)
+
+// component name
+var (
+	Projects     = "projects"
+	Achievements = "achievements"
+	Educations   = "educations"
+	Experiences  = "experiences"
+	Certificates = "certificates"
+)
+
+// ComponentMap used to validate incoming component list
+var (
+	ComponentMap = map[string]bool{
+		Projects:     true,
+		Achievements: true,
+		Educations:   true,
+		Experiences:  true,
+		Certificates: true,
+	}
 )

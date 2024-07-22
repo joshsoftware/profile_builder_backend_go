@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -28,11 +29,12 @@ func (expSvc *service) CreateExperience(ctx context.Context, expDetail specs.Cre
 		}
 	}()
 
-	if len(expDetail.Experiences) == 0 {
-		zap.S().Error("experiences payload can't be empty")
-		return 0, errors.ErrEmptyPayload
+	count, err := expSvc.ProfileRepo.CountRecords(ctx, profileID, constants.Experiences, tx)
+	if err != nil {
+		return 0, errors.ErrInvalidRequestData
 	}
 
+	count++
 	var value []repository.ExperienceRepo
 	for _, experience := range expDetail.Experiences {
 		val := repository.ExperienceRepo{
@@ -41,12 +43,14 @@ func (expSvc *service) CreateExperience(ctx context.Context, expDetail specs.Cre
 			CompanyName: experience.CompanyName,
 			FromDate:    experience.FromDate,
 			ToDate:      experience.ToDate,
+			Priorities:  count,
 			CreatedAt:   today,
 			UpdatedAt:   today,
 			CreatedByID: userID,
 			UpdatedByID: userID,
 		}
 
+		count++
 		value = append(value, val)
 	}
 

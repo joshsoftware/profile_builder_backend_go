@@ -37,7 +37,7 @@ func GetQueryStrings(r *http.Request, key string) []string {
 	return NameStrs
 }
 
-// ConvertStringToInt returns the integer value of given string
+// ConvertStringToIntWithDefault returns the integer value of given string
 func ConvertStringToIntWithDefault(envVars string, defaultValue int32) int32 {
 	valueStr := os.Getenv(envVars)
 	if valueStr == "" {
@@ -53,6 +53,7 @@ func ConvertStringToIntWithDefault(envVars string, defaultValue int32) int32 {
 	return int32(value)
 }
 
+// ConvertStringToTimeDuration converts a String to time duration
 func ConvertStringToTimeDuration(envVars string, defaultValue time.Duration) time.Duration {
 	valueStr := os.Getenv(envVars)
 	if valueStr == "" {

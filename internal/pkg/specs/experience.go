@@ -86,6 +86,7 @@ func (req *UpdateExperienceRequest) Validate() error {
 	return nil
 }
 
+// DeleteExperienceRequest represenst a Delete request of project
 type DeleteExperienceRequest struct {
 	ProfileID    int `json:"profile_id"`
 	ExperienceID int `json:"id"`

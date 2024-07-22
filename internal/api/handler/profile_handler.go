@@ -178,6 +178,46 @@ func DeleteProfileHandler(ctx context.Context, profileSvc service.Service) func(
 	}
 }
 
+// UpdateSequenceHandler returns an HTTP handler that updates component sequences using profileSvc.
+func UpdateSequenceHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		req, err := decodeUpdateSequenceRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		err = req.Validate()
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		updatedResp, err := profileSvc.UpdateSequence(ctx, userID, req)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error("Unable to update sequence : ", err, "for profile id : ", updatedResp)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponseWithID{
+			Message:   "Component sequence updated successfully",
+			ProfileID: updatedResp,
+		})
+	}
+}
+
+// UpdateProfileStatusHandler returns an HTTP handler that updates profile status using profileSvc.
 func UpdateProfileStatusHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		profileID, err := helpers.GetParamsByID(r, constants.ProfileID)

@@ -741,6 +741,34 @@ func (_m *Service) UpdateProject(ctx context.Context, profileID int, projID int,
 	return r0, r1
 }
 
+// UpdateSequence provides a mock function with given fields: ctx, userID, seqDetail
+func (_m *Service) UpdateSequence(ctx context.Context, userID int, seqDetail specs.UpdateSequenceRequest) (int, error) {
+	ret := _m.Called(ctx, userID, seqDetail)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateSequence")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.UpdateSequenceRequest) (int, error)); ok {
+		return rf(ctx, userID, seqDetail)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.UpdateSequenceRequest) int); ok {
+		r0 = rf(ctx, userID, seqDetail)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, specs.UpdateSequenceRequest) error); ok {
+		r1 = rf(ctx, userID, seqDetail)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewService creates a new instance of Service. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewService(t interface {

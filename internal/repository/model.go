@@ -49,6 +49,15 @@ type UpdateProfileRepo struct {
 	UpdatedByID       int      `db:"updated_by_id"`
 }
 
+// UpdateSequenceRequest represents a data access object for component sequence updation.
+type UpdateSequenceRequest struct {
+	ProfileID           int         `db:"profile_id"`
+	ComponentName       string      `db:"component_name"`
+	ComponentPriorities map[int]int `db:"priorities"`
+	UpdatedAt           string      `db:"updated_at"`
+	UpdatedByID         int         `db:"updated_by_id"`
+}
+
 // EducationRepo represents a data access object for education-related information.
 // This struct maps to a database table, where each field corresponds to a column
 // in the educations table.
@@ -58,6 +67,7 @@ type EducationRepo struct {
 	Place            string `db:"place"`
 	PercentageOrCgpa string `db:"percent_or_cgpa"`
 	PassingYear      string `db:"passing_year"`
+	Priorities       int    `db:"priorities"`
 	CreatedAt        string `db:"created_at"`
 	UpdatedAt        string `db:"updated_at"`
 	CreatedByID      int    `db:"created_by_id"`
@@ -89,6 +99,7 @@ type ProjectRepo struct {
 	WorkingStartDate string   `db:"working_start_date"`
 	WorkingEndDate   string   `db:"working_end_date"`
 	Duration         string   `db:"duration"`
+	Priorities       int      `db:"priorities"`
 	CreatedAt        string   `db:"created_at"`
 	UpdatedAt        string   `db:"updated_at"`
 	CreatedByID      int      `db:"created_by_id"`
@@ -119,6 +130,7 @@ type ExperienceRepo struct {
 	CompanyName string `db:"company_name"`
 	FromDate    string `db:"from_date"`
 	ToDate      string `db:"to_date"`
+	Priorities  int    `db:"priorities"`
 	CreatedAt   string `db:"created_at"`
 	UpdatedAt   string `db:"updated_at"`
 	CreatedByID int    `db:"created_by_id"`
@@ -146,6 +158,7 @@ type CertificateRepo struct {
 	IssuedDate       string `db:"issued_date"`
 	FromDate         string `db:"from_date"`
 	ToDate           string `db:"to_date"`
+	Priorities       int    `db:"priorities"`
 	CreatedAt        string `db:"created_at"`
 	UpdatedAt        string `db:"updated_at"`
 	CreatedByID      int    `db:"created_by_id"`
@@ -171,6 +184,7 @@ type UpdateCertificateRepo struct {
 type AchievementRepo struct {
 	Name        string `db:"name"`
 	Description string `db:"description"`
+	Priorities  int    `db:"priorities"`
 	CreatedAt   string `db:"created_at"`
 	UpdatedAt   string `db:"updated_at"`
 	CreatedByID int    `db:"created_by_id"`
@@ -186,6 +200,7 @@ type UpdateAchievementRepo struct {
 	UpdatedByID int    `db:"updated_by_id"`
 }
 
+// UpdateProfileStatusRepo represents a data access object for profile status information updation.
 type UpdateProfileStatusRepo struct {
 	IsCurrentEmployee *int `db:"is_current_employee , omitempty"`
 	IsActive          *int `db:"is_active , omitempty"`

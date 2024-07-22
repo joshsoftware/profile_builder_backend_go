@@ -25,6 +25,7 @@ type UserStorer interface {
 	GetUserIDByEmail(ctx context.Context, email string) (int64, error)
 }
 
+// NewUserLoginRepo defines repo dependancies
 func NewUserLoginRepo(db *pgxpool.Pool) UserStorer {
 	return &UserStore{
 		db: db,

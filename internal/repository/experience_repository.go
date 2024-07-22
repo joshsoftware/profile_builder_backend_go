@@ -41,7 +41,7 @@ func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []
 
 	for _, value := range values {
 		insertBuilder = insertBuilder.Values(
-			value.Designation, value.CompanyName, value.FromDate, value.ToDate,
+			value.Designation, value.CompanyName, value.FromDate, value.ToDate, value.Priorities,
 			value.CreatedAt, value.UpdatedAt, value.CreatedByID, value.UpdatedByID, value.ProfileID,
 		)
 	}
@@ -68,7 +68,7 @@ func (expStore *ExperienceStore) CreateExperience(ctx context.Context, values []
 
 // ListExperiences returns a details experiences in the Database that are currently available for perticular ID
 func (expStore *ExperienceStore) ListExperiences(ctx context.Context, profileID int, filter specs.ListExperiencesFilter, tx pgx.Tx) (values []specs.ExperienceResponse, err error) {
-	queryBuilder := sq.Select(constants.ResponseExperiencesColumns...).From("experiences").Where(sq.Eq{"profile_id": profileID}).PlaceholderFormat(sq.Dollar)
+	queryBuilder := psql.Select(constants.ResponseExperiencesColumns...).From("experiences").Where(sq.Eq{"profile_id": profileID}).OrderBy("priorities")
 
 	if len(filter.ExperiencesIDs) > 0 {
 		queryBuilder = queryBuilder.Where(sq.Eq{"id": filter.ExperiencesIDs})
@@ -131,6 +131,7 @@ func (expStore *ExperienceStore) UpdateExperience(ctx context.Context, profileID
 	return profileID, nil
 }
 
+// DeleteExperience deletes experience details into the database.
 func (expStore *ExperienceStore) DeleteExperience(ctx context.Context, profileID, experienceID int, tx pgx.Tx) error {
 	deleteQuery, args, err := psql.Delete("experiences").Where(sq.Eq{"id": experienceID, "profile_id": profileID}).ToSql()
 	if err != nil {
