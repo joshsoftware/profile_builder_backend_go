@@ -39,6 +39,7 @@ type Service interface {
 	ExperienceService
 	CertificateService
 	AchievementService
+	UserEmailService
 }
 
 // RepoDeps is used to intialize repo dependencies

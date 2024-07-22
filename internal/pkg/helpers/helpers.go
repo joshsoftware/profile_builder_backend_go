@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"reflect"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"go.uber.org/zap"
 )
 
@@ -67,4 +69,29 @@ func ConvertStringToTimeDuration(envVars string, defaultValue time.Duration) tim
 		return defaultValue
 	}
 	return value
+}
+
+// constructEmailMessage constructs the email message
+func ConstructEmailMessage(from string, request specs.UserEmailRequest) []byte {
+	// Construct the link using the profile ID
+	link := fmt.Sprintf("http://localhost:3000/profile-builder/%d", request.ProfileID)
+
+	messageBody := fmt.Sprintf(`
+        <html>
+        <head></head>
+        <body>
+            <p>Your profile has been created successfully. Please click on the link below to see the details:</p>
+            <p><a href="%s">Click here</a></p>
+        </body>
+        </html>`, link)
+
+	return []byte(strings.Join([]string{
+		"From: " + from,
+		"To: " + request.Email,
+		"Subject: Update your profile",
+		"MIME-version: 1.0;",
+		"Content-Type: text/html; charset=\"UTF-8\";",
+		"",
+		messageBody,
+	}, "\r\n"))
 }
