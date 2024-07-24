@@ -25,7 +25,7 @@ var CorsOptions = cors.Options{
 // CreateUserColumns defines the columns required for creating a new user profile.
 var CreateUserColumns = []string{
 	"name", "email", "gender", "mobile", "designation", "description", "title",
-	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link", "career_objectives", "is_active", "is_current_employee", "created_at", "updated_at", "created_by_id", "updated_by_id",
+	"years_of_experience", "primary_skills", "secondary_skills", "josh_joining_date", "github_link", "linkedin_link", "career_objectives", "is_active", "is_current_employee", "created_at", "updated_at", "created_by_id", "updated_by_id",
 }
 
 // CreateEducationColumns defines the columns required for creating education details.
@@ -65,7 +65,7 @@ var ListProfilesColumns = []string{
 // ResponseProfileColumns defines the columns required for returning a specific user profile.
 var ResponseProfileColumns = []string{
 	"id", "name", "email", "gender", "mobile", "designation", "description", "title",
-	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link", "career_objectives",
+	"years_of_experience", "primary_skills", "secondary_skills", "josh_joining_date", "github_link", "linkedin_link", "career_objectives",
 }
 
 // ResponseEducationColumns defines the columns required for returning a specific user education.

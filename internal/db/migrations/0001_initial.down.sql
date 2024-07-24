@@ -1,7 +1,3 @@
--- DROP TABLE IF EXISTS users;
-
--- DROP TABLE IF EXISTS profiles;
-
 DROP TABLE IF EXISTS educations;
 
 DROP TABLE IF EXISTS certificates;
@@ -13,3 +9,7 @@ DROP TABLE IF EXISTS achievements;
 DROP TABLE IF EXISTS experiences;
 
 DROP TABLE IF EXISTS skills;
+
+DROP TABLE IF EXISTS profiles;
+
+DROP TABLE IF EXISTS users;

@@ -18,6 +18,11 @@ type ProfileStorer struct {
 	mock.Mock
 }
 
+// BackupAllProfiles provides a mock function with given fields: backup_dir
+func (_m *ProfileStorer) BackupAllProfiles(backup_dir string) {
+	_m.Called(backup_dir)
+}
+
 // BeginTransaction provides a mock function with given fields: ctx
 func (_m *ProfileStorer) BeginTransaction(ctx context.Context) (pgx.Tx, error) {
 	ret := _m.Called(ctx)

@@ -15,6 +15,11 @@ type Service struct {
 	mock.Mock
 }
 
+// BackupAllProfiles provides a mock function with given fields:
+func (_m *Service) BackupAllProfiles() {
+	_m.Called()
+}
+
 // CreateAchievement provides a mock function with given fields: ctx, cDetail, profileID, userID
 func (_m *Service) CreateAchievement(ctx context.Context, cDetail specs.CreateAchievementRequest, profileID int, userID int) (int, error) {
 	ret := _m.Called(ctx, cDetail, profileID, userID)

@@ -32,6 +32,7 @@ type Profile struct {
 	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
 	SecondarySkills   []string `json:"secondary_skills"`
+	JoshJoiningDate   string   `json:"josh_joining_date"`
 	GithubLink        string   `json:"github_link"`
 	LinkedinLink      string   `json:"linkedin_link"`
 	CareerObjectives  string   `json:"career_objectives"`
@@ -87,6 +88,7 @@ type ResponseProfile struct {
 	YearsOfExperience float64  `json:"years_of_experience"`
 	PrimarySkills     []string `json:"primary_skills"`
 	SecondarySkills   []string `json:"secondary_skills"`
+	JoshJoiningDate   string   `json:"josh_joining_date"`
 	GithubLink        string   `json:"github_link"`
 	LinkedinLink      string   `json:"linkedin_link"`
 	CareerObjectives  string   `json:"career_objectives"`

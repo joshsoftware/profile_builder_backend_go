@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"os"
 	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -32,6 +33,11 @@ type Service interface {
 	UpdateSequence(ctx context.Context, userID int, seqDetail specs.UpdateSequenceRequest) (ID int, err error)
 	UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error)
 	DeleteProfile(ctx context.Context, profileID int) (err error)
+
+	// Now it
+	// Description: It take all backup of user profiles and store it in sql file
+	// Intensionally added here coz going forward if any req of API endpoint currently it being used by cron job
+	BackupAllProfiles()
 
 	UserLoginServive
 	EducationService
@@ -89,6 +95,7 @@ func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail spec
 	profileRepo.YearsOfExperience = profileDetail.Profile.YearsOfExperience
 	profileRepo.PrimarySkills = profileDetail.Profile.PrimarySkills
 	profileRepo.SecondarySkills = profileDetail.Profile.SecondarySkills
+	profileRepo.JoshJoiningDate = profileDetail.Profile.JoshJoiningDate
 	profileRepo.GithubLink = profileDetail.Profile.GithubLink
 	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
 	profileRepo.CareerObjectives = profileDetail.Profile.CareerObjectives
@@ -327,4 +334,9 @@ func (profileSvc *service) UpdateProfileStatus(ctx context.Context, profileID in
 	}
 	zap.S().Info("profile status updated with profile id : ", profileID)
 	return nil
+}
+
+func (profileSvc *service) BackupAllProfiles() {
+	backupDir := os.Getenv("BACKUP_DIR")
+	profileSvc.ProfileRepo.BackupAllProfiles(backupDir)
 }
