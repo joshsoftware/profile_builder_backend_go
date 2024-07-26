@@ -34,9 +34,8 @@ type Service interface {
 	UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error)
 	DeleteProfile(ctx context.Context, profileID int) (err error)
 
-	// Now it
-	// Description: It take all backup of user profiles and store it in sql file
-	// Intensionally added here coz going forward if any req of API endpoint currently it being used by cron job
+	// Description: It takes backups of all user profiles and stores them in an SQL file.
+	// Intentionally added here because, going forward, if there is any requirement for an API endpoint, it is currently being used by a cron job.
 	BackupAllProfiles()
 
 	UserLoginServive
