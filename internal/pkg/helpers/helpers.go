@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"reflect"
@@ -67,4 +68,20 @@ func ConvertStringToTimeDuration(envVars string, defaultValue time.Duration) tim
 		return defaultValue
 	}
 	return value
+}
+
+// JoinValues used to join multiple values while data backing up
+func JoinValues(values interface{}, sep string) string {
+	switch v := values.(type) {
+	case []string:
+		return strings.Join(v, sep)
+	case []interface{}:
+		strValues := make([]string, len(v))
+		for i, val := range v {
+			strValues[i] = fmt.Sprintf("%v", val)
+		}
+		return strings.Join(strValues, sep)
+	default:
+		return ""
+	}
 }

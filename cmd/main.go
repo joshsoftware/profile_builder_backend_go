@@ -12,6 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	cronjob "github.com/joshsoftware/profile_builder_backend_go/internal/cron-job"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"github.com/rs/cors"
@@ -56,6 +57,9 @@ func main() {
 
 	//Initializing Services
 	services := service.NewServices(repodeps)
+
+	//Initialize CRON Jobs
+	cronjob.InitCronJob(services)
 
 	//Initializing Router
 	router := api.NewRouter(ctx, services)

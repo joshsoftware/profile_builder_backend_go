@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -21,11 +23,13 @@ var (
 
 // Migration used to define migrations
 type Migration struct {
-	m *migrate.Migrate
+	m             *migrate.Migrate
+	directoryName string
+	filesPath     string
 }
 
 // InitMainDBMigrations used to initialize migrations
-func InitMainDBMigrations() Migration {
+func InitMainDBMigrations() (migration Migration) {
 	var (
 		dbConnection string
 		err          error
@@ -36,33 +40,45 @@ func InitMainDBMigrations() Migration {
 		zap.S().Fatal("PSQL_INFO environment variable is not set")
 	}
 
-	m, err := migrate.New(mainMigrationFilesPath, dbConnection)
+	migration.directoryName = mainMigrationsDIR
+	migration.filesPath = mainMigrationFilesPath
+
+	migration.m, err = migrate.New(migration.filesPath, dbConnection)
 	if err != nil {
+		if err == migrate.ErrNoChange {
+			return
+		}
+
 		zap.S().Fatal("Error initializing migrations:", err)
 	}
 
-	return Migration{m}
+	return
 }
 
 // RunMigrations used to run a migrations
 func (migration Migration) RunMigrations() {
-	zap.S().Infof("Migrations started from %s", mainMigrationsDIR)
+	zap.S().Infof("Migrations started from %s", migration.directoryName)
 	startTime := time.Now()
 	defer func() {
 		zap.S().Infof("Migrations complete, total time taken %s", time.Since(startTime))
 	}()
 
+	// dbVersion is the currently active database migration version
 	dbVersion, dirty, err := migration.m.Version()
 	if err != nil && err != migrate.ErrNilVersion {
 		zap.S().Fatal(err)
 	}
 
-	localVersion := uint(1)
+	// localVersion is the local migration version
+	localVersion, err := migration.MigrationLocalVersion()
+	if err != nil {
+		zap.S().Fatal(err)
+	}
 
-	if dbVersion > localVersion {
+	if dbVersion > uint(localVersion) {
 		zap.S().Fatalf("Your database migration %d is ahead of local migration %d, you might need to rollback a few migrations", dbVersion, localVersion)
 	}
-	if dbVersion < localVersion && dirty {
+	if dbVersion < uint(localVersion) && dirty {
 		zap.S().Fatalf("Your currently active database migration %d is dirty, you might need to rollback it and then deploy again.", dbVersion)
 	}
 
@@ -92,7 +108,8 @@ func (migration Migration) MigrationsUp() {
 		zap.S().Fatal(err)
 		return
 	}
-	zap.S().Info("Migration up complete")
+	migration.MigrationVersion()
+	zap.S().Info("Migration up completed")
 }
 
 // MigrationsDown used to make migrations down
@@ -107,8 +124,152 @@ func (migration Migration) MigrationsDown() {
 		zap.S().Fatal(err)
 		return
 	}
+	migration.MigrationVersion()
+	zap.S().Info("Migration down completed")
+}
 
-	zap.S().Info("Migration down complete")
+// ForceVersion forces the migration to a specific version
+func (migration Migration) ForceVersion(version int) {
+	err := migration.m.Force(version)
+	if err != nil {
+		zap.S().Fatal(err)
+	}
+
+	zap.S().Infof("Migration force version %d complete", version)
+}
+
+// CreateMigrationFile creates new migration files
+func (migration Migration) CreateMigrationFile(filename string) (err error) {
+	if len(filename) == 0 {
+		return errors.New("filename is not provided")
+	}
+
+	timeStamp := time.Now().Unix()
+	upMigrationFilePath := fmt.Sprintf("%s/%d_%s.up.sql", migration.directoryName, timeStamp, filename)
+	downMigrationFilePath := fmt.Sprintf("%s/%d_%s.down.sql", migration.directoryName, timeStamp, filename)
+
+	defer func() {
+		if err != nil {
+			os.Remove(upMigrationFilePath)
+			os.Remove(downMigrationFilePath)
+		}
+	}()
+
+	err = createFile(upMigrationFilePath)
+	if err != nil {
+		return
+	}
+
+	zap.S().Info("created %s\n", upMigrationFilePath)
+
+	err = createFile(downMigrationFilePath)
+	if err != nil {
+		return
+	}
+
+	zap.S().Info("created %s\n", downMigrationFilePath)
+	return
+}
+
+// createFile used to create a file with specified name of versioning
+func createFile(filename string) (err error) {
+	f, err := os.Create(filename)
+	if err != nil {
+		return
+	}
+
+	err = f.Close()
+	return
+}
+
+// MigrationVersion prints the current migration version
+func (migration Migration) MigrationVersion() (err error) {
+	version, dirty, err := migration.m.Version()
+	if err != nil {
+		return
+	}
+
+	zap.S().Infof("version: %v, dirty: %v", version, dirty)
+	return
+}
+
+// MigrationLocalVersion gets the latest migration version from local file system
+func (migration Migration) MigrationLocalVersion() (localversion int, err error) {
+	localDIRFileVersions, err := getMigrationVersionsFromDir(migration.directoryName)
+	if err != nil {
+		return 0, fmt.Errorf("can't get files information from local file system: %w", err)
+	}
+
+	if len(localDIRFileVersions) == 0 {
+		zap.S().Warn("no migration files found in local file system")
+		return 0, nil
+	}
+
+	zap.S().Infof("latest migration version from local file system: %d", localDIRFileVersions[0])
+	return localDIRFileVersions[0], nil
+}
+
+func getMigrationVersionsFromDir(dir string) ([]int, error) {
+	return []int{}, nil
+}
+
+// GoToSpecificVersion migrates to a specific version
+func (migration Migration) GoToSpecificVersion(version uint) (err error) {
+	localDIRFileVersions, err := getMigrationVersionsFromDir(migration.directoryName)
+	if err != nil {
+		return fmt.Errorf("can't get files information from local file system: %w", err)
+	}
+
+	if len(localDIRFileVersions) == 0 {
+		zap.S().Warn("no migration files found in local file system, hence migration not required")
+		return nil
+	}
+
+	dbversion, dirty, err := migration.m.Version()
+	if err != nil {
+		if err == migrate.ErrNilVersion {
+			zap.S().Info("no migration found, initializing DB with latest migration")
+			err = migration.m.Migrate(version)
+			if err != migrate.ErrNoChange {
+				return err
+			}
+
+			zap.S().Infof("database successfully initialized with migration: %d", version)
+			return nil
+		}
+		return err
+	}
+
+	// if the database is in dirty state, we pick the previous successfully executed migration
+	// and force the database to that version
+	if dirty {
+		index, err := getIndexOfSlice(localDIRFileVersions, int(dbversion))
+		if err != nil {
+			return errors.New("database version corresponding file not found in local file system")
+		}
+
+		if len(localDIRFileVersions) <= index+1 {
+			return errors.New("previous successfully executed migration not found in local file system")
+		}
+		forceMigrateVersion := localDIRFileVersions[index+1]
+
+		err = migration.m.Force(forceMigrateVersion)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = migration.m.Migrate(version)
+	if err != migrate.ErrNoChange {
+		return err
+	}
+
+	zap.S().Infof("database successfully migrated to version: %d", version)
+	return nil
+}
+
+func getIndexOfSlice(slice []int, value int) (int, error) {
+	return 0, nil
 }
 
 func main() {
