@@ -160,14 +160,14 @@ func (migration Migration) CreateMigrationFile(filename string) (err error) {
 		return
 	}
 
-	fmt.Printf("created %s\n", upMigrationFilePath)
+	zap.S().Info("created %s\n", upMigrationFilePath)
 
 	err = createFile(downMigrationFilePath)
 	if err != nil {
 		return
 	}
 
-	fmt.Printf("created %s\n", downMigrationFilePath)
+	zap.S().Info("created %s\n", downMigrationFilePath)
 	return
 }
 
@@ -213,8 +213,8 @@ func getMigrationVersionsFromDir(dir string) ([]int, error) {
 	return []int{}, nil
 }
 
-// GoTo migrates to a specific version
-func (migration Migration) GoTo(version uint) (err error) {
+// GoToSpecificVersion migrates to a specific version
+func (migration Migration) GoToSpecificVersion(version uint) (err error) {
 	localDIRFileVersions, err := getMigrationVersionsFromDir(migration.directoryName)
 	if err != nil {
 		return fmt.Errorf("can't get files information from local file system: %w", err)

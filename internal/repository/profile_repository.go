@@ -354,9 +354,7 @@ func (profileStore *ProfileStore) BackupAllProfiles(backupDir string) {
 	}
 	defer file.Close()
 
-	tables := []string{"users", "profiles", "educations", "certificates", "projects", "experiences", "achievements"}
-
-	for _, table := range tables {
+	for _, table := range constants.BackupTables {
 		if err := dumpTable(profileStore, file, table); err != nil {
 			zap.S().Errorw("Failed to dump table", "table", table, "error", err)
 			return

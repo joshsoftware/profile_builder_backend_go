@@ -93,6 +93,9 @@ var ResponseCertificatesColumns = []string{
 	"id", "profile_id", "name", "organization_name", "description", "issued_date", "from_date", "to_date",
 }
 
+// BackupTables defines the table names required for returning a backup.
+var BackupTables = []string{"users", "profiles", "educations", "certificates", "projects", "experiences", "achievements"}
+
 // ListQueryParams for acheivements
 var (
 	AchievementIDsStr   = "achievement_ids"
