@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
-	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"go.uber.org/zap"
 )
 
@@ -71,27 +70,37 @@ func ConvertStringToTimeDuration(envVars string, defaultValue time.Duration) tim
 	return value
 }
 
-// constructEmailMessage constructs the email message
-func ConstructEmailMessage(from string, request specs.UserEmailRequest) []byte {
-	// Construct the link using the profile ID
-	link := fmt.Sprintf("http://localhost:3000/profile-builder/%d", request.ProfileID)
+// ConstructEmailMessage constructs the email message for a profile invitation
+func ConstructUserMessage(email string, profileID int) string {
+	link := fmt.Sprintf("http://localhost:3000/profile-builder/%d", profileID)
+	content := fmt.Sprintf(`
+		<html>
+		<body>
+			<div class="email-content">
+				<p>Hello,</p>
+				<p>Your profile has been created successfully. Please <a href="%s">click here</a> to complete your profile.</p>
+				<p>Thank you,</p>
+				<p>The Team</p>
+			</div>
+		</body>
+		</html>
+	`, link)
+	return content
+}
 
-	messageBody := fmt.Sprintf(`
-        <html>
-        <head></head>
-        <body>
-            <p>Your profile has been created successfully. Please click on the link below to see the details:</p>
-            <p><a href="%s">Click here</a></p>
-        </body>
-        </html>`, link)
-
-	return []byte(strings.Join([]string{
-		"From: " + from,
-		"To: " + request.Email,
-		"Subject: Update your profile",
-		"MIME-version: 1.0;",
-		"Content-Type: text/html; charset=\"UTF-8\";",
-		"",
-		messageBody,
-	}, "\r\n"))
+// ConstructAdminEmailMessage constructs the email message for an admin invitation
+func ConstructAdminEmailMessage(email string, profileID int) string {
+	link := fmt.Sprintf("http://localhost:3000/profile-builder/%d", profileID)
+	content := fmt.Sprintf(`
+		<html>
+		<body>
+			<div class="email-content">
+				<p>Hello,</p>
+				<p>Employee completed his/her Profile. Please <a href="%s">click here</a> to download profile.</p>
+				<p>Thank you,</p>
+			</div>
+		</body>
+		</html>
+	`, link)
+	return content
 }

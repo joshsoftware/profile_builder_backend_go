@@ -32,6 +32,7 @@ var (
 	ErrFailedToUpdate         = errors.New("failed to update status")
 	ErrComponentNotSuppoerted = errors.New("component name not supported")
 	ErrUnableToSendEmail      = errors.New("unable to send email")
+	ErrFailedToGet            = errors.New("failed to get data")
 )
 
 // Profile Related variables

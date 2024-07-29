@@ -61,7 +61,8 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	profileSubrouter.HandleFunc("/profiles/{profile_id}/achievements/{id}", handler.DeleteAchievementHandler(ctx, svc)).Methods(http.MethodDelete)
 
 	// User Email APIs
-	profileSubrouter.HandleFunc("/senduseremail", handler.SendUserInvitation(ctx, svc)).Methods(http.MethodPost)
+	profileSubrouter.HandleFunc("/userinvitation", handler.SendUserInvitation(ctx, svc)).Methods(http.MethodPost)
+	profileSubrouter.HandleFunc("/admininvitation", handler.SendAdminInvitation(ctx, svc)).Methods(http.MethodPatch)
 
 	return router
 }

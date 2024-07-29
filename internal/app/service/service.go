@@ -14,6 +14,7 @@ import (
 // service implements the Service interface.
 type service struct {
 	UserLoginRepo   repository.UserStorer
+	UserEmailRepo   repository.EmailStorer
 	ProfileRepo     repository.ProfileStorer
 	EducationRepo   repository.EducationStorer
 	ExperienceRepo  repository.ExperienceStorer
@@ -45,6 +46,7 @@ type Service interface {
 // RepoDeps is used to intialize repo dependencies
 type RepoDeps struct {
 	UserLoginDeps   repository.UserStorer
+	UserEmailDeps   repository.EmailStorer
 	ProfileDeps     repository.ProfileStorer
 	EducationDeps   repository.EducationStorer
 	ExperienceDeps  repository.ExperienceStorer
@@ -57,6 +59,7 @@ type RepoDeps struct {
 func NewServices(rp RepoDeps) Service {
 	return &service{
 		UserLoginRepo:   rp.UserLoginDeps,
+		UserEmailRepo:   rp.UserEmailDeps,
 		ProfileRepo:     rp.ProfileDeps,
 		EducationRepo:   rp.EducationDeps,
 		ExperienceRepo:  rp.ExperienceDeps,
@@ -136,6 +139,13 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 			isActive = "YES"
 		}
 
+		profileComplete := "NO"
+		if profile.ProfileComplete.Valid {
+			if profile.ProfileComplete.Int64 == 1 {
+				profileComplete = "YES"
+			}
+		}
+
 		values = append(values, specs.ResponseListProfiles{
 			ID:                profile.ID,
 			Name:              profile.Name,
@@ -144,6 +154,7 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 			PrimarySkills:     profile.PrimarySkills,
 			IsCurrentEmployee: isCurrentEmployee,
 			IsActive:          isActive,
+			ProfileComplete:   profileComplete,
 		})
 	}
 

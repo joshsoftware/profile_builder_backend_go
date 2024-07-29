@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +15,9 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"go.uber.org/zap"
 )
 
 // SendRequest used to check valid login request
@@ -238,4 +242,50 @@ func DecodeExperiencesRequest(r *http.Request) (specs.ListExperiencesFilter, err
 		Names:          experiencesNameStrs,
 	}
 	return filter, nil
+}
+
+// getEmailConfig returns the email configuration from the environment variables
+func getEmailConfig() (from, api_key string) {
+	from = os.Getenv("FROM_EMAIL")
+	api_key = os.Getenv("SENDGRID_API_KEY")
+	return
+}
+
+// SendAdminInvitation sends an admin invitation email
+func SendAdminInvitation(email string, profileID int) error {
+	message := ConstructAdminEmailMessage(email, profileID)
+	return SendInvitation(email, "Admin Invitation", message)
+}
+
+// SendUserInvitation sends a user invitation email
+func SendUserInvitation(email string, profileID int) error {
+	message := ConstructUserMessage(email, profileID)
+	return SendInvitation(email, "Profile Invitation", message)
+}
+
+// SendInvitation sends an invitation email
+func SendInvitation(email string, subject string, message string) error {
+	from, sendgridAPIKey := getEmailConfig()
+	client := sendgrid.NewSendClient(sendgridAPIKey)
+
+	fromEmail := mail.NewEmail("Saurabh Puri", from)
+	toEmail := mail.NewEmail("Saurabh Puri", email)
+	plainTextContent := message
+	htmlContent := message
+	msg := mail.NewSingleEmail(fromEmail, subject, toEmail, plainTextContent, htmlContent)
+
+	response, err := client.Send(msg)
+	if err != nil {
+		zap.S().Error("failed to send email : ", err)
+		return err
+	}
+
+	if response.StatusCode >= 200 && response.StatusCode < 300 {
+		zap.S().Info("Email sent successfully", zap.String("email", email))
+	} else {
+		zap.S().Error("Failed to send email", zap.String("email", email), zap.String("response", response.Body))
+	}
+
+	return nil
+
 }

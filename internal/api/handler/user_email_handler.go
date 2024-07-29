@@ -5,31 +5,77 @@ import (
 	"net/http"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/middleware"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"go.uber.org/zap"
 )
 
-func SendUserInvitation(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+// SendUserInvitation sends an invitation to the user
+func SendUserInvitation(ctx context.Context, userService service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
 		req, err := decodeSendUserInvitationRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
-			zap.S().Error("Error decoding request : ", err)
+			zap.S().Error("Error decoding request: ", err)
 			return
 		}
 
 		err = req.Validate()
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadRequest, err)
-			zap.S().Error("Error validating request : ", err)
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidBody)
+			zap.S().Error("Error validating request: ", err)
 			return
 		}
 
-		err = profileSvc.SendUserInvitation(ctx, req)
+		err = userService.SendUserInvitation(ctx, userID, req)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
-			zap.S().Error("Error sending invitation : ", err)
+			zap.S().Errorf("Error sending invitation: %v", err)
+			middleware.ErrorResponse(w, http.StatusInternalServerError, errors.ErrUnableToSendEmail)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+			Message: "Invitation sent successfully",
+		})
+	}
+}
+
+func SendAdminInvitation(ctx context.Context, userService service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		req, err := decodeSendUserInvitationRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error("Error decoding request: ", err)
+			return
+		}
+
+		err = req.Validate()
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidBody)
+			zap.S().Error("Error validating request: ", err)
+			return
+		}
+
+		err = userService.SendAdminInvitation(ctx, userID, req)
+		if err != nil {
+			zap.S().Errorf("Error sending invitation: %v", err)
+			middleware.ErrorResponse(w, http.StatusInternalServerError, errors.ErrUnableToSendEmail)
 			return
 		}
 

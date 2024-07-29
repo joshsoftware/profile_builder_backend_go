@@ -4,6 +4,7 @@ import (
 	"context"
 
 	jwttoken "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/jwt_token"
+	"go.uber.org/zap"
 )
 
 // UserLoginServive contains methods of creation of tokens
@@ -22,5 +23,6 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 	if err != nil {
 		return "", err
 	}
+	zap.S().Info("Login successful for user: ", email)
 	return token, nil
 }

@@ -59,7 +59,7 @@ var CreateAchievementColumns = []string{
 
 // ListProfilesColumns defines the columns required for listing user profiles.
 var ListProfilesColumns = []string{
-	"id", "name", "email", "years_of_experience", "primary_skills", "is_current_employee", "is_active",
+	"p.id", "p.name", "p.email", "p.years_of_experience", "p.primary_skills", "p.is_current_employee", "p.is_active", "i.profile_complete",
 }
 
 // ResponseProfileColumns defines the columns required for returning a specific user profile.
@@ -91,6 +91,10 @@ var ResponseAchievementsColumns = []string{
 // ResponseCertificatesColumns defines the columns required for returning a specific user certificates.
 var ResponseCertificatesColumns = []string{
 	"id", "profile_id", "name", "organization_name", "description", "issued_date", "from_date", "to_date",
+}
+
+var RequestInvitationColumns = []string{
+	"profile_id", "profile_complete", "created_at", "updated_at", "created_by_id", "updated_by_id",
 }
 
 // ListQueryParams for acheivements
@@ -172,4 +176,9 @@ var (
 		Experiences:  true,
 		Certificates: true,
 	}
+)
+
+// DefaultMaxRetries defines the default maximum number of retries for sending an email
+var (
+	DefaultMaxRetries = 3
 )
