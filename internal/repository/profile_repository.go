@@ -84,7 +84,7 @@ func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileR
 
 // ListProfiles returns a list of all profiles in the Database that are currently available
 func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) (values []specs.ListProfiles, err error) {
-	sql, args, err := psql.Select(constants.ListProfilesColumns...).From("profiles").OrderBy("created_at DESC").ToSql()
+	sql, args, err := psql.Select(constants.ListProfilesColumns...).From("profiles p").LeftJoin("invitations i ON p.id = i.profile_id").OrderBy("p.created_at DESC").ToSql()
 	if err != nil {
 		zap.S().Error("Error generating list project select query: ", err)
 		return []specs.ListProfiles{}, err
@@ -97,7 +97,7 @@ func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) (
 
 	for rows.Next() {
 		var value specs.ListProfiles
-		err := rows.Scan(&value.ID, &value.Name, &value.Email, &value.YearsOfExperience, &value.PrimarySkills, &value.IsCurrentEmployee, &value.IsActive)
+		err := rows.Scan(&value.ID, &value.Name, &value.Email, &value.YearsOfExperience, &value.PrimarySkills, &value.IsCurrentEmployee, &value.IsActive, &value.ProfileComplete)
 		if err != nil {
 			zap.S().Error("error scanning row:", err)
 			return []specs.ListProfiles{}, err
@@ -324,13 +324,13 @@ func (profileStore *ProfileStore) HandleTransaction(ctx context.Context, tx pgx.
 	if incomingErr != nil {
 		err = tx.Rollback(ctx)
 		if err != nil {
-			return
+			return err
 		}
-		return
+		return incomingErr
 	}
 	err = tx.Commit(ctx)
 	if err != nil {
-		return
+		return err
 	}
-	return
+	return nil
 }

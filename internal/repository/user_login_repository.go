@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
@@ -51,7 +51,7 @@ func (profileStore *UserStore) GetUserIDByEmail(ctx context.Context, email strin
 	row := profileStore.db.QueryRow(ctx, selectQuery, args...)
 	err = row.Scan(&user.ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return 0, errors.ErrNoRecordFound
 		}
 		if helpers.IsDuplicateKeyError(err) {

@@ -205,3 +205,16 @@ type UpdateProfileStatusRepo struct {
 	IsCurrentEmployee *int `db:"is_current_employee , omitempty"`
 	IsActive          *int `db:"is_active , omitempty"`
 }
+
+type SendUserInvitationRequest struct {
+	ProfileID int `db:"profile_id"`
+}
+
+type EmailRepo struct {
+	ProfileID       int    `db:"profile_id"`
+	ProfileComplete int    `db:"profile_complete"`
+	CreatedAt       string `db:"created_at"`
+	UpdatedAt       string `db:"updated_at"`
+	CreatedByID     int    `db:"created_by_id"`
+	UpdatedByID     int    `db:"updated_by_id"`
+}
