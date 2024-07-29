@@ -71,28 +71,29 @@ CREATE DATABASE profile_builder;
 \c profile_builder;
 ```
 
-2. Run following command to Make migrations of DB
+## Commands to Make migrations of DB
+
+2.Run following command to install migrate dependency -
 
 ```bash
-make migrate
+curl -L -o migrate.tar.gz https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz
 ```
 
-## APIs
+3.Run following command to extract that dependency -
 
-1. <b>Login API</b> : `POST http://localhost:1925/login`
-2. <b>Create Profile</b> : `POST http://localhost:1925/profiles`
-3. <b>Create Educations for Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/educations`
-4. <b>Create Projects for Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/projects`
-5. <b>Create Experiences for Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/experiences`
-6. <b>Create Certificates for Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/certificates`
-7. <b>Create Achievements for Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/achievements`
-8. <b>List Skills</b> : `POST http://localhost:1925/skills`
-9. <b>Get Profile of Specific ID</b> : `POST http://localhost:1925/profiles/{profile_id}`
-10. <b>Get Educations of Specific Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/educations`
-11. <b>Get Projects of Specific Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/projects`
-12. <b>Get Experiences of Specific Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/experiences`
-13. <b>Get Certificates of Specific Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/certificates`
-14. <b>Get Achievements of Specific Profile</b> : `POST http://localhost:1925/profiles/{profile_id}/achievements`
+```bash
+tar -xvzf migrate.tar.gz
+```
+4.Run following command to extract that dependency(Optional) -
+
+```bash
+sudo mv migrate /usr/local/bin/
+```
+5.Finally, Run following command to apply all migrations -
+
+```bash
+make migrate-up
+```
 
 ## Postman Collection
 
@@ -101,11 +102,13 @@ make migrate
 ## Project Structure
 
 ```
-jspnlp@unispab:~/JOSH/Profile Builder Backend$ tree
+josh@josh:~/JOSH/Profile Builder Backend$ tree
 .
 ├── cmd
 │   └── main.go
 ├── coverage.out
+├── Dockerfile
+├── Dockerfile.dev
 ├── go.mod
 ├── go.sum
 ├── internal
@@ -117,12 +120,18 @@ jspnlp@unispab:~/JOSH/Profile Builder Backend$ tree
 │   │   │   ├── education_handler.go
 │   │   │   ├── experience_handler.go
 │   │   │   ├── profile_handler.go
-│   │   │   └── project_handler.go
-│   │   └── router.go
+│   │   │   ├── project_handler.go
+│   │   │   └── user_login_handler.go
+│   │   ├── router.go
+│   │   └── tests
+│   │       ├── achievement_handler_test.go
+│   │       ├── certificate_handler_test.go
+│   │       ├── education_handler_test.go
+│   │       ├── experience_handler_test.go
+│   │       ├── profile_handler_test.go
+│   │       ├── project_handler_test.go
+│   │       └── user_login_handler_test.go
 │   ├── app
-│   │   ├── dependencies.go
-│   │   ├── mocks
-│   │   │   └── Service.go
 │   │   └── service
 │   │       ├── achievement_service.go
 │   │       ├── certificate_service.go
@@ -134,34 +143,58 @@ jspnlp@unispab:~/JOSH/Profile Builder Backend$ tree
 │   │       │   ├── EducationService.go
 │   │       │   ├── ExperienceService.go
 │   │       │   ├── ProjectService.go
-│   │       │   └── Service.go
+│   │       │   ├── Service.go
+│   │       │   └── UserLoginServive.go
 │   │       ├── project_service.go
-│   │       └── service.go
+│   │       ├── service.go
+│   │       ├── tests
+│   │       │   ├── achievement_service_test.go
+│   │       │   ├── certificate_service_test.go
+│   │       │   ├── education_service_test.go
+│   │       │   ├── experience_service_test.go
+│   │       │   ├── project_service_test.go
+│   │       │   ├── service_test.go
+│   │       │   └── user_login_service_test.go
+│   │       └── user_login_service.go
+│   ├── cron-job
+│   │   └── app.go
 │   ├── db
 │   │   ├── migrate.go
 │   │   └── migrations
-│   │       ├── postgres_DOWN.sql
-│   │       └── postrges_UP.sql
+│   │       ├── 000001_initial.down.sql
+│   │       ├── 000001_initial.up.sql
+│   │       ├── 000002_add_colm_josh_joining_date.down.sql
+│   │       └── 000002_add_colm_josh_joining_date.up.sql
 │   ├── pkg
 │   │   ├── constants
 │   │   │   └── app.go
-│   │   ├── specs
-│   │   │   ├── achievement.go
-│   │   │   ├── api.go
-│   │   │   ├── certificate.go
-│   │   │   ├── education.go
-│   │   │   ├── experience.go
-│   │   │   ├── profile.go
-│   │   │   └── project.go
 │   │   ├── errors
 │   │   │   └── errors.go
 │   │   ├── helpers
-│   │   │   └── app.go
-│   │   └── middleware
-│   │       └── response_writer.go
+│   │   │   ├── app.go
+│   │   │   └── helpers.go
+│   │   ├── jwt_token
+│   │   │   └── createToken.go
+│   │   ├── middleware
+│   │   │   ├── auth.go
+│   │   │   ├── response_writer.go
+│   │   │   ├── tests
+│   │   │   │   ├── auth_test.go
+│   │   │   │   └── verify_jwt_token_test.go
+│   │   │   └── verify_jwt_token.go
+│   │   └── specs
+│   │       ├── achievement.go
+│   │       ├── api.go
+│   │       ├── certificate.go
+│   │       ├── education.go
+│   │       ├── experience.go
+│   │       ├── profile.go
+│   │       ├── project.go
+│   │       └── user_login.go
 │   └── repository
 │       ├── achievement_repository.go
 │       ├── certificate_repository.go
+│       ├── config.go
 │       ├── education_repository.go
 │       ├── experience_repository.go
 │       ├── init.go
@@ -171,12 +204,19 @@ jspnlp@unispab:~/JOSH/Profile Builder Backend$ tree
 │       │   ├── EducationStorer.go
 │       │   ├── ExperienceStorer.go
 │       │   ├── ProfileStorer.go
-│       │   └── ProjectStorer.go
+│       │   ├── ProjectStorer.go
+│       │   ├── RepositoryTrasanctions.go
+│       │   ├── Trasanctions.go
+│       │   └── UserStorer.go
 │       ├── model.go
 │       ├── profile_repository.go
-│       └── project_repository.go
-└── Makefile
+│       ├── project_repository.go
+│       ├── repo.go
+│       └── user_login_repository.go
+├── Makefile
+├── README.md
+└── swagger.yaml
 
-18 directories, 55 files
+22 directories, 90 files
 
 ```
