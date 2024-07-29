@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"os"
 	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -33,6 +34,10 @@ type Service interface {
 	UpdateSequence(ctx context.Context, userID int, seqDetail specs.UpdateSequenceRequest) (ID int, err error)
 	UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error)
 	DeleteProfile(ctx context.Context, profileID int) (err error)
+
+	// Description: It takes backups of all user profiles and stores them in an SQL file.
+	// Intentionally added here because, going forward, if there is any requirement for an API endpoint, it is currently being used by a cron job.
+	BackupAllProfiles() error
 
 	UserLoginServive
 	EducationService
@@ -93,6 +98,7 @@ func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail spec
 	profileRepo.YearsOfExperience = profileDetail.Profile.YearsOfExperience
 	profileRepo.PrimarySkills = profileDetail.Profile.PrimarySkills
 	profileRepo.SecondarySkills = profileDetail.Profile.SecondarySkills
+	profileRepo.JoshJoiningDate = profileDetail.Profile.JoshJoiningDate
 	profileRepo.GithubLink = profileDetail.Profile.GithubLink
 	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
 	profileRepo.CareerObjectives = profileDetail.Profile.CareerObjectives
@@ -221,6 +227,7 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, use
 	profileRepo.YearsOfExperience = profileDetail.Profile.YearsOfExperience
 	profileRepo.PrimarySkills = profileDetail.Profile.PrimarySkills
 	profileRepo.SecondarySkills = profileDetail.Profile.SecondarySkills
+	profileRepo.JoshJoiningDate = profileDetail.Profile.JoshJoiningDate
 	profileRepo.GithubLink = profileDetail.Profile.GithubLink
 	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
 	profileRepo.UpdatedAt = today
@@ -338,5 +345,14 @@ func (profileSvc *service) UpdateProfileStatus(ctx context.Context, profileID in
 		return err
 	}
 	zap.S().Info("profile status updated with profile id : ", profileID)
+	return nil
+}
+
+func (profileSvc *service) BackupAllProfiles() error {
+	backupDir := os.Getenv("BACKUP_DIR")
+	if backupDir == "" {
+		return errors.ErrEmptyPayload
+	}
+	profileSvc.ProfileRepo.BackupAllProfiles(backupDir)
 	return nil
 }

@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
@@ -32,6 +34,7 @@ type ProfileStorer interface {
 	ListSkills(ctx context.Context, tx pgx.Tx) (values specs.ListSkills, err error)
 	BeginTransaction(ctx context.Context) (tx pgx.Tx, err error)
 	HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error)
+	BackupAllProfiles(backupDir string)
 }
 
 // NewProfileRepo creates a new instance of ProfileRepo.
@@ -48,7 +51,7 @@ func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileR
 
 	values := []interface{}{
 		pd.Name, pd.Email, pd.Gender, pd.Mobile, pd.Designation, pd.Description, pd.Title,
-		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.GithubLink, pd.LinkedinLink, pd.CareerObjectives, 1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID,
+		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.JoshJoiningDate, pd.GithubLink, pd.LinkedinLink, pd.CareerObjectives, 1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID,
 	}
 
 	insertQuery, args, err := psql.Insert("profiles").
@@ -147,7 +150,7 @@ func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int,
 	}
 
 	if rows.Next() {
-		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink, &value.CareerObjectives); err != nil {
+		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.JoshJoiningDate, &value.GithubLink, &value.LinkedinLink, &value.CareerObjectives); err != nil {
 			zap.S().Error("Error scanning row: ", err)
 			return specs.ResponseProfile{}, err
 		}
@@ -169,9 +172,7 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 			"gender": pd.Gender, "mobile": pd.Mobile,
 			"designation": pd.Designation, "description": pd.Description,
 			"title": pd.Title, "years_of_experience": pd.YearsOfExperience,
-			"primary_skills": pd.PrimarySkills, "secondary_skills": pd.SecondarySkills,
-			"github_link": pd.GithubLink, "linkedin_link": pd.LinkedinLink,
-			"updated_at": pd.UpdatedAt, "updated_by_id": pd.UpdatedByID,
+			"josh_joining_date": pd.JoshJoiningDate, "primary_skills": pd.PrimarySkills, "secondary_skills": pd.SecondarySkills, "github_link": pd.GithubLink, "linkedin_link": pd.LinkedinLink, "updated_at": pd.UpdatedAt, "updated_by_id": pd.UpdatedByID,
 		}).
 		Where(sq.Eq{"id": profileID}).ToSql()
 	if err != nil {
@@ -333,4 +334,69 @@ func (profileStore *ProfileStore) HandleTransaction(ctx context.Context, tx pgx.
 		return err
 	}
 	return nil
+}
+
+// BackupAllProfiles used to backing up all the data at every midnight by CronJOb
+func (profileStore *ProfileStore) BackupAllProfiles(backupDir string) {
+	zap.S().Info("Starting backing up data...")
+	err := os.MkdirAll(backupDir, os.ModePerm)
+	if err != nil {
+		zap.S().Errorw("Failed to create backup directory", "error", err)
+		return
+	}
+
+	fileName := fmt.Sprintf("%s%s-profile_builder.sql", backupDir, time.Now().Format("20060102"))
+
+	file, err := os.Create(fileName)
+	if err != nil {
+		zap.S().Errorw("Failed to create backup file", "error", err)
+		return
+	}
+	defer file.Close()
+
+	for _, table := range constants.BackupTables {
+		if err := dumpTable(profileStore, file, table); err != nil {
+			zap.S().Errorw("Failed to dump table", "table", table, "error", err)
+			return
+		}
+	}
+
+	zap.S().Infow("Database backed up successfully", "fileName", fileName, "time", time.Now())
+}
+
+func dumpTable(profileStore *ProfileStore, file *os.File, table string) error {
+	rows, err := profileStore.db.Query(context.Background(), fmt.Sprintf("SELECT * FROM %s", table))
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	columns := rows.FieldDescriptions()
+	columnNames := make([]string, len(columns))
+	for i, col := range columns {
+		columnNames[i] = string(col.Name)
+	}
+
+	if _, err := fmt.Fprintf(file, "-- Dumping data for table %s\n", table); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(file, "COPY %s (%s) FROM stdin;\n", table, helpers.JoinValues(columnNames, ", ")); err != nil {
+		return err
+	}
+
+	for rows.Next() {
+		values, err := rows.Values()
+		if err != nil {
+			return err
+		}
+		if _, err := fmt.Fprintf(file, "%s\n", helpers.JoinValues(values, "\t")); err != nil {
+			return err
+		}
+	}
+
+	if _, err := fmt.Fprintln(file, "\\."); err != nil {
+		return err
+	}
+
+	return rows.Err()
 }

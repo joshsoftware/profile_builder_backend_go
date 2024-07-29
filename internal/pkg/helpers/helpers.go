@@ -70,6 +70,22 @@ func ConvertStringToTimeDuration(envVars string, defaultValue time.Duration) tim
 	return value
 }
 
+// JoinValues used to join multiple values while data backing up
+func JoinValues(values interface{}, sep string) string {
+	switch v := values.(type) {
+	case []string:
+		return strings.Join(v, sep)
+	case []interface{}:
+		strValues := make([]string, len(v))
+		for i, val := range v {
+			strValues[i] = fmt.Sprintf("%v", val)
+		}
+		return strings.Join(strValues, sep)
+	default:
+		return ""
+	}
+}
+
 // ConstructEmailMessage constructs the email message for a profile invitation
 func ConstructUserMessage(email string, profileID int) string {
 	link := fmt.Sprintf("http://localhost:3000/profile-builder/%d", profileID)
