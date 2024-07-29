@@ -36,7 +36,7 @@ type Service interface {
 
 	// Description: It takes backups of all user profiles and stores them in an SQL file.
 	// Intentionally added here because, going forward, if there is any requirement for an API endpoint, it is currently being used by a cron job.
-	BackupAllProfiles()
+	BackupAllProfiles() error
 
 	UserLoginServive
 	EducationService
@@ -215,6 +215,7 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, use
 	profileRepo.YearsOfExperience = profileDetail.Profile.YearsOfExperience
 	profileRepo.PrimarySkills = profileDetail.Profile.PrimarySkills
 	profileRepo.SecondarySkills = profileDetail.Profile.SecondarySkills
+	profileRepo.JoshJoiningDate = profileDetail.Profile.JoshJoiningDate
 	profileRepo.GithubLink = profileDetail.Profile.GithubLink
 	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
 	profileRepo.UpdatedAt = today
@@ -335,7 +336,11 @@ func (profileSvc *service) UpdateProfileStatus(ctx context.Context, profileID in
 	return nil
 }
 
-func (profileSvc *service) BackupAllProfiles() {
+func (profileSvc *service) BackupAllProfiles() error {
 	backupDir := os.Getenv("BACKUP_DIR")
+	if backupDir == "" {
+		return errors.ErrEmptyPayload
+	}
 	profileSvc.ProfileRepo.BackupAllProfiles(backupDir)
+	return nil
 }

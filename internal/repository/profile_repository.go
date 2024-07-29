@@ -172,9 +172,7 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 			"gender": pd.Gender, "mobile": pd.Mobile,
 			"designation": pd.Designation, "description": pd.Description,
 			"title": pd.Title, "years_of_experience": pd.YearsOfExperience,
-			"primary_skills": pd.PrimarySkills, "secondary_skills": pd.SecondarySkills,
-			"github_link": pd.GithubLink, "linkedin_link": pd.LinkedinLink,
-			"updated_at": pd.UpdatedAt, "updated_by_id": pd.UpdatedByID,
+			"josh_joining_date": pd.JoshJoiningDate, "primary_skills": pd.PrimarySkills, "secondary_skills": pd.SecondarySkills, "github_link": pd.GithubLink, "linkedin_link": pd.LinkedinLink, "updated_at": pd.UpdatedAt, "updated_by_id": pd.UpdatedByID,
 		}).
 		Where(sq.Eq{"id": profileID}).ToSql()
 	if err != nil {

@@ -44,6 +44,7 @@ type UpdateProfileRepo struct {
 	YearsOfExperience float64  `db:"years_of_experience"`
 	PrimarySkills     []string `db:"primary_skills"`
 	SecondarySkills   []string `db:"secondary_skills"`
+	JoshJoiningDate   string   `db:"josh_joining_date"`
 	GithubLink        string   `db:"github_link"`
 	LinkedinLink      string   `db:"linkedin_link"`
 	UpdatedAt         string   `db:"updated_at"`

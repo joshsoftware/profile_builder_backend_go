@@ -1,6 +1,6 @@
 # Makefile
 
-.PHONY: run clean test test-cover html-cover migrate-up migrate-down new-migration
+.PHONY: run clean test test-cover html-cover migrate-up migrate-down migrate-custom-version new-migration
 
 run: ## Run project on host machine
 	go run cmd/main.go
@@ -20,8 +20,15 @@ html-cover: test-cover ## Generate HTML test coverage report
 migrate-down: ## Roll back the last database migration
 	@bash -c 'set -o allexport; source .env; migrate -database $$DB_MIGRATION -path internal/db/migrations down 1'
 
-migrate-up: ## Apply database migrations
+migrate-up: ## Apply all pending database migrations
 	@bash -c 'set -o allexport; source .env; migrate -database $$DB_MIGRATION -path internal/db/migrations up'
+
+migrate-custom-version: ## Apply database migrations up to a specific version
+	@if [ -z "$(version)" ]; then \
+		echo "Migration version not provided. Usage: make migrate-custom-version version=<version_number>"; \
+		exit 1; \
+	fi; \
+	bash -c 'set -o allexport; source .env; migrate -database $$DB_MIGRATION -path internal/db/migrations goto $(version)'
 
 new-migration: ## Create a new migration
 	@if [ -z "$(name)" ]; then \

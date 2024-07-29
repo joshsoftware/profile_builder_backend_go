@@ -16,8 +16,21 @@ type Service struct {
 }
 
 // BackupAllProfiles provides a mock function with given fields:
-func (_m *Service) BackupAllProfiles() {
-	_m.Called()
+func (_m *Service) BackupAllProfiles() error {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for BackupAllProfiles")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // CreateAchievement provides a mock function with given fields: ctx, cDetail, profileID, userID

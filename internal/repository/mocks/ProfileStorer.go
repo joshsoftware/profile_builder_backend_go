@@ -18,9 +18,9 @@ type ProfileStorer struct {
 	mock.Mock
 }
 
-// BackupAllProfiles provides a mock function with given fields: backup_dir
-func (_m *ProfileStorer) BackupAllProfiles(backup_dir string) {
-	_m.Called(backup_dir)
+// BackupAllProfiles provides a mock function with given fields: backupDir
+func (_m *ProfileStorer) BackupAllProfiles(backupDir string) {
+	_m.Called(backupDir)
 }
 
 // BeginTransaction provides a mock function with given fields: ctx
