@@ -21,7 +21,7 @@ type EmailStorer interface {
 	GetCreatedByIdByProfileID(ctx context.Context, sendRequest SendUserInvitationRequest, tx pgx.Tx) (int, error)
 	GetUserEmailByUserID(ctx context.Context, userID int, tx pgx.Tx) (string, error)
 	CreateSendInvitation(ctx context.Context, sendRequest EmailRepo, tx pgx.Tx) error
-	UpdateProfileCompleteStatus(ctx context.Context, updateReq SendUserInvitationRequest, tx pgx.Tx) error
+	UpdateProfileCompleteStatus(ctx context.Context, updateReq UpadateRequest, tx pgx.Tx) error
 }
 
 func NewUserEmailRepo(db *pgxpool.Pool) EmailStorer {
@@ -52,7 +52,7 @@ func (userStore *EmailStore) GetEmailByProfileID(ctx context.Context, sendReques
 }
 
 func (userStore *EmailStore) GetCreatedByIdByProfileID(ctx context.Context, sendRequest SendUserInvitationRequest, tx pgx.Tx) (int, error) {
-	queryBuilder := psql.Select("created_by_id").From("invitations").Where(sq.And{sq.Eq{"profile_id": sendRequest.ProfileID}, sq.Eq{"profile_complete": 0}})
+	queryBuilder := psql.Select("created_by_id").From("invitations").Where(sq.And{sq.Eq{"profile_id": sendRequest.ProfileID}, sq.Eq{"is_profile_complete": 0}})
 	sql, args, err := queryBuilder.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating select query: ", err)
@@ -131,8 +131,8 @@ func (emailStore *EmailStore) CreateSendInvitation(ctx context.Context, emailRep
 	return nil
 }
 
-func (emailStore *EmailStore) UpdateProfileCompleteStatus(ctx context.Context, updateReq SendUserInvitationRequest, tx pgx.Tx) error {
-	queryBuilder := psql.Update("invitations").Set("profile_complete", 1).Where(sq.Eq{"profile_id": updateReq.ProfileID, "profile_complete": 0})
+func (emailStore *EmailStore) UpdateProfileCompleteStatus(ctx context.Context, updateReq UpadateRequest, tx pgx.Tx) error {
+	queryBuilder := psql.Update("invitations").Set("is_profile_complete", 1).Set("updated_at", updateReq.UpdatedAt).Where(sq.Eq{"profile_id": updateReq.ProfileID, "is_profile_complete": 0})
 	updateQuery, args, err := queryBuilder.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating update query: ", err)

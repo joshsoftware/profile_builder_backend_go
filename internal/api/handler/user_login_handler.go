@@ -55,7 +55,7 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 			return
 		}
 
-		token, err := profileSvc.GenerateLoginToken(ctx, userInfo.Email)
+		info, err := profileSvc.GenerateLoginToken(ctx, userInfo.Email)
 		if err != nil {
 			if err == errors.ErrNoRecordFound {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
@@ -69,11 +69,13 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 			return
 		}
 
-		w.Header().Set("Authorization", "Bearer "+token)
+		w.Header().Set("Authorization", "Bearer "+info.Token)
 
 		loginResp := specs.UserLoginResponse{
 			Message:    "Login successful",
-			Token:      token,
+			ProfileID:  info.ProfileID,
+			Role:       info.Role,
+			Token:      info.Token,
 			StatusCode: http.StatusOK,
 		}
 

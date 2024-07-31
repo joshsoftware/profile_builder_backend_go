@@ -59,7 +59,21 @@ var CreateAchievementColumns = []string{
 
 // ListProfilesColumns defines the columns required for listing user profiles.
 var ListProfilesColumns = []string{
-	"p.id", "p.name", "p.email", "p.years_of_experience", "p.primary_skills", "p.is_current_employee", "p.is_active", "i.profile_complete",
+	"p.id",
+	"p.name",
+	"p.email",
+	"p.years_of_experience",
+	"p.primary_skills",
+	"p.is_current_employee",
+	"p.is_active",
+	`(SELECT 
+			CASE 
+				WHEN COUNT(*) = 0 THEN 0 
+				WHEN COUNT(*) FILTER (WHERE is_profile_complete = 0) > 0 THEN 1 
+				ELSE 0 
+			END 
+		FROM invitations 
+		WHERE invitations.profile_id = p.id) as is_profile_complete`,
 }
 
 // ResponseProfileColumns defines the columns required for returning a specific user profile.
@@ -94,7 +108,7 @@ var ResponseCertificatesColumns = []string{
 }
 
 var RequestInvitationColumns = []string{
-	"profile_id", "profile_complete", "created_at", "updated_at", "created_by_id", "updated_by_id",
+	"profile_id", "is_profile_complete", "created_at", "updated_at", "created_by_id", "updated_by_id",
 }
 
 // BackupTables defines the table names required for returning a backup.
@@ -184,4 +198,9 @@ var (
 // DefaultMaxRetries defines the default maximum number of retries for sending an email
 var (
 	DefaultMaxRetries = 3
+)
+
+var (
+	Admin    = "admin"
+	Employee = "employee"
 )

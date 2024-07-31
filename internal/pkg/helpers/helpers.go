@@ -88,7 +88,7 @@ func JoinValues(values interface{}, sep string) string {
 
 // ConstructEmailMessage constructs the email message for a profile invitation
 func ConstructUserMessage(email string, profileID int) string {
-	link := fmt.Sprintf("http://localhost:3000/profile-builder/%d", profileID)
+	link := fmt.Sprintf("%s/%d", os.Getenv("HOST_URL"), profileID)
 	content := fmt.Sprintf(`
 		<html>
 		<body>
@@ -106,7 +106,7 @@ func ConstructUserMessage(email string, profileID int) string {
 
 // ConstructAdminEmailMessage constructs the email message for an admin invitation
 func ConstructAdminEmailMessage(email string, profileID int) string {
-	link := fmt.Sprintf("http://localhost:3000/profile-builder/%d", profileID)
+	link := fmt.Sprintf("%s/%d", os.Getenv("HOST_URL"), profileID)
 	content := fmt.Sprintf(`
 		<html>
 		<body>
@@ -119,4 +119,13 @@ func ConstructAdminEmailMessage(email string, profileID int) string {
 		</html>
 	`, link)
 	return content
+}
+
+// GetCurrentISTTime returns the current time in the Asia/Kolkata time zone formatted as RFC3339
+func GetCurrentISTTime() string {
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		return ""
+	}
+	return time.Now().In(loc).Format(time.RFC3339)
 }

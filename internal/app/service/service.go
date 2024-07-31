@@ -145,11 +145,9 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 			isActive = "YES"
 		}
 
-		profileComplete := "NO"
-		if profile.ProfileComplete.Valid {
-			if profile.ProfileComplete.Int64 == 1 {
-				profileComplete = "YES"
-			}
+		isProfileCompleteStr := "NO"
+		if profile.IsProfileComplete == 1 {
+			isProfileCompleteStr = "YES"
 		}
 
 		values = append(values, specs.ResponseListProfiles{
@@ -160,7 +158,7 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 			PrimarySkills:     profile.PrimarySkills,
 			IsCurrentEmployee: isCurrentEmployee,
 			IsActive:          isActive,
-			ProfileComplete:   profileComplete,
+			IsProfileComplete: isProfileCompleteStr,
 		})
 	}
 

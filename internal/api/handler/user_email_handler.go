@@ -38,7 +38,7 @@ func SendUserInvitation(ctx context.Context, userService service.Service) func(h
 
 		err = userService.SendUserInvitation(ctx, userID, req)
 		if err != nil {
-			zap.S().Errorf("Error sending invitation: %v", err)
+			zap.S().Errorf("Error sending invitation: ", err)
 			middleware.ErrorResponse(w, http.StatusInternalServerError, errors.ErrUnableToSendEmail)
 			return
 		}

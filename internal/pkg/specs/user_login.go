@@ -14,6 +14,8 @@ type UserLoginRequest struct {
 // UserLoginResponse to respond with login
 type UserLoginResponse struct {
 	Message    string `json:"message"`
+	ProfileID  int    `json:"profile_id"`
+	Role       string `json:"role"`
 	Token      string `json:"token"`
 	StatusCode int    `json:"status_code"`
 }
@@ -21,4 +23,10 @@ type UserLoginResponse struct {
 // UserInfo for getting mail of specified login
 type UserInfo struct {
 	Email string `json:"email"`
+}
+
+type LoginResponse struct {
+	ProfileID int    `json:"profile_id"`
+	Role      string `json:"role"`
+	Token     string `json:"token"`
 }

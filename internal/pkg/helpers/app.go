@@ -285,7 +285,5 @@ func SendInvitation(email string, subject string, message string) error {
 	} else {
 		zap.S().Error("Failed to send email", zap.String("email", email), zap.String("response", response.Body))
 	}
-
 	return nil
-
 }

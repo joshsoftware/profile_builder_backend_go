@@ -37,11 +37,12 @@ func (userService *service) SendUserInvitation(ctx context.Context, userID int, 
 		return err
 	}
 
+	now := helpers.GetCurrentISTTime()
 	createSendInvitationRequest := repository.EmailRepo{
 		ProfileID:       request.ProfileID,
 		ProfileComplete: 0,
-		CreatedAt:       today,
-		UpdatedAt:       today,
+		CreatedAt:       now,
+		UpdatedAt:       now,
 		CreatedByID:     userID,
 		UpdatedByID:     userID,
 	}
@@ -52,11 +53,17 @@ func (userService *service) SendUserInvitation(ctx context.Context, userID int, 
 		return err
 	}
 
+	err = userService.UserLoginRepo.CreateUserAsEmployee(ctx, email, tx)
+	if err != nil {
+		zap.S().Error("Error creating user as employee: ", err)
+		return err
+	}
+
 	go func(email string, profileID int) {
 		for i := 0; i < constants.DefaultMaxRetries; i++ {
-			helpers.SendUserInvitation(email, profileID)
+			err := helpers.SendUserInvitation(email, profileID)
 			if err != nil {
-				zap.S().Error("Error sending invitation: ", err)
+				zap.S().Error("Error sending invitation to user : ", err)
 				time.Sleep(time.Second * 2)
 				continue
 			}
@@ -88,14 +95,15 @@ func (userService *service) SendAdminInvitation(ctx context.Context, userID int,
 		return err
 	}
 
-	email, err := userService.UserEmailRepo.GetUserEmailByUserID(ctx, ID, tx)
+	adminEmail, err := userService.UserEmailRepo.GetUserEmailByUserID(ctx, ID, tx)
 	if err != nil {
 		zap.S().Error("Error getting email by id: ", err)
 		return err
 	}
-
-	updateSendRequest := repository.SendUserInvitationRequest{
+	now := helpers.GetCurrentISTTime()
+	updateSendRequest := repository.UpadateRequest{
 		ProfileID: request.ProfileID,
+		UpdatedAt: now,
 	}
 	err = userService.UserEmailRepo.UpdateProfileCompleteStatus(ctx, updateSendRequest, tx)
 	if err != nil {
@@ -103,10 +111,22 @@ func (userService *service) SendAdminInvitation(ctx context.Context, userID int,
 		return err
 	}
 
+	employeeEmail, err := userService.UserEmailRepo.GetEmailByProfileID(ctx, sendRequest, tx)
+	if err != nil {
+		zap.S().Error("Error getting email by profile id: ", err)
+		return err
+	}
+
+	err = userService.UserLoginRepo.RemoveUserEmployee(ctx, employeeEmail, tx)
+	if err != nil {
+		zap.S().Error("Error removing user employee: ", err)
+		return err
+	}
+
 	// Send email to the user in a fire-and-forget manner
-	go func(email string) {
+	go func(adminEmail string, profileID int) {
 		for i := 0; i < constants.DefaultMaxRetries; i++ {
-			helpers.SendAdminInvitation(email, request.ProfileID)
+			err := helpers.SendAdminInvitation(adminEmail, profileID)
 			if err != nil {
 				zap.S().Error("Error sending invitation: ", err)
 				time.Sleep(time.Second * 2)
@@ -115,7 +135,7 @@ func (userService *service) SendAdminInvitation(ctx context.Context, userID int,
 			return
 		}
 		zap.S().Error("Max retries reached. Failed to send invitation.")
-	}(email)
+	}(adminEmail, request.ProfileID)
 
 	return nil
 }

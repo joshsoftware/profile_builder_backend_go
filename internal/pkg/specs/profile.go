@@ -1,7 +1,6 @@
 package specs
 
 import (
-	"database/sql"
 	"fmt"
 	"regexp"
 	"strings"
@@ -41,14 +40,14 @@ type Profile struct {
 
 // ListProfiles struct represents details of user profiles for listing.
 type ListProfiles struct {
-	ID                int           `json:"id"`
-	Name              string        `json:"name"`
-	Email             string        `json:"email"`
-	YearsOfExperience float64       `json:"years_of_experience"`
-	PrimarySkills     []string      `json:"primary_skills"`
-	IsCurrentEmployee int           `json:"is_current_employee"`
-	IsActive          int           `json:"is_active"`
-	ProfileComplete   sql.NullInt64 `json:"profile_complete"`
+	ID                int      `json:"id"`
+	Name              string   `json:"name"`
+	Email             string   `json:"email"`
+	YearsOfExperience float64  `json:"years_of_experience"`
+	PrimarySkills     []string `json:"primary_skills"`
+	IsCurrentEmployee int      `json:"is_current_employee"`
+	IsActive          int      `json:"is_active"`
+	IsProfileComplete int      `json:"is_profile_complete"`
 }
 
 // ResponseListProfiles struct represents response of user profiles for listing.
@@ -60,7 +59,7 @@ type ResponseListProfiles struct {
 	PrimarySkills     []string `json:"primary_skills"`
 	IsCurrentEmployee string   `json:"is_current_employee"`
 	IsActive          string   `json:"is_active"`
-	ProfileComplete   string   `json:"profile_complete"`
+	IsProfileComplete string   `json:"is_profile_complete"`
 }
 
 // ListSkills struct represents details of skills for listing.
