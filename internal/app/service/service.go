@@ -29,7 +29,7 @@ type Service interface {
 	CreateProfile(ctx context.Context, profileDetail specs.CreateProfileRequest, userID int) (profileID int, err error)
 	ListProfiles(ctx context.Context) (values []specs.ResponseListProfiles, err error)
 	ListSkills(ctx context.Context) (values specs.ListSkills, err error)
-	GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error)
+	GetProfile(ctx context.Context, id int, email string) (value specs.ResponseProfile, err error)
 	UpdateProfile(ctx context.Context, profileID int, userID int, profileDetail specs.UpdateProfileRequest) (ID int, err error)
 	UpdateSequence(ctx context.Context, userID int, seqDetail specs.UpdateSequenceRequest) (ID int, err error)
 	UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error)
@@ -185,7 +185,7 @@ func (profileSvc *service) ListSkills(ctx context.Context) (values specs.ListSki
 }
 
 // GetProfile in the service layer retrieves a list of user profiles.
-func (profileSvc *service) GetProfile(ctx context.Context, id int) (value specs.ResponseProfile, err error) {
+func (profileSvc *service) GetProfile(ctx context.Context, id int, email string) (value specs.ResponseProfile, err error) {
 	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
 	defer func() {
 		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
@@ -195,6 +195,23 @@ func (profileSvc *service) GetProfile(ctx context.Context, id int) (value specs.
 		}
 	}()
 
+	getRequest := repository.SendUserInvitationRequest{
+		ProfileID: id,
+	}
+	userEmail, err := profileSvc.UserEmailRepo.GetEmailByProfileID(ctx, getRequest, tx)
+	if err != nil {
+		zap.S().Error("Unable to get email : ", err, " for profile id : ", id)
+		return specs.ResponseProfile{}, err
+	}
+	if email != userEmail {
+		zap.S().Error("Unauthorized access to profile id : ", id)
+		return specs.ResponseProfile{}, errors.ErrAuthToken
+	}
+
+	if err != nil {
+		zap.S().Error("Unable to get email : ", err, " for profile id : ", id)
+		return specs.ResponseProfile{}, err
+	}
 	value, err = profileSvc.ProfileRepo.GetProfile(ctx, id, tx)
 	if err != nil {
 		zap.S().Error("Unable to get profile : ", err, " for profile id : ", id)

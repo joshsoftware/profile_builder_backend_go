@@ -106,6 +106,14 @@ func GetUserIDFromContext(r *http.Request) (ID int, err error) {
 	return int(userID), nil
 }
 
+func GetEmailFromContext(r *http.Request) (email string, err error) {
+	email, ok := r.Context().Value(constants.Email).(string)
+	if !ok {
+		return "", errors.ErrInvalidEmail
+	}
+	return email, nil
+}
+
 // GetMultipleParams returns the multiple IDs which is coming from the query parameters
 func GetMultipleParams(r *http.Request) (int, int, error) {
 	vars := mux.Vars(r)

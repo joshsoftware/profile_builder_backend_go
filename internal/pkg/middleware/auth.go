@@ -48,8 +48,16 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			zap.S().Error(errors.ErrUserRole)
 			return
 		}
+
+		email, ok := claims["email"]
+		if !ok {
+			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalispecsken)
+			zap.S().Error(errors.ErrEmail)
+			return
+		}
 		ctx := context.WithValue(r.Context(), constants.UserIDKey, userID)
 		ctx = context.WithValue(ctx, constants.UserRoleKey, role)
+		ctx = context.WithValue(ctx, constants.Email, email)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
