@@ -36,6 +36,19 @@ func SendUserInvitation(ctx context.Context, userService service.Service) func(h
 			return
 		}
 
+		profileID, err := helpers.GetProfileId(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		if profileID != req.ProfileID {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidProfile)
+			zap.S().Error(errors.ErrInvalidProfile)
+			return
+		}
+
 		err = userService.SendUserInvitation(ctx, userID, req)
 		if err != nil {
 			zap.S().Errorf("Error sending invitation: ", err)
@@ -44,7 +57,7 @@ func SendUserInvitation(ctx context.Context, userService service.Service) func(h
 		}
 
 		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-			Message: "Invitation sent successfully",
+			Message: "Invitation sent successfully to employee",
 		})
 	}
 }
@@ -72,6 +85,19 @@ func SendAdminInvitation(ctx context.Context, userService service.Service) func(
 			return
 		}
 
+		profileID, err := helpers.GetProfileId(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		if profileID != req.ProfileID {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidProfile)
+			zap.S().Error(errors.ErrInvalidProfile)
+			return
+		}
+
 		err = userService.SendAdminInvitation(ctx, userID, req)
 		if err != nil {
 			zap.S().Errorf("Error sending invitation: %v", err)
@@ -80,7 +106,7 @@ func SendAdminInvitation(ctx context.Context, userService service.Service) func(
 		}
 
 		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-			Message: "Invitation sent successfully",
+			Message: "Profile Completed Successfully",
 		})
 	}
 }

@@ -157,6 +157,7 @@ const (
 	UserIDKey        ContextKey = "user_id"
 	ProfileIDKey     ContextKey = "profile_id"
 	AchievementIDKey ContextKey = "achievement_id"
+	UserRoleKey      ContextKey = "role"
 )
 
 // define default values for the environment variables

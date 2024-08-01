@@ -40,7 +40,7 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 		}
 	}
 
-	token, err := jwttoken.CreateToken(userInfo.ID, email)
+	token, err := jwttoken.CreateToken(userInfo.ID, userInfo.Role, email)
 	if err != nil {
 		return res, err
 	}

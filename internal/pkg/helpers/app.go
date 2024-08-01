@@ -287,3 +287,17 @@ func SendInvitation(email string, subject string, message string) error {
 	}
 	return nil
 }
+
+func GetProfileId(r *http.Request) (int, error) {
+	vars := mux.Vars(r)
+	profileIDStr, ok := vars["profile_id"]
+	if !ok {
+		return 0, errors.ErrInvalidRequestData
+	}
+
+	profileID, err := strconv.Atoi(profileIDStr)
+	if err != nil {
+		return 0, errors.ErrInvalidRequestData
+	}
+	return profileID, nil
+}

@@ -33,6 +33,7 @@ var (
 	ErrComponentNotSuppoerted = errors.New("component name not supported")
 	ErrUnableToSendEmail      = errors.New("unable to send email")
 	ErrFailedToGet            = errors.New("failed to get data")
+	ErrUserRole               = errors.New("error in parsing role from claims")
 )
 
 // Profile Related variables

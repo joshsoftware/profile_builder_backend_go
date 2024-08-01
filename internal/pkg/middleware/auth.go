@@ -42,8 +42,37 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		role, ok := claims["role"]
+		if !ok {
+			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalispecsken)
+			zap.S().Error(errors.ErrUserRole)
+			return
+		}
 		ctx := context.WithValue(r.Context(), constants.UserIDKey, userID)
+		ctx = context.WithValue(ctx, constants.UserRoleKey, role)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// RoleMiddleware used for Authorization.
+func RoleMiddleware(roles []string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userRole, ok := r.Context().Value(constants.UserRoleKey).(string)
+			if !ok {
+				ErrorResponse(w, http.StatusUnauthorized, errors.ErrAuthToken)
+				zap.S().Error(errors.ErrAuthToken)
+				return
+			}
+			for _, role := range roles {
+				if role == userRole {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+			ErrorResponse(w, http.StatusForbidden, errors.ErrAuthToken)
+			zap.S().Error(errors.ErrAuthToken)
+		})
+	}
 }
