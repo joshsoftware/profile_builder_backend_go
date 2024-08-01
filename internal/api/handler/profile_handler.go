@@ -84,7 +84,7 @@ func SkillsListHandler(ctx context.Context, profileSvc service.Service) func(htt
 // GetProfileHandler returns an HTTP handler that fetches particular profile using profileSvc.
 func GetProfileHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		email, err := helpers.GetEmailFromContext(r)
+		userContext, err := helpers.GetContextValue(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)
@@ -98,7 +98,7 @@ func GetProfileHandler(ctx context.Context, profileSvc service.Service) func(htt
 			return
 		}
 
-		profResp, err := profileSvc.GetProfile(ctx, profileID, email)
+		profResp, err := profileSvc.GetProfile(ctx, profileID, userContext)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to get profile : ", err, "for profile id : ", profileID)

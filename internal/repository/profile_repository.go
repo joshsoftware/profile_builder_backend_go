@@ -112,6 +112,9 @@ func (profileRepo *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) ([
 			&profile.PrimarySkills,
 			&profile.IsCurrentEmployee,
 			&profile.IsActive,
+			&profile.JoshJoiningDate,
+			&profile.CreatedAt,
+			&profile.UpdatedAt,
 			&profile.IsProfileComplete,
 		)
 		if err != nil {

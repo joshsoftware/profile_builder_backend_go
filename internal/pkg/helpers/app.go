@@ -106,12 +106,22 @@ func GetUserIDFromContext(r *http.Request) (ID int, err error) {
 	return int(userID), nil
 }
 
-func GetEmailFromContext(r *http.Request) (email string, err error) {
+func GetContextValue(r *http.Request) (specs.UserContext, error) {
 	email, ok := r.Context().Value(constants.Email).(string)
 	if !ok {
-		return "", errors.ErrInvalidEmail
+		return specs.UserContext{}, errors.ErrInvalidEmail
 	}
-	return email, nil
+
+	role, ok := r.Context().Value(constants.UserRoleKey).(string)
+	if !ok {
+		return specs.UserContext{}, errors.ErrUserRole
+	}
+
+	userContext := specs.UserContext{
+		Role:  role,
+		Email: email,
+	}
+	return userContext, nil
 }
 
 // GetMultipleParams returns the multiple IDs which is coming from the query parameters

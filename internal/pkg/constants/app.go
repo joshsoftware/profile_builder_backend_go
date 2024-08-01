@@ -66,6 +66,9 @@ var ListProfilesColumns = []string{
 	"p.primary_skills",
 	"p.is_current_employee",
 	"p.is_active",
+	"p.josh_joining_date",
+	"p.created_at",
+	"p.updated_at",
 	`(SELECT 
 			CASE 
 				WHEN COUNT(*) = 0 THEN 0 

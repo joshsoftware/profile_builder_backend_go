@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -40,26 +41,32 @@ type Profile struct {
 
 // ListProfiles struct represents details of user profiles for listing.
 type ListProfiles struct {
-	ID                int      `json:"id"`
-	Name              string   `json:"name"`
-	Email             string   `json:"email"`
-	YearsOfExperience float64  `json:"years_of_experience"`
-	PrimarySkills     []string `json:"primary_skills"`
-	IsCurrentEmployee int      `json:"is_current_employee"`
-	IsActive          int      `json:"is_active"`
-	IsProfileComplete int      `json:"is_profile_complete"`
+	ID                int       `json:"id"`
+	Name              string    `json:"name"`
+	Email             string    `json:"email"`
+	YearsOfExperience float64   `json:"years_of_experience"`
+	PrimarySkills     []string  `json:"primary_skills"`
+	IsCurrentEmployee int       `json:"is_current_employee"`
+	IsActive          int       `json:"is_active"`
+	JoshJoiningDate   string    `json:"josh_joining_date"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	IsProfileComplete int       `json:"is_profile_complete"`
 }
 
 // ResponseListProfiles struct represents response of user profiles for listing.
 type ResponseListProfiles struct {
-	ID                int      `json:"id"`
-	Name              string   `json:"name"`
-	Email             string   `json:"email"`
-	YearsOfExperience float64  `json:"years_of_experience"`
-	PrimarySkills     []string `json:"primary_skills"`
-	IsCurrentEmployee string   `json:"is_current_employee"`
-	IsActive          string   `json:"is_active"`
-	IsProfileComplete string   `json:"is_profile_complete"`
+	ID                int       `json:"id"`
+	Name              string    `json:"name"`
+	Email             string    `json:"email"`
+	YearsOfExperience float64   `json:"years_of_experience"`
+	PrimarySkills     []string  `json:"primary_skills"`
+	IsCurrentEmployee string    `json:"is_current_employee"`
+	IsActive          string    `json:"is_active"`
+	JoshJoiningDate   string    `json:"josh_joining_date"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	IsProfileComplete string    `json:"is_profile_complete"`
 }
 
 // ListSkills struct represents details of skills for listing.
@@ -117,6 +124,12 @@ type UpdateProfileStatus struct {
 type UpdateProfileStatusRequest struct {
 	IsCurrentEmployee string `json:"is_current_employee,omitempty"`
 	IsActive          string `json:"is_active,omitempty"`
+}
+
+// User Context Value
+type UserContext struct {
+	Role  string `json:"role"`
+	Email string `json:"email"`
 }
 
 // Validate func checks if the CreateProfileRequest is valid.
