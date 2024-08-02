@@ -155,6 +155,34 @@ func (_m *ProfileStorer) GetProfile(ctx context.Context, profileID int, tx pgx.T
 	return r0, r1
 }
 
+// GetProfileIdByEmail provides a mock function with given fields: ctx, email, tx
+func (_m *ProfileStorer) GetProfileIdByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error) {
+	ret := _m.Called(ctx, email, tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetProfileIdByEmail")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, pgx.Tx) (int, error)); ok {
+		return rf(ctx, email, tx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, pgx.Tx) int); ok {
+		r0 = rf(ctx, email, tx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, pgx.Tx) error); ok {
+		r1 = rf(ctx, email, tx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // HandleTransaction provides a mock function with given fields: ctx, tx, incomingErr
 func (_m *ProfileStorer) HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) error {
 	ret := _m.Called(ctx, tx, incomingErr)
