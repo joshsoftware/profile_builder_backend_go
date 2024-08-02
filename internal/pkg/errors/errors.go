@@ -35,6 +35,7 @@ var (
 	ErrFailedToGet            = errors.New("failed to get data")
 	ErrUserRole               = errors.New("error in parsing role from claims")
 	ErrEmail                  = errors.New("error in parsing email from claims")
+	ErrProfileID              = errors.New("error in parsing profileID from claims")
 )
 
 // Profile Related variables

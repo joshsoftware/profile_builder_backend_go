@@ -217,6 +217,18 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 
 // DeleteProfile delete an existing user profile in the database.
 func (profileStore *ProfileStore) DeleteProfile(ctx context.Context, profileID int, tx pgx.Tx) (err error) {
+
+	selectEmailQuery, args, err := psql.Select("email").From("profiles").Where(sq.Eq{"id": profileID}).ToSql()
+	if err != nil {
+		zap.S().With("profile_id", profileID).Error("Error generating email select query: ", err)
+	}
+
+	var email string
+	err = tx.QueryRow(ctx, selectEmailQuery, args...).Scan(&email)
+	if err != nil {
+		zap.S().Error("Error fetching email: ", err)
+	}
+
 	deleteQuery, args, err := psql.Delete("profiles").Where(sq.Eq{"id": profileID}).ToSql()
 	if err != nil {
 		zap.S().With("profile_id", profileID).Error("Error generating profile delete query: ", err)
@@ -231,6 +243,26 @@ func (profileStore *ProfileStore) DeleteProfile(ctx context.Context, profileID i
 
 	if result.RowsAffected() == 0 {
 		return errors.ErrNoData
+	}
+
+	if email != "" {
+		deleteQuery, args, err := psql.Delete("users").Where(sq.Eq{"email": email}).ToSql()
+		if err != nil {
+			zap.S().With("email", email).Error("Error generating user delete query: ", err)
+			return err
+		}
+
+		result, err := tx.Exec(ctx, deleteQuery, args...)
+		if err != nil {
+			zap.S().With("query", deleteQuery, "args", args).Error("Error executing delete user query", zap.Error(err))
+			return err
+		}
+
+		if result.RowsAffected() == 0 {
+			zap.S().Info("No user found for email: ", email)
+		}
+	} else {
+		zap.S().Info("No email found for profile ID: ", profileID)
 	}
 	return nil
 }

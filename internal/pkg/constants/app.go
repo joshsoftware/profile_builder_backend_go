@@ -209,3 +209,8 @@ var (
 	Admin    = "admin"
 	Employee = "employee"
 )
+
+// Default profileID for the admin is 0
+var (
+	AdminProfileID = 0
+)

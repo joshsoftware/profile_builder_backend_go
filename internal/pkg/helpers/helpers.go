@@ -129,3 +129,11 @@ func GetCurrentISTTime() string {
 	}
 	return time.Now().In(loc).Format(time.RFC3339)
 }
+
+func ConvertFloatToInt(profileID any) int {
+	profileIDfloat, ok := profileID.(float64)
+	if !ok {
+		return 0
+	}
+	return int(profileIDfloat)
+}

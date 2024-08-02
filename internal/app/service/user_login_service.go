@@ -31,18 +31,18 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 
 	var profileID int
 	if userInfo.Role == constants.Admin {
-		profileID = 0
+		profileID = constants.AdminProfileID
 	} else {
 		profileID, err = userService.ProfileRepo.GetProfileIdByEmail(ctx, email, tx)
 		if err != nil {
 			zap.S().Error("Error getting profile id by email: ", err)
-			return res, err
+			return specs.LoginResponse{}, err
 		}
 	}
 
-	token, err := jwttoken.CreateToken(userInfo.ID, userInfo.Role, email)
+	token, err := jwttoken.CreateToken(userInfo.ID, profileID, userInfo.Role, email)
 	if err != nil {
-		return res, err
+		return specs.LoginResponse{}, err
 	}
 
 	loginResponse := specs.LoginResponse{

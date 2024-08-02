@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -318,4 +319,16 @@ func GetProfileId(r *http.Request) (int, error) {
 		return 0, errors.ErrInvalidRequestData
 	}
 	return profileID, nil
+}
+
+func ProfileIDNotRequiredPath(r *http.Request) bool {
+	fmt.Println("Path in ProfileIDNotRequiredPath ", r.URL.Path)
+	pathNotRequired := map[string]bool{
+		"/login":              true,
+		"/api/profiles":       true,
+		"/api/skills":         true,
+		"/api/updateSequence": true,
+	}
+
+	return pathNotRequired[r.URL.Path]
 }

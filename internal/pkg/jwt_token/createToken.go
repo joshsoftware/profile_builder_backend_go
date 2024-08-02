@@ -12,7 +12,7 @@ import (
 )
 
 // CreateToken used to generate a token
-func CreateToken(userID int64, role string, email string) (string, error) {
+func CreateToken(userID int64, profileID int, role string, email string) (string, error) {
 	secretKey := os.Getenv("SECRET_KEY")
 
 	if secretKey == "" {
@@ -30,7 +30,7 @@ func CreateToken(userID int64, role string, email string) (string, error) {
 		return "", err
 	}
 
-	claims := createClaims(userID, role, email, time.Duration(expirationHours)*time.Hour)
+	claims := createClaims(userID, profileID, role, email, time.Duration(expirationHours)*time.Hour)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, err := token.SignedString([]byte(secretKey))
@@ -42,10 +42,11 @@ func CreateToken(userID int64, role string, email string) (string, error) {
 }
 
 // CreateClaims to generate claims that are required to create token
-func createClaims(userID int64, role string, email string, expiration time.Duration) jwt.MapClaims {
+func createClaims(userID int64, profileID int, role string, email string, expiration time.Duration) jwt.MapClaims {
 	return jwt.MapClaims{
 		"authorised": true,
 		"userID":     userID,
+		"profileID":  profileID,
 		"role":       role,
 		"email":      email,
 		"exp":        time.Now().Add(expiration).Unix(),

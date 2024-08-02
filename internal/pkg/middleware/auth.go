@@ -7,6 +7,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"go.uber.org/zap"
 )
 
@@ -49,15 +50,32 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		email, ok := claims["email"]
+		reqProfileID, ok := claims["profileID"]
 		if !ok {
 			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalispecsken)
-			zap.S().Error(errors.ErrEmail)
+			zap.S().Error(errors.ErrProfileID)
 			return
 		}
+
+		requestedProfileID := helpers.ConvertFloatToInt(reqProfileID)
+
+		if !helpers.ProfileIDNotRequiredPath(r) {
+			profileID, err := helpers.GetProfileId(r)
+			if err != nil {
+				ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalidProfile)
+				zap.S().Error(errors.ErrProfileID)
+				return
+			}
+
+			if requestedProfileID != profileID && role != constants.Admin {
+				ErrorResponse(w, http.StatusUnauthorized, errors.ErrAuthToken)
+				zap.S().Error(errors.ErrProfileID)
+				return
+			}
+		}
+
 		ctx := context.WithValue(r.Context(), constants.UserIDKey, userID)
 		ctx = context.WithValue(ctx, constants.UserRoleKey, role)
-		ctx = context.WithValue(ctx, constants.Email, email)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
