@@ -310,22 +310,22 @@ func (_m *Service) DeleteProject(ctx context.Context, profileID int, projectID i
 }
 
 // GenerateLoginToken provides a mock function with given fields: ctx, email
-func (_m *Service) GenerateLoginToken(ctx context.Context, email string) (string, error) {
+func (_m *Service) GenerateLoginToken(ctx context.Context, email string) (specs.LoginResponse, error) {
 	ret := _m.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GenerateLoginToken")
 	}
 
-	var r0 string
+	var r0 specs.LoginResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (specs.LoginResponse, error)); ok {
 		return rf(ctx, email)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) specs.LoginResponse); ok {
 		r0 = rf(ctx, email)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(specs.LoginResponse)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
@@ -337,9 +337,9 @@ func (_m *Service) GenerateLoginToken(ctx context.Context, email string) (string
 	return r0, r1
 }
 
-// GetProfile provides a mock function with given fields: ctx, id
-func (_m *Service) GetProfile(ctx context.Context, id int) (specs.ResponseProfile, error) {
-	ret := _m.Called(ctx, id)
+// GetProfile provides a mock function with given fields: ctx, id, userContext
+func (_m *Service) GetProfile(ctx context.Context, id int, userContext specs.UserContext) (specs.ResponseProfile, error) {
+	ret := _m.Called(ctx, id, userContext)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetProfile")
@@ -347,17 +347,17 @@ func (_m *Service) GetProfile(ctx context.Context, id int) (specs.ResponseProfil
 
 	var r0 specs.ResponseProfile
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int) (specs.ResponseProfile, error)); ok {
-		return rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.UserContext) (specs.ResponseProfile, error)); ok {
+		return rf(ctx, id, userContext)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int) specs.ResponseProfile); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.UserContext) specs.ResponseProfile); ok {
+		r0 = rf(ctx, id, userContext)
 	} else {
 		r0 = ret.Get(0).(specs.ResponseProfile)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, id)
+	if rf, ok := ret.Get(1).(func(context.Context, int, specs.UserContext) error); ok {
+		r1 = rf(ctx, id, userContext)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -571,6 +571,42 @@ func (_m *Service) ListSkills(ctx context.Context) (specs.ListSkills, error) {
 	}
 
 	return r0, r1
+}
+
+// SendAdminInvitation provides a mock function with given fields: ctx, userID, request
+func (_m *Service) SendAdminInvitation(ctx context.Context, userID int, request specs.UserSendInvitationRequest) error {
+	ret := _m.Called(ctx, userID, request)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendAdminInvitation")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.UserSendInvitationRequest) error); ok {
+		r0 = rf(ctx, userID, request)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SendUserInvitation provides a mock function with given fields: ctx, userID, request
+func (_m *Service) SendUserInvitation(ctx context.Context, userID int, request specs.UserSendInvitationRequest) error {
+	ret := _m.Called(ctx, userID, request)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendUserInvitation")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.UserSendInvitationRequest) error); ok {
+		r0 = rf(ctx, userID, request)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // UpdateAchievement provides a mock function with given fields: ctx, profileID, achID, userID, req
