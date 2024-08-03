@@ -36,6 +36,8 @@ var (
 	ErrUserRole               = errors.New("error in parsing role from claims")
 	ErrEmail                  = errors.New("error in parsing email from claims")
 	ErrProfileID              = errors.New("error in parsing profileID from claims")
+	ErrEmptyToken             = errors.New("empty token")
+	ErrTokenNotFound          = errors.New("token not found in whitelist")
 )
 
 // Profile Related variables

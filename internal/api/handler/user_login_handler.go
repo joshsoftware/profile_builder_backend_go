@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -80,5 +82,31 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 		}
 
 		middleware.SuccessResponse(w, http.StatusOK, loginResp)
+	}
+}
+
+func Logout(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrEmptyToken)
+			zap.S().Error(errors.ErrEmptyToken)
+			return
+		}
+
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+
+		err := profileSvc.RemoveToken(token)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(errors.ErrTokenNotFound, " : ", err)
+			return
+		}
+
+		fmt.Println("token list after logout : ", helpers.TokenList)
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+			Message: "Logout successfully",
+		})
 	}
 }

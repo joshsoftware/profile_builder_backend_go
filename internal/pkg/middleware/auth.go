@@ -36,6 +36,16 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		helpers.WhiteListMutext.Lock()
+		_, ok := helpers.TokenList[tokenString]
+		helpers.WhiteListMutext.Unlock()
+
+		if !ok {
+			ErrorResponse(w, http.StatusUnauthorized, errors.ErrAuthToken)
+			zap.S().Error(errors.ErrTokenNotFound)
+			return
+		}
+
 		userID, ok := claims["userID"]
 		if !ok {
 			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalispecsken)

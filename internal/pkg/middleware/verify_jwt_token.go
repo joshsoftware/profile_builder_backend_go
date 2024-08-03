@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/golang-jwt/jwt"
@@ -33,7 +32,7 @@ func VerifyJWTToken(tokenString string) (jwt.MapClaims, error) {
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || claims == nil {
-		fmt.Println("Error in parsing claims")
+		zap.S().Error("Error in parsing claims")
 		return nil, errors.ErrInvalispecsken
 	}
 

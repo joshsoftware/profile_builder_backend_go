@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	jwttoken "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/jwt_token"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"go.uber.org/zap"
@@ -12,6 +15,7 @@ import (
 // UserLoginServive contains methods of creation of tokens
 type UserLoginServive interface {
 	GenerateLoginToken(ctx context.Context, email string) (specs.LoginResponse, error)
+	RemoveToken(token string) error
 }
 
 func (userService *service) GenerateLoginToken(ctx context.Context, email string) (res specs.LoginResponse, err error) {
@@ -45,6 +49,12 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 		return specs.LoginResponse{}, err
 	}
 
+	helpers.WhiteListMutext.Lock()
+	helpers.TokenList[token] = struct{}{}
+	helpers.WhiteListMutext.Unlock()
+
+	fmt.Println("TokenList: ", helpers.TokenList)
+
 	loginResponse := specs.LoginResponse{
 		ProfileID: profileID,
 		Role:      userInfo.Role,
@@ -52,4 +62,15 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 	}
 	zap.S().Info("Login successful for user: ", email)
 	return loginResponse, nil
+}
+
+func (userService *service) RemoveToken(token string) error {
+	helpers.WhiteListMutext.Lock()
+	defer helpers.WhiteListMutext.Unlock()
+	if _, found := helpers.TokenList[token]; !found {
+		zap.S().Error("Token not found in whitelist")
+		return errors.ErrTokenNotFound
+	}
+	delete(helpers.TokenList, token)
+	return nil
 }

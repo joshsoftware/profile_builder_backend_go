@@ -2,13 +2,13 @@ package helpers
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -273,13 +273,13 @@ func getEmailConfig() (from, api_key string) {
 // SendAdminInvitation sends an admin invitation email
 func SendAdminInvitation(email string, profileID int) error {
 	message := ConstructAdminEmailMessage(email, profileID)
-	return SendInvitation(email, "Admin Invitation", message)
+	return SendInvitation(email, "Profile Update: An Employee Has Completed Their Profile", message)
 }
 
 // SendUserInvitation sends a user invitation email
 func SendUserInvitation(email string, profileID int) error {
 	message := ConstructUserMessage(email, profileID)
-	return SendInvitation(email, "Profile Invitation", message)
+	return SendInvitation(email, "Action Required: Complete Your Profile", message)
 }
 
 // SendInvitation sends an invitation email
@@ -322,9 +322,9 @@ func GetProfileId(r *http.Request) (int, error) {
 }
 
 func ProfileIDNotRequiredPath(r *http.Request) bool {
-	fmt.Println("Path in ProfileIDNotRequiredPath ", r.URL.Path)
 	pathNotRequired := map[string]bool{
 		"/login":              true,
+		"/api/logout":         true,
 		"/api/profiles":       true,
 		"/api/skills":         true,
 		"/api/updateSequence": true,
@@ -332,3 +332,9 @@ func ProfileIDNotRequiredPath(r *http.Request) bool {
 
 	return pathNotRequired[r.URL.Path]
 }
+
+// define the global variable for the store the token
+var (
+	TokenList       = make(map[string]struct{})
+	WhiteListMutext = &sync.Mutex{}
+)
