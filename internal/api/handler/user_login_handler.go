@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -102,8 +101,6 @@ func Logout(ctx context.Context, profileSvc service.Service) func(http.ResponseW
 			zap.S().Error(errors.ErrTokenNotFound, " : ", err)
 			return
 		}
-
-		fmt.Println("token list after logout : ", helpers.TokenList)
 
 		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
 			Message: "Logout successfully",

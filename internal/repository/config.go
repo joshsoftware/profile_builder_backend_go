@@ -43,8 +43,8 @@ func Config() *pgxpool.Config {
 func setConfig(dbConfig *pgxpool.Config) {
 	dbConfig.MaxConns = helpers.ConvertStringToIntWithDefault("MAX_CONNECTIONS", constants.DefaultMaxConnections)
 	dbConfig.MinConns = helpers.ConvertStringToIntWithDefault("MIN_CONNECTIONS", constants.DefaultMinConnections)
-	dbConfig.MaxConnLifetime = helpers.ConvertStringToTimeDuration("MAX_CONNECTIONS_LIFETIME_IN_MINUTES", constants.DefaultConnLifeTime)
-	dbConfig.MaxConnIdleTime = helpers.ConvertStringToTimeDuration("MAX_CONNECTIONS_IDLE_TIME_IN_MINUTES", constants.DefaultConnIdleTime)
-	dbConfig.HealthCheckPeriod = helpers.ConvertStringToTimeDuration("HEALTH_CHECK_PERIOD_IN_MINUTES", constants.DefaultHealthCheck)
+	dbConfig.MaxConnLifetime = helpers.ConvertStringToTimeDuration("MAX_CONNECTIONS_LIFETIME_IN_SECONDS", constants.DefaultConnLifeTime)
+	dbConfig.MaxConnIdleTime = helpers.ConvertStringToTimeDuration("MAX_CONNECTIONS_IDLE_TIME_IN_SECONDS", constants.DefaultConnIdleTime)
+	dbConfig.HealthCheckPeriod = helpers.ConvertStringToTimeDuration("HEALTH_CHECK_PERIOD_IN_SECONDS", constants.DefaultHealthCheck)
 	dbConfig.MaxConnLifetimeJitter = helpers.ConvertStringToTimeDuration("CONNECT_TIMEOUT_IN_SECONDS", constants.DefaultConnectTimeout)
 }

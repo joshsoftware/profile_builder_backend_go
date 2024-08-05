@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -30,7 +29,7 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 
 	userInfo, err := userService.UserLoginRepo.GetUserInfoByEmail(ctx, email)
 	if err != nil || userInfo.ID == 0 || userInfo.Role == "" {
-		return res, err
+		return specs.LoginResponse{}, err
 	}
 
 	var profileID int
@@ -52,8 +51,6 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 	helpers.WhiteListMutext.Lock()
 	helpers.TokenList[token] = struct{}{}
 	helpers.WhiteListMutext.Unlock()
-
-	fmt.Println("TokenList: ", helpers.TokenList)
 
 	loginResponse := specs.LoginResponse{
 		ProfileID: profileID,
