@@ -69,5 +69,6 @@ func (userService *service) RemoveToken(token string) error {
 		return errors.ErrTokenNotFound
 	}
 	delete(helpers.TokenList, token)
+	zap.S().Info("Logout successfully")
 	return nil
 }

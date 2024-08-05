@@ -214,3 +214,8 @@ var (
 var (
 	AdminProfileID = 0
 )
+
+var (
+	EmployeeInvitationSubject = "Action Required: Complete Your Profile"
+	AdminRequestSubject       = "Profile Update: An Employee Has Completed The Profile"
+)

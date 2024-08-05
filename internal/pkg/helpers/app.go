@@ -273,13 +273,13 @@ func getEmailConfig() (from, api_key string) {
 // SendAdminInvitation sends an admin invitation email
 func SendAdminInvitation(email string, profileID int) error {
 	message := ConstructAdminEmailMessage(email, profileID)
-	return SendInvitation(email, "Profile Update: An Employee Has Completed Their Profile", message)
+	return SendInvitation(email, constants.AdminRequestSubject, message)
 }
 
 // SendUserInvitation sends a user invitation email
 func SendUserInvitation(email string, profileID int) error {
 	message := ConstructUserMessage(email, profileID)
-	return SendInvitation(email, "Action Required: Complete Your Profile", message)
+	return SendInvitation(email, constants.EmployeeInvitationSubject, message)
 }
 
 // SendInvitation sends an invitation email
@@ -287,8 +287,8 @@ func SendInvitation(email string, subject string, message string) error {
 	from, sendgridAPIKey := getEmailConfig()
 	client := sendgrid.NewSendClient(sendgridAPIKey)
 
-	fromEmail := mail.NewEmail("Saurabh Puri", from)
-	toEmail := mail.NewEmail("Saurabh Puri", email)
+	fromEmail := mail.NewEmail(from, from)
+	toEmail := mail.NewEmail("", email)
 	plainTextContent := message
 	htmlContent := message
 	msg := mail.NewSingleEmail(fromEmail, subject, toEmail, plainTextContent, htmlContent)
