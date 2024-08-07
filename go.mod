@@ -15,6 +15,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/cors v1.11.0
 	github.com/sendgrid/sendgrid-go v3.14.0+incompatible
+	github.com/spf13/cast v1.7.0
 	github.com/stretchr/testify v1.9.0
 	github.com/undefinedlabs/go-mpatch v1.0.7
 	go.uber.org/zap v1.27.0
