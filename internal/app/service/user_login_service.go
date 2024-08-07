@@ -38,7 +38,7 @@ func (userService *service) GenerateLoginToken(ctx context.Context, filter specs
 	} else {
 		profileID, err = userService.ProfileRepo.GetProfileIdByEmail(ctx, filter.Email, tx)
 		if err != nil {
-			zap.S().Error("Error getting profile id : %v by email : %s ", err, filter.Email)
+			zap.S().Errorf("Error getting profile id : %v by email : %s ", err, filter.Email)
 			return specs.LoginResponse{}, err
 		}
 	}
@@ -57,7 +57,7 @@ func (userService *service) GenerateLoginToken(ctx context.Context, filter specs
 		Role:      userInfo.Role,
 		Token:     token,
 	}
-	zap.S().Info("Login successful for user: ", filter.Email)
+	zap.S().Infof("Login successful for user: %s", filter.Email)
 	return loginResponse, nil
 }
 

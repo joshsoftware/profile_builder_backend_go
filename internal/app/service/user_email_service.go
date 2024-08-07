@@ -29,13 +29,13 @@ func (userService *service) SendUserInvitation(ctx context.Context, userID int, 
 
 	profile, err := userService.ProfileRepo.GetProfile(ctx, profileID, tx)
 	if err != nil {
-		zap.S().Error("Error while getting profile. profile id :%d, err:%v", profileID, err)
+		zap.S().Errorf("Error while getting profile. profile id :%d, err:%v", profileID, err)
 		return err
 	}
 
 	err = helpers.SendUserInvitation(profile.Email, profileID)
 	if err != nil {
-		zap.S().Error("Error sending invitation:%v  for email:%s and profile ID : %d ", err, profile.Email, profileID)
+		zap.S().Errorf("Error sending invitation:%v  for email:%s and profile ID : %d ", err, profile.Email, profileID)
 		return err
 	}
 
@@ -51,13 +51,13 @@ func (userService *service) SendUserInvitation(ctx context.Context, userID int, 
 
 	err = userService.UserEmailRepo.CreateInvitation(ctx, createInvitationRequest, tx)
 	if err != nil {
-		zap.S().Error("Error creating send invitation %v. for user %s : ", err, profile.Email)
+		zap.S().Errorf("Error creating send invitation %v. for user %s : ", err, profile.Email)
 		return err
 	}
 
 	err = userService.UserLoginRepo.CreateUser(ctx, profile.Email, constants.Employee, tx)
 	if err != nil {
-		zap.S().Error("Error creating user employee: %v for user %s: ", err, profile.Email)
+		zap.S().Errorf("Error creating user employee: %v for user %s: ", err, profile.Email)
 		return err
 	}
 
@@ -78,7 +78,7 @@ func (userService *service) UpdateInvitation(ctx context.Context, userID int, pr
 
 	invitation, err := userService.UserEmailRepo.GetInvitations(ctx, profileID, tx)
 	if err != nil {
-		zap.S().Error("Error getting invitation : %v by profile id: %d", err, profileID)
+		zap.S().Errorf("Error getting invitation : %v by profile id: %d", err, profileID)
 		return err
 	}
 
@@ -88,13 +88,13 @@ func (userService *service) UpdateInvitation(ctx context.Context, userID int, pr
 
 	admin, err := userService.UserLoginRepo.GetUserInfo(ctx, userInfoFilter)
 	if err != nil {
-		zap.S().Error("Error getting email : %v by user : %s: ", err, invitation.CreatedByID)
+		zap.S().Errorf("Error getting email : %v by user : %s: ", err, invitation.CreatedByID)
 		return err
 	}
 
 	err = helpers.SendAdminInvitation(admin.Email, profileID)
 	if err != nil {
-		zap.S().Error("Error sending invitation %v for user email : %s and profile ID : %d: ", err, admin.Email, profileID)
+		zap.S().Errorf("Error sending invitation %v for user email : %s and profile ID : %d: ", err, admin.Email, profileID)
 		return err
 	}
 
@@ -105,22 +105,22 @@ func (userService *service) UpdateInvitation(ctx context.Context, userID int, pr
 	}
 	err = userService.UserEmailRepo.UpdateProfileCompleteStatus(ctx, profileID, updateSendRequest, tx)
 	if err != nil {
-		zap.S().Error("Error creating send invitation %v for profile ID : %d : ", err, profileID)
+		zap.S().Errorf("Error creating send invitation %v for profile ID : %d : ", err, profileID)
 		return err
 	}
 
 	profile, err := userService.ProfileRepo.GetProfile(ctx, profileID, tx)
 	if err != nil {
-		zap.S().Error("Error getting email : %v by profile id: %d ", err, profileID)
+		zap.S().Errorf("Error getting email : %v by profile id: %d ", err, profileID)
 		return err
 	}
 
 	err = userService.UserLoginRepo.RemoveUser(ctx, profile.Email, tx)
 	if err != nil {
-		zap.S().Error("Error removing user employee: %v for user : %s ", err, profile.Email)
+		zap.S().Errorf("Error removing user employee: %v for user : %s ", err, profile.Email)
 		return err
 	}
 
-	zap.S().Info("Profile completed successfully for user : user ID : %d and profile ID : %d", userID, profileID)
+	zap.S().Infof("Profile completed successfully for user : user ID : %d and profile ID : %d", userID, profileID)
 	return nil
 }
