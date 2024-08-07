@@ -61,7 +61,7 @@ func (userService *service) SendUserInvitation(ctx context.Context, userID int, 
 		return err
 	}
 
-	zap.S().Info("Invitation sent to user : user ID : %d and profile ID : %d", userID, profileID)
+	zap.S().Infof("Invitation sent to user : user ID : %d and profile ID : %d", userID, profileID)
 	return nil
 }
 

@@ -300,7 +300,7 @@ func SendInvitation(email string, subject string, message string) error {
 	}
 
 	if response.StatusCode >= 200 && response.StatusCode < 300 {
-		zap.S().Info("Email sent successfully", zap.String("email", email))
+		zap.S().Info("Email sent successfully for email : ", email)
 	} else {
 		zap.S().Error("Failed to send email", zap.String("email", email), zap.String("response", response.Body))
 	}
