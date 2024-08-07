@@ -13,11 +13,11 @@ import (
 
 // UserLoginServive contains methods of creation of tokens
 type UserLoginServive interface {
-	GenerateLoginToken(ctx context.Context, email string) (specs.LoginResponse, error)
+	GenerateLoginToken(ctx context.Context, filter specs.UserInfoFilter) (specs.LoginResponse, error)
 	RemoveToken(token string) error
 }
 
-func (userService *service) GenerateLoginToken(ctx context.Context, email string) (res specs.LoginResponse, err error) {
+func (userService *service) GenerateLoginToken(ctx context.Context, filter specs.UserInfoFilter) (res specs.LoginResponse, err error) {
 	tx, _ := userService.ProfileRepo.BeginTransaction(ctx)
 	defer func() {
 		txErr := userService.ProfileRepo.HandleTransaction(ctx, tx, err)
@@ -27,7 +27,7 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 		}
 	}()
 
-	userInfo, err := userService.UserLoginRepo.GetUserInfoByEmail(ctx, email)
+	userInfo, err := userService.UserLoginRepo.GetUserInfo(ctx, filter)
 	if err != nil || userInfo.ID == 0 || userInfo.Role == "" {
 		return specs.LoginResponse{}, err
 	}
@@ -36,14 +36,14 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 	if userInfo.Role == constants.Admin {
 		profileID = constants.AdminProfileID
 	} else {
-		profileID, err = userService.ProfileRepo.GetProfileIdByEmail(ctx, email, tx)
+		profileID, err = userService.ProfileRepo.GetProfileIdByEmail(ctx, filter.Email, tx)
 		if err != nil {
 			zap.S().Error("Error getting profile id by email: ", err)
 			return specs.LoginResponse{}, err
 		}
 	}
 
-	token, err := jwttoken.CreateToken(userInfo.ID, profileID, userInfo.Role, email)
+	token, err := jwttoken.CreateToken(userInfo.ID, profileID, userInfo.Role, filter.Email)
 	if err != nil {
 		return specs.LoginResponse{}, err
 	}
@@ -57,7 +57,7 @@ func (userService *service) GenerateLoginToken(ctx context.Context, email string
 		Role:      userInfo.Role,
 		Token:     token,
 	}
-	zap.S().Info("Login successful for user: ", email)
+	zap.S().Info("Login successful for user: ", filter.Email)
 	return loginResponse, nil
 }
 

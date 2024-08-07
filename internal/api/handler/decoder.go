@@ -187,15 +187,3 @@ func decodeUpdateAchievementRequest(r *http.Request) (specs.UpdateAchievementReq
 
 	return req, nil
 }
-
-// Decode the send invitation request
-func decodeSendUserInvitationRequest(r *http.Request) (specs.UserSendInvitationRequest, error) {
-	var req specs.UserSendInvitationRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		zap.S().Error(err)
-		return specs.UserSendInvitationRequest{}, errors.ErrInvalidBody
-	}
-
-	return req, nil
-}

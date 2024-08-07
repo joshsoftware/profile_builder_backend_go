@@ -85,7 +85,7 @@ func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileR
 	return profileID, nil
 }
 
-// // ListProfiles returns a list of all profiles in the Database that are currently available
+// ListProfiles returns a list of all profiles in the Database that are currently available
 func (profileRepo *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) ([]specs.ListProfiles, error) {
 	queryBuilder := psql.Select(constants.ListProfilesColumns...).From("profiles p").OrderBy("p.created_at DESC")
 	sql, args, err := queryBuilder.ToSql()

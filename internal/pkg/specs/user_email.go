@@ -1,20 +1,12 @@
 package specs
 
-import (
-	"fmt"
+import "time"
 
-	errors "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
-)
-
-// UserEmailRequest is the request for sending an email to the user
-type UserSendInvitationRequest struct {
-	ProfileID int `json:"profile_id"`
-}
-
-// Validate validates the request
-func (req *UserSendInvitationRequest) Validate() error {
-	if req.ProfileID <= 0 {
-		return fmt.Errorf("%s : profile id", errors.ErrParameterMissing.Error())
-	}
-	return nil
+type InvitationResponse struct {
+	ProfileID       int       `json:"profile_id"`
+	ProfileComplete int       `json:"is_profile_complete"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	CreatedByID     int       `json:"created_by_id"`
+	UpdatedByID     int       `json:"updated_by_id"`
 }

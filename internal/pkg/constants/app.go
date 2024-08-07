@@ -117,6 +117,11 @@ var RequestInvitationColumns = []string{
 // BackupTables defines the table names required for returning a backup.
 var BackupTables = []string{"users", "profiles", "educations", "certificates", "projects", "experiences", "achievements"}
 
+// Reuquest User Columns
+var RequestUserColumns = []string{
+	"id", "email", "role",
+}
+
 // ListQueryParams for acheivements
 var (
 	AchievementIDsStr   = "achievement_ids"
@@ -203,6 +208,8 @@ var (
 // DefaultMaxRetries defines the default maximum number of retries for sending an email
 var (
 	DefaultMaxRetries = 3
+	ProfileIncomplete = 0
+	ProfileComplete   = 1
 )
 
 var (

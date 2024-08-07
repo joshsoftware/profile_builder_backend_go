@@ -19,7 +19,7 @@ import (
 // Login returns an HTTP handler that login using profileSvc.
 func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var userInfo specs.UserInfo
+		var userInfo specs.UserInfoFilter
 		req, err := decodeUserLoginRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -56,7 +56,7 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 			return
 		}
 
-		info, err := profileSvc.GenerateLoginToken(ctx, userInfo.Email)
+		info, err := profileSvc.GenerateLoginToken(ctx, userInfo)
 		if err != nil {
 			if err == errors.ErrNoRecordFound {
 				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{

@@ -1,11 +1,12 @@
 package repository
 
-// UserDao represents a data access object for user-related information.
+// User represents a data access object for user-related information.
 // This struct maps to a database table, where each field corresponds to a column
 // in the users table.
-type UserDao struct {
-	ID   int64  `db:"id"`
-	Role string `db:"role"`
+type User struct {
+	ID    int64  `db:"id"`
+	Email string `db:"email"`
+	Role  string `db:"role"`
 }
 
 // ProfileRepo represents a data access object for profile-related information.
@@ -208,23 +209,23 @@ type UpdateProfileStatusRepo struct {
 	IsActive          *int `db:"is_active , omitempty"`
 }
 
-// SendUserInvitationRequest represents a data access object for sending user invitation.
-type SendUserInvitationRequest struct {
-	ProfileID int `db:"profile_id"`
-}
-
 // UpdateRequest represents a data access object for updating invitation information.
 type UpadateRequest struct {
-	ProfileID int    `db:"profile_id"`
-	UpdatedAt string `db:"updated_at"`
+	ProfileComplete int    `db:"is_profile_complete"`
+	UpdatedAt       string `db:"updated_at"`
 }
 
 // EmailRepo represents a data access object for email information.
-type EmailRepo struct {
+type Invitations struct {
 	ProfileID       int    `db:"profile_id"`
 	ProfileComplete int    `db:"is_profile_complete"`
 	CreatedAt       string `db:"created_at"`
 	UpdatedAt       string `db:"updated_at"`
 	CreatedByID     int    `db:"created_by_id"`
 	UpdatedByID     int    `db:"updated_by_id"`
+}
+
+type UserInfo struct {
+	Email string `db:"email"`
+	Role  string `db:"role"`
 }

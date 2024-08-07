@@ -22,20 +22,6 @@ func SendUserInvitation(ctx context.Context, userService service.Service) func(h
 			return
 		}
 
-		req, err := decodeSendUserInvitationRequest(r)
-		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadRequest, err)
-			zap.S().Error("Error decoding request: ", err)
-			return
-		}
-
-		err = req.Validate()
-		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidBody)
-			zap.S().Error("Error validating request: ", err)
-			return
-		}
-
 		profileID, err := helpers.GetProfileId(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -43,13 +29,7 @@ func SendUserInvitation(ctx context.Context, userService service.Service) func(h
 			return
 		}
 
-		if profileID != req.ProfileID {
-			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidProfile)
-			zap.S().Error(errors.ErrInvalidProfile)
-			return
-		}
-
-		err = userService.SendUserInvitation(ctx, userID, req)
+		err = userService.SendUserInvitation(ctx, userID, profileID)
 		if err != nil {
 			zap.S().Errorf("Error sending invitation: ", err)
 			middleware.ErrorResponse(w, http.StatusInternalServerError, errors.ErrUnableToSendEmail)
@@ -71,20 +51,6 @@ func SendAdminInvitation(ctx context.Context, userService service.Service) func(
 			return
 		}
 
-		req, err := decodeSendUserInvitationRequest(r)
-		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadRequest, err)
-			zap.S().Error("Error decoding request: ", err)
-			return
-		}
-
-		err = req.Validate()
-		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidBody)
-			zap.S().Error("Error validating request: ", err)
-			return
-		}
-
 		profileID, err := helpers.GetProfileId(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -92,13 +58,7 @@ func SendAdminInvitation(ctx context.Context, userService service.Service) func(
 			return
 		}
 
-		if profileID != req.ProfileID {
-			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidProfile)
-			zap.S().Error(errors.ErrInvalidProfile)
-			return
-		}
-
-		err = userService.SendAdminInvitation(ctx, userID, req)
+		err = userService.UpdateInvitation(ctx, userID, profileID)
 		if err != nil {
 			zap.S().Errorf("Error sending invitation: %v", err)
 			middleware.ErrorResponse(w, http.StatusInternalServerError, errors.ErrUnableToSendEmail)
