@@ -83,6 +83,9 @@ curl -L -o migrate.tar.gz https://github.com/golang-migrate/migrate/releases/dow
 
 ```bash
 tar -xvzf migrate.tar.gz
+
+for MacOs
+brew install golang-migrate
 ```
 4.Run following command to extract that dependency(Optional) -
 
