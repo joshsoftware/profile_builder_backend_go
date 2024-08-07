@@ -13,24 +13,33 @@ import (
 	"go.uber.org/zap"
 )
 
+// EmailStore represents the email store
 type EmailStore struct {
 	db *pgxpool.Pool
 }
 
+// Invitations represents the invitation details
+var (
+	invitationTable = "invitations"
+)
+
+// EmailStorer defines methods to interact with email data
 type EmailStorer interface {
-	GetInvitations(ctx context.Context, profileID int, tx pgx.Tx) (specs.InvitationResponse, error)
+	GetInvitations(ctx context.Context, getRequest GetRequest, tx pgx.Tx) (specs.InvitationResponse, error)
 	CreateInvitation(ctx context.Context, invitation Invitations, tx pgx.Tx) error
-	UpdateProfileCompleteStatus(ctx context.Context, profileID int, updateReq UpadateRequest, tx pgx.Tx) error
+	UpdateProfileCompleteStatus(ctx context.Context, profileID int, updateReq UpdateRequest, tx pgx.Tx) error
 }
 
+// NewUserEmailRepo creates a new instance of the email repository
 func NewUserEmailRepo(db *pgxpool.Pool) EmailStorer {
 	return &EmailStore{
 		db: db,
 	}
 }
 
-func (userStore *EmailStore) GetInvitations(ctx context.Context, profileID int, tx pgx.Tx) (specs.InvitationResponse, error) {
-	queryBuilder := psql.Select(constants.RequestInvitationColumns...).From("invitations").Where(sq.And{sq.Eq{"profile_id": profileID}, sq.Eq{"is_profile_complete": 0}})
+// GetInvitations returns the invitation details for the given profile ID
+func (emailStore *EmailStore) GetInvitations(ctx context.Context, getRequest GetRequest, tx pgx.Tx) (specs.InvitationResponse, error) {
+	queryBuilder := psql.Select(constants.RequestInvitationColumns...).From(invitationTable).Where(sq.And{sq.Eq{"profile_id": getRequest.ProfileID}, sq.Eq{"is_profile_complete": getRequest.IsProfileComplete}})
 	sql, args, err := queryBuilder.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating select query for get invitations: ", err)
@@ -42,7 +51,7 @@ func (userStore *EmailStore) GetInvitations(ctx context.Context, profileID int, 
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			zap.S().Info("No invitations found with profile ID %d", profileID)
+			zap.S().Info("No invitations found with profile ID %d", getRequest.ProfileID)
 			return specs.InvitationResponse{}, err
 		}
 		zap.S().Error("Error executing query for get invitations: ", err)
@@ -51,13 +60,14 @@ func (userStore *EmailStore) GetInvitations(ctx context.Context, profileID int, 
 	return Invitation, nil
 }
 
+// CreateInvitation creates a new invitation for the given profile ID
 func (emailStore *EmailStore) CreateInvitation(ctx context.Context, invitation Invitations, tx pgx.Tx) error {
 	values := []interface{}{
 		invitation.ProfileID, invitation.ProfileComplete, invitation.CreatedAt, invitation.UpdatedAt,
 		invitation.CreatedByID, invitation.UpdatedByID,
 	}
 
-	insertQuery, args, err := psql.Insert("invitations").
+	insertQuery, args, err := psql.Insert(invitationTable).
 		Columns(constants.RequestInvitationColumns...).
 		Values(values...).
 		Suffix("RETURNING id").
@@ -90,8 +100,9 @@ func (emailStore *EmailStore) CreateInvitation(ctx context.Context, invitation I
 	return nil
 }
 
-func (emailStore *EmailStore) UpdateProfileCompleteStatus(ctx context.Context, profileID int, updateReq UpadateRequest, tx pgx.Tx) error {
-	queryBuilder := psql.Update("invitations").Set("is_profile_complete", updateReq.ProfileComplete).Set("updated_at", updateReq.UpdatedAt).Where(sq.Eq{"profile_id": profileID, "is_profile_complete": 0})
+// UpdateProfileCompleteStatus updates the profile complete status for the given profile ID
+func (emailStore *EmailStore) UpdateProfileCompleteStatus(ctx context.Context, profileID int, updateReq UpdateRequest, tx pgx.Tx) error {
+	queryBuilder := psql.Update(invitationTable).Set("is_profile_complete", updateReq.ProfileComplete).Set("updated_at", updateReq.UpdatedAt).Where(sq.Eq{"profile_id": profileID, "is_profile_complete": 0})
 	updateQuery, args, err := queryBuilder.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating update query: ", err)

@@ -36,7 +36,7 @@ func (userService *service) GenerateLoginToken(ctx context.Context, filter specs
 	if userInfo.Role == constants.Admin {
 		profileID = constants.AdminProfileID
 	} else {
-		profileID, err = userService.ProfileRepo.GetProfileIdByEmail(ctx, filter.Email, tx)
+		profileID, err = userService.ProfileRepo.GetProfileIDByEmail(ctx, filter.Email, tx)
 		if err != nil {
 			zap.S().Errorf("Error getting profile id : %v by email : %s ", err, filter.Email)
 			return specs.LoginResponse{}, err

@@ -8,6 +8,7 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 )
 
@@ -48,29 +49,29 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		userID, ok := claims["userID"]
 		if !ok {
-			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalispecsken)
+			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalidToken)
 			zap.S().Error(errors.ErrUserID)
 			return
 		}
 
 		role, ok := claims["role"]
 		if !ok {
-			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalispecsken)
+			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalidToken)
 			zap.S().Error(errors.ErrUserRole)
 			return
 		}
 
 		reqProfileID, ok := claims["profileID"]
 		if !ok {
-			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalispecsken)
+			ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalidToken)
 			zap.S().Error(errors.ErrProfileID)
 			return
 		}
 
-		requestedProfileID := helpers.ConvertFloatToInt(reqProfileID)
+		requestedProfileID := cast.ToInt(reqProfileID)
 
 		if !helpers.ProfileIDNotRequiredPath(r) {
-			profileID, err := helpers.GetProfileId(r)
+			profileID, err := helpers.GetProfileID(r)
 			if err != nil {
 				ErrorResponse(w, http.StatusUnauthorized, errors.ErrInvalidProfile)
 				zap.S().Error(errors.ErrProfileID)

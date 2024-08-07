@@ -76,9 +76,14 @@ func (userService *service) UpdateInvitation(ctx context.Context, userID int, pr
 		}
 	}()
 
-	invitation, err := userService.UserEmailRepo.GetInvitations(ctx, profileID, tx)
+	getRequest := repository.GetRequest{
+		ProfileID:         profileID,
+		IsProfileComplete: constants.ProfileIncomplete,
+	}
+
+	invitation, err := userService.UserEmailRepo.GetInvitations(ctx, getRequest, tx)
 	if err != nil {
-		zap.S().Errorf("Error getting invitation : %v by profile id: %d", err, profileID)
+		zap.S().Errorf("Error getting invitation : %v by profile ID: %d", err, profileID)
 		return err
 	}
 
@@ -99,7 +104,7 @@ func (userService *service) UpdateInvitation(ctx context.Context, userID int, pr
 	}
 
 	now := helpers.GetCurrentISTTime()
-	updateSendRequest := repository.UpadateRequest{
+	updateSendRequest := repository.UpdateRequest{
 		ProfileComplete: constants.ProfileComplete,
 		UpdatedAt:       now,
 	}

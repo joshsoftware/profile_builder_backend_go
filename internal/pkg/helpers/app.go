@@ -107,6 +107,7 @@ func GetUserIDFromContext(r *http.Request) (ID int, err error) {
 	return int(userID), nil
 }
 
+// GetContextValue returns the integer values which is coming from the query parameters
 func GetContextValue(r *http.Request) (specs.UserContext, error) {
 	email, ok := r.Context().Value(constants.Email).(string)
 	if !ok {
@@ -263,10 +264,10 @@ func DecodeExperiencesRequest(r *http.Request) (specs.ListExperiencesFilter, err
 	return filter, nil
 }
 
-// getEmailConfig returns the email configuration from the environment variables
-func getEmailConfig() (from, api_key string) {
+// GetQueryStrings returns the string values which is coming from the query parameters
+func getEmailConfig() (from, apiKey string) {
 	from = os.Getenv("FROM_EMAIL")
-	api_key = os.Getenv("SENDGRID_API_KEY")
+	apiKey = os.Getenv("SENDGRID_API_KEY")
 	return
 }
 
@@ -307,7 +308,8 @@ func SendInvitation(email string, subject string, message string) error {
 	return nil
 }
 
-func GetProfileId(r *http.Request) (int, error) {
+// GetProfileID returns the profile_id from the request
+func GetProfileID(r *http.Request) (int, error) {
 	vars := mux.Vars(r)
 	profileIDStr, ok := vars["profile_id"]
 	if !ok {
@@ -321,6 +323,7 @@ func GetProfileId(r *http.Request) (int, error) {
 	return profileID, nil
 }
 
+// ProfileIDNotRequiredPath returns true if the profile_id is not required for the given path
 func ProfileIDNotRequiredPath(r *http.Request) bool {
 	pathNotRequired := map[string]bool{
 		"/login":              true,

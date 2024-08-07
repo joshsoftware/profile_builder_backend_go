@@ -22,18 +22,18 @@ func VerifyJWTToken(tokenString string) (jwt.MapClaims, error) {
 
 	if err != nil {
 		zap.S().Error("Error in parsing token: %v", err)
-		return nil, errors.ErrInvalispecsken
+		return nil, errors.ErrInvalidToken
 	}
 
 	if !token.Valid {
 		zap.S().Error("Token is not valid")
-		return nil, errors.ErrInvalispecsken
+		return nil, errors.ErrInvalidToken
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || claims == nil {
 		zap.S().Error("Error in parsing claims")
-		return nil, errors.ErrInvalispecsken
+		return nil, errors.ErrInvalidToken
 	}
 
 	return claims, nil

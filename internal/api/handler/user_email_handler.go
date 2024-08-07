@@ -22,7 +22,7 @@ func SendUserInvitation(ctx context.Context, userService service.Service) func(h
 			return
 		}
 
-		profileID, err := helpers.GetProfileId(r)
+		profileID, err := helpers.GetProfileID(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)
@@ -42,6 +42,7 @@ func SendUserInvitation(ctx context.Context, userService service.Service) func(h
 	}
 }
 
+// SendAdminInvitation sends an invitation to the admin
 func SendAdminInvitation(ctx context.Context, userService service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := helpers.GetUserIDFromContext(r)
@@ -51,7 +52,7 @@ func SendAdminInvitation(ctx context.Context, userService service.Service) func(
 			return
 		}
 
-		profileID, err := helpers.GetProfileId(r)
+		profileID, err := helpers.GetProfileID(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
 			zap.S().Error(err)

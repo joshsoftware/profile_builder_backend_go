@@ -73,7 +73,7 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 		w.Header().Set("Authorization", "Bearer "+info.Token)
 
 		loginResp := specs.UserLoginResponse{
-			Message:    "Login successful",
+			Message:    "Login successfully",
 			ProfileID:  info.ProfileID,
 			Role:       info.Role,
 			Token:      info.Token,
@@ -84,6 +84,7 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 	}
 }
 
+// Logout returns an HTTP handler that logout using profileSvc.
 func Logout(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")

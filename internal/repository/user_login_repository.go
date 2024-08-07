@@ -77,7 +77,7 @@ func (userStore *UserStore) GetUserInfo(ctx context.Context, filter specs.UserIn
 	return user, nil
 }
 
-// CreateUserAsEmployee creates a new user with the given email and role as employee
+// CreateUser creates a new user with the given email and role
 func (userStore *UserStore) CreateUser(ctx context.Context, email string, role string, tx pgx.Tx) error {
 	query := psql.Insert(userTable).Columns("email", "role").Values(email, role).Suffix("RETURNING id")
 	sql, args, err := query.ToSql()
@@ -111,6 +111,7 @@ func (userStore *UserStore) CreateUser(ctx context.Context, email string, role s
 	return nil
 }
 
+// RemoveUser removes a user with the given email
 func (userStore *UserStore) RemoveUser(ctx context.Context, email string, tx pgx.Tx) error {
 	query := psql.Delete(userTable).Where(sq.Eq{"email": email})
 	sql, args, err := query.ToSql()
@@ -131,7 +132,7 @@ func (userStore *UserStore) RemoveUser(ctx context.Context, email string, tx pgx
 	}
 
 	if res.RowsAffected() == 0 {
-		zap.S().Info("No rows affected with given query: ", sql)
+		zap.S().Info("No rows affected for remove user")
 		return errs.ErrNoRecordFound
 	}
 	return nil

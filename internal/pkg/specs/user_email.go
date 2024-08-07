@@ -2,6 +2,7 @@ package specs
 
 import "time"
 
+// InvitationResponse struct to store invitation details
 type InvitationResponse struct {
 	ProfileID       int       `json:"profile_id"`
 	ProfileComplete int       `json:"is_profile_complete"`

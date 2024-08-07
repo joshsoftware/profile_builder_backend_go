@@ -21,6 +21,12 @@ type ProfileStore struct {
 	db *pgxpool.Pool
 }
 
+// Constants for table names
+var (
+	ProfileTable = "profiles"
+	SkillsTable  = "skills"
+)
+
 // ProfileStorer defines methods to interact with user profile data.
 type ProfileStorer interface {
 	CreateProfile(ctx context.Context, pd ProfileRepo, tx pgx.Tx) (int, error)
@@ -35,7 +41,7 @@ type ProfileStorer interface {
 	BeginTransaction(ctx context.Context) (tx pgx.Tx, err error)
 	HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error)
 	BackupAllProfiles(backupDir string)
-	GetProfileIdByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error)
+	GetProfileIDByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error)
 }
 
 // NewProfileRepo creates a new instance of ProfileRepo.
@@ -54,7 +60,7 @@ func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileR
 		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.JoshJoiningDate, pd.GithubLink, pd.LinkedinLink, pd.CareerObjectives, 1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID,
 	}
 
-	insertQuery, args, err := psql.Insert("profiles").
+	insertQuery, args, err := psql.Insert(ProfileTable).
 		Columns(constants.CreateUserColumns...).
 		Values(values...).
 		Suffix("RETURNING id").
@@ -86,7 +92,7 @@ func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileR
 }
 
 // ListProfiles returns a list of all profiles in the Database that are currently available
-func (profileRepo *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) ([]specs.ListProfiles, error) {
+func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) ([]specs.ListProfiles, error) {
 	queryBuilder := psql.Select(constants.ListProfilesColumns...).From("profiles p").OrderBy("p.created_at DESC")
 	sql, args, err := queryBuilder.ToSql()
 	if err != nil {
@@ -129,7 +135,7 @@ func (profileRepo *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) ([
 
 // ListSkills returns a list of all skills in the Database that are currently available
 func (profileStore *ProfileStore) ListSkills(ctx context.Context, tx pgx.Tx) (values specs.ListSkills, err error) {
-	sql, args, err := psql.Select("name").From("skills").ToSql()
+	sql, args, err := psql.Select("name").From(SkillsTable).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating list skills select query: ", err)
 		return specs.ListSkills{}, err
@@ -152,7 +158,7 @@ func (profileStore *ProfileStore) ListSkills(ctx context.Context, tx pgx.Tx) (va
 
 // GetProfile returns a details profile in the Database that are currently available for perticular ID
 func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int, tx pgx.Tx) (value specs.ResponseProfile, err error) {
-	query, args, err := psql.Select(constants.ResponseProfileColumns...).From("profiles").
+	query, args, err := psql.Select(constants.ResponseProfileColumns...).From(ProfileTable).
 		Where(sq.Eq{"id": profileID}).ToSql()
 	if err != nil {
 		zap.S().Error("Error generating list project select query: ", err)
@@ -181,7 +187,7 @@ func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int,
 
 // UpdateProfile updates an existing user profile in the database.
 func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID int, pd UpdateProfileRepo, tx pgx.Tx) (int, error) {
-	updateQuery, args, err := psql.Update("profiles").
+	updateQuery, args, err := psql.Update(ProfileTable).
 		SetMap(map[string]interface{}{
 			"name": pd.Name, "email": pd.Email,
 			"gender": pd.Gender, "mobile": pd.Mobile,
@@ -218,7 +224,7 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 // DeleteProfile delete an existing user profile in the database.
 func (profileStore *ProfileStore) DeleteProfile(ctx context.Context, profileID int, tx pgx.Tx) (err error) {
 
-	selectEmailQuery, args, err := psql.Select("email").From("profiles").Where(sq.Eq{"id": profileID}).ToSql()
+	selectEmailQuery, args, err := psql.Select("email").From(ProfileTable).Where(sq.Eq{"id": profileID}).ToSql()
 	if err != nil {
 		zap.S().With("profile_id", profileID).Error("Error generating email select query: ", err)
 	}
@@ -325,7 +331,7 @@ func (profileStore *ProfileStore) UpdateSequence(ctx context.Context, us UpdateS
 
 // UpdateProfileStatus updates an existing profile's status in the database.
 func (profileStore *ProfileStore) UpdateProfileStatus(ctx context.Context, profileID int, updateRequest UpdateProfileStatusRepo, tx pgx.Tx) error {
-	updateQuery := psql.Update("profiles")
+	updateQuery := psql.Update(ProfileTable)
 
 	if updateRequest.IsCurrentEmployee != nil {
 		updateQuery = updateQuery.Set("is_current_employee", *updateRequest.IsCurrentEmployee)
@@ -411,6 +417,7 @@ func (profileStore *ProfileStore) BackupAllProfiles(backupDir string) {
 	zap.S().Infow("Database backed up successfully", "fileName", fileName, "time", time.Now())
 }
 
+// dumpTable dumps the data of the given table to the given file.
 func dumpTable(profileStore *ProfileStore, file *os.File, table string) error {
 	rows, err := profileStore.db.Query(context.Background(), fmt.Sprintf("SELECT * FROM %s", table))
 	if err != nil {
@@ -448,8 +455,9 @@ func dumpTable(profileStore *ProfileStore, file *os.File, table string) error {
 	return rows.Err()
 }
 
-func (profileStore *ProfileStore) GetProfileIdByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error) {
-	query := psql.Select("id").From("profiles").Where(sq.Eq{"email": email})
+// GetProfileIDByEmail returns the profile ID for the given email.
+func (profileStore *ProfileStore) GetProfileIDByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error) {
+	query := psql.Select("id").From(ProfileTable).Where(sq.Eq{"email": email})
 	sql, args, err := query.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating select query: ", err)

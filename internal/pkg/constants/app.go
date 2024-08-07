@@ -110,6 +110,7 @@ var ResponseCertificatesColumns = []string{
 	"id", "profile_id", "name", "organization_name", "description", "issued_date", "from_date", "to_date",
 }
 
+// RequestInvitationColumns defines the columns required for creating a new invitation.
 var RequestInvitationColumns = []string{
 	"profile_id", "is_profile_complete", "created_at", "updated_at", "created_by_id", "updated_by_id",
 }
@@ -117,7 +118,7 @@ var RequestInvitationColumns = []string{
 // BackupTables defines the table names required for returning a backup.
 var BackupTables = []string{"users", "profiles", "educations", "certificates", "projects", "experiences", "achievements"}
 
-// Reuquest User Columns
+// RequestUserColumns defines the columns required for creating a new user.
 var RequestUserColumns = []string{
 	"id", "email", "role",
 }
@@ -212,6 +213,7 @@ var (
 	ProfileComplete   = 1
 )
 
+// Default role for the user
 var (
 	Admin    = "admin"
 	Employee = "employee"
@@ -222,6 +224,7 @@ var (
 	AdminProfileID = 0
 )
 
+// Email subject for send invitation and update profile
 var (
 	EmployeeInvitationSubject = "Action Required: Complete Your Profile"
 	AdminRequestSubject       = "Profile Update: An Employee Has Completed The Profile"

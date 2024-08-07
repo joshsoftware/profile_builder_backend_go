@@ -210,12 +210,12 @@ type UpdateProfileStatusRepo struct {
 }
 
 // UpdateRequest represents a data access object for updating invitation information.
-type UpadateRequest struct {
+type UpdateRequest struct {
 	ProfileComplete int    `db:"is_profile_complete"`
 	UpdatedAt       string `db:"updated_at"`
 }
 
-// EmailRepo represents a data access object for email information.
+// Invitations represents a data access object for email information.
 type Invitations struct {
 	ProfileID       int    `db:"profile_id"`
 	ProfileComplete int    `db:"is_profile_complete"`
@@ -225,7 +225,14 @@ type Invitations struct {
 	UpdatedByID     int    `db:"updated_by_id"`
 }
 
+// UserInfo represents a data access object for user information.
 type UserInfo struct {
 	Email string `db:"email"`
 	Role  string `db:"role"`
+}
+
+// GetRequest represents a data access object for getting invitation information.
+type GetRequest struct {
+	ProfileID         int `db:"profile_id"`
+	IsProfileComplete int `db:"is_profile_complete"`
 }

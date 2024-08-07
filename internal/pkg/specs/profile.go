@@ -126,7 +126,7 @@ type UpdateProfileStatusRequest struct {
 	IsActive          string `json:"is_active,omitempty"`
 }
 
-// User Context Value
+// UserContext struct represents a user context.
 type UserContext struct {
 	Role  string `json:"role"`
 	Email string `json:"email"`

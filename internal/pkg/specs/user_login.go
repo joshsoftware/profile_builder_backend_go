@@ -1,5 +1,6 @@
 package specs
 
+// UserInfoFilter struct to store user details
 type UserInfoFilter struct {
 	ID    int    `json:"id"`
 	Email string `json:"email"`
@@ -19,6 +20,7 @@ type UserLoginResponse struct {
 	StatusCode int    `json:"status_code"`
 }
 
+// LoginResponse to respond with login
 type LoginResponse struct {
 	ProfileID int    `json:"profile_id"`
 	Role      string `json:"role"`

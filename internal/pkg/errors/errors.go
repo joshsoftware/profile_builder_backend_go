@@ -19,7 +19,7 @@ var (
 	ErrAuthToken              = errors.New("unauthorized access")
 	ErrAuthHeader             = errors.New("invalid authorization header")
 	ErrSigningMethod          = errors.New("unexpected signing method")
-	ErrInvalispecsken         = errors.New("invalid token")
+	ErrInvalidToken           = errors.New("invalid token")
 	ErrUserID                 = errors.New("error in parsing userID from claims")
 	ErrTokenEmpty             = errors.New("token string is empty")
 	ErrTokenExpirationHours   = errors.New("TOKEN_EXPIRATION_HOURS is not set")

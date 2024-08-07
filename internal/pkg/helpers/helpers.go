@@ -86,7 +86,7 @@ func JoinValues(values interface{}, sep string) string {
 	}
 }
 
-// ConstructEmailMessage constructs the email message for a profile invitation
+// ConstructUserMessage constructs the email message for a profile invitation
 func ConstructUserMessage(email string, profileID int) string {
 	link := fmt.Sprintf("%s/%d", os.Getenv("HOST_URL"), profileID)
 	content := fmt.Sprintf(`
@@ -130,14 +130,7 @@ func GetCurrentISTTime() string {
 	return time.Now().In(loc).Format(time.RFC3339)
 }
 
-func ConvertFloatToInt(profileID any) int {
-	profileIDfloat, ok := profileID.(float64)
-	if !ok {
-		return 0
-	}
-	return int(profileIDfloat)
-}
-
+// CheckBoolStatus returns YES if value is 1 else NO
 func CheckBoolStatus(value int) string {
 	if value == 1 {
 		return "YES"
