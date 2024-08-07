@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -52,6 +53,8 @@ func (userService *service) GenerateLoginToken(ctx context.Context, filter specs
 	helpers.TokenList[token] = struct{}{}
 	helpers.WhiteListMutext.Unlock()
 
+	fmt.Println("TokenList: ", helpers.TokenList)
+
 	loginResponse := specs.LoginResponse{
 		ProfileID: profileID,
 		Role:      userInfo.Role,
@@ -69,6 +72,8 @@ func (userService *service) RemoveToken(token string) error {
 		return errors.ErrTokenNotFound
 	}
 	delete(helpers.TokenList, token)
+
+	fmt.Println("After remove TokenList: ", helpers.TokenList)
 	zap.S().Info("Logout successfully")
 	return nil
 }

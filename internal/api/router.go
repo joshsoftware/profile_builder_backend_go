@@ -66,7 +66,7 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	profileSubrouter.Handle("/profiles/{profile_id}/profile_complete", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.SendAdminInvitation(ctx, svc)))).Methods(http.MethodPatch)
 
 	// User Logout APIs
-	profileSubrouter.Handle("/logout", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.Logout(ctx, svc)))).Methods(http.MethodDelete)
+	profileSubrouter.Handle("/logout", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.Logout(ctx, svc)))).Methods(http.MethodPost)
 
 	return router
 }
