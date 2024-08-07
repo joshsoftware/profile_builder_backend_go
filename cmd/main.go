@@ -14,6 +14,7 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	cronjob "github.com/joshsoftware/profile_builder_backend_go/internal/cron-job"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/log"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
@@ -22,13 +23,16 @@ import (
 func main() {
 	ctx := context.Background()
 
-	//setting logger
-	logger, _ := zap.NewProduction()
-	zap.ReplaceGlobals(logger)
+	// Setting logger
+	logger, err := log.SetupLogger()
+	if err != nil {
+		zap.S().Error("Error setting up logger:", err)
+		return
+	}
 	defer logger.Sync()
 
 	//setup env
-	err := godotenv.Load()
+	err = godotenv.Load()
 	if err != nil {
 		logger.Info("error loading.env file")
 		return

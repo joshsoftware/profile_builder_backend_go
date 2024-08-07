@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -386,66 +388,21 @@ func (profileStore *ProfileStore) HandleTransaction(ctx context.Context, tx pgx.
 // BackupAllProfiles used to backing up all the data at every midnight by CronJOb
 func (profileStore *ProfileStore) BackupAllProfiles(backupDir string) {
 	zap.S().Info("Starting backing up data...")
-	err := os.MkdirAll(backupDir, os.ModePerm)
-	if err != nil {
-		zap.S().Errorw("Failed to create backup directory", "error", err)
-		return
+
+	dbName := os.Getenv("BACKUP_DBNAME")
+	dbUser := os.Getenv("BACKUP_USER")
+	dbPass := os.Getenv("BACKUP_PASSWORD")
+	backupFile := fmt.Sprintf("%s/%s_backup_%s.sql", backupDir, dbName, time.Now().Format("20060102150405"))
+
+	os.Setenv("PGPASSWORD", dbPass)
+	defer os.Unsetenv("PGPASSWORD")
+
+	cmd := exec.Command("pg_dump", "-U", dbUser, "-f", backupFile, dbName)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.Fatalf("Failed to run pg_dump: %v, output: %s", err, output)
 	}
 
-	fileName := fmt.Sprintf("%s%s-profile_builder.sql", backupDir, time.Now().Format("20060102"))
-
-	file, err := os.Create(fileName)
-	if err != nil {
-		zap.S().Errorw("Failed to create backup file", "error", err)
-		return
-	}
-	defer file.Close()
-
-	for _, table := range constants.BackupTables {
-		if err := dumpTable(profileStore, file, table); err != nil {
-			zap.S().Errorw("Failed to dump table", "table", table, "error", err)
-			return
-		}
-	}
-
-	zap.S().Infow("Database backed up successfully", "fileName", fileName, "time", time.Now())
-}
-
-func dumpTable(profileStore *ProfileStore, file *os.File, table string) error {
-	rows, err := profileStore.db.Query(context.Background(), fmt.Sprintf("SELECT * FROM %s", table))
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	columns := rows.FieldDescriptions()
-	columnNames := make([]string, len(columns))
-	for i, col := range columns {
-		columnNames[i] = string(col.Name)
-	}
-
-	if _, err := fmt.Fprintf(file, "-- Dumping data for table %s\n", table); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(file, "COPY %s (%s) FROM stdin;\n", table, helpers.JoinValues(columnNames, ", ")); err != nil {
-		return err
-	}
-
-	for rows.Next() {
-		values, err := rows.Values()
-		if err != nil {
-			return err
-		}
-		if _, err := fmt.Fprintf(file, "%s\n", helpers.JoinValues(values, "\t")); err != nil {
-			return err
-		}
-	}
-
-	if _, err := fmt.Fprintln(file, "\\."); err != nil {
-		return err
-	}
-
-	return rows.Err()
+	zap.S().Infow("Database backed up successfully", "fileName", backupFile)
 }
 
 func (profileStore *ProfileStore) GetProfileIdByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error) {
