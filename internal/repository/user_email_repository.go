@@ -33,7 +33,7 @@ func (userStore *EmailStore) GetInvitations(ctx context.Context, profileID int, 
 	queryBuilder := psql.Select(constants.RequestInvitationColumns...).From("invitations").Where(sq.And{sq.Eq{"profile_id": profileID}, sq.Eq{"is_profile_complete": 0}})
 	sql, args, err := queryBuilder.ToSql()
 	if err != nil {
-		zap.S().Error("Error generating select query: ", err)
+		zap.S().Error("Error generating select query for get invitations: ", err)
 		return specs.InvitationResponse{}, err
 	}
 	var Invitation specs.InvitationResponse
@@ -45,7 +45,7 @@ func (userStore *EmailStore) GetInvitations(ctx context.Context, profileID int, 
 			zap.S().Info("No invitations found with profile ID %d", profileID)
 			return specs.InvitationResponse{}, err
 		}
-		zap.S().Error("Error executing query: ", err)
+		zap.S().Error("Error executing query for get invitations: ", err)
 		return specs.InvitationResponse{}, err
 	}
 	return Invitation, nil

@@ -65,10 +65,6 @@ func (userStore *UserStore) GetUserInfo(ctx context.Context, filter specs.UserIn
 		if err == pgx.ErrNoRows {
 			return User{}, errs.ErrNoRecordFound
 		}
-		if helpers.IsDuplicateKeyError(err) {
-			zap.S().Error("Duplicate key error : ", err)
-			return User{}, errs.ErrDuplicateKey
-		}
 		if helpers.IsInvalidProfileError(err) {
 			zap.S().Error("Invalid profile error : ", err)
 			return User{}, errs.ErrInvalidProfile

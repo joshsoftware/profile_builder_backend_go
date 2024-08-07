@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -39,7 +38,7 @@ func (userService *service) GenerateLoginToken(ctx context.Context, filter specs
 	} else {
 		profileID, err = userService.ProfileRepo.GetProfileIdByEmail(ctx, filter.Email, tx)
 		if err != nil {
-			zap.S().Error("Error getting profile id by email: ", err)
+			zap.S().Error("Error getting profile id : %v by email : %s ", err, filter.Email)
 			return specs.LoginResponse{}, err
 		}
 	}
@@ -52,8 +51,6 @@ func (userService *service) GenerateLoginToken(ctx context.Context, filter specs
 	helpers.WhiteListMutext.Lock()
 	helpers.TokenList[token] = struct{}{}
 	helpers.WhiteListMutext.Unlock()
-
-	fmt.Println("TokenList: ", helpers.TokenList)
 
 	loginResponse := specs.LoginResponse{
 		ProfileID: profileID,
@@ -73,7 +70,6 @@ func (userService *service) RemoveToken(token string) error {
 	}
 	delete(helpers.TokenList, token)
 
-	fmt.Println("After remove TokenList: ", helpers.TokenList)
 	zap.S().Info("Logout successfully")
 	return nil
 }

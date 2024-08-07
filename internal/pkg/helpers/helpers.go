@@ -137,3 +137,10 @@ func ConvertFloatToInt(profileID any) int {
 	}
 	return int(profileIDfloat)
 }
+
+func CheckBoolStatus(value int) string {
+	if value == 1 {
+		return "YES"
+	}
+	return "NO"
+}
