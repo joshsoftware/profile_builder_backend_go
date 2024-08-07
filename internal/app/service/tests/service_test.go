@@ -245,7 +245,7 @@ func TestGetProfile(t *testing.T) {
 			test.setup(mockProfileRepo)
 
 			// Call the method being tested
-			gotResp, err := profileService.GetProfile(context.Background(), test.profileID, specs.UserContext{})
+			gotResp, err := profileService.GetProfile(context.Background(), test.profileID)
 
 			// Assertions
 			assert.Equal(t, test.wantResponse, gotResp)

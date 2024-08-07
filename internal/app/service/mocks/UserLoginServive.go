@@ -15,9 +15,9 @@ type UserLoginServive struct {
 	mock.Mock
 }
 
-// GenerateLoginToken provides a mock function with given fields: ctx, email
-func (_m *UserLoginServive) GenerateLoginToken(ctx context.Context, email string) (specs.LoginResponse, error) {
-	ret := _m.Called(ctx, email)
+// GenerateLoginToken provides a mock function with given fields: ctx, filter
+func (_m *UserLoginServive) GenerateLoginToken(ctx context.Context, filter specs.UserInfoFilter) (specs.LoginResponse, error) {
+	ret := _m.Called(ctx, filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GenerateLoginToken")
@@ -25,22 +25,40 @@ func (_m *UserLoginServive) GenerateLoginToken(ctx context.Context, email string
 
 	var r0 specs.LoginResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (specs.LoginResponse, error)); ok {
-		return rf(ctx, email)
+	if rf, ok := ret.Get(0).(func(context.Context, specs.UserInfoFilter) (specs.LoginResponse, error)); ok {
+		return rf(ctx, filter)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) specs.LoginResponse); ok {
-		r0 = rf(ctx, email)
+	if rf, ok := ret.Get(0).(func(context.Context, specs.UserInfoFilter) specs.LoginResponse); ok {
+		r0 = rf(ctx, filter)
 	} else {
 		r0 = ret.Get(0).(specs.LoginResponse)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, email)
+	if rf, ok := ret.Get(1).(func(context.Context, specs.UserInfoFilter) error); ok {
+		r1 = rf(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
 
 	return r0, r1
+}
+
+// RemoveToken provides a mock function with given fields: token
+func (_m *UserLoginServive) RemoveToken(token string) error {
+	ret := _m.Called(token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveToken")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(token)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // NewUserLoginServive creates a new instance of UserLoginServive. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

@@ -43,7 +43,7 @@ func TestUserLoginHandler(t *testing.T) {
 			Email:       TestEmail,
 			AccessToken: "valid_access_token",
 			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
-				userInfo := specs.UserInfo{Email: TestEmail}
+				userInfo := specs.UserInfoFilter{Email: TestEmail}
 				return json.Marshal(userInfo)
 			},
 			MockSetup: func(mockUserLoginService *mocks.Service, email string) {
@@ -88,7 +88,7 @@ func TestUserLoginHandler(t *testing.T) {
 			Email:       "",
 			AccessToken: "valid_access_token",
 			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
-				userInfo := specs.UserInfo{Email: ""}
+				userInfo := specs.UserInfoFilter{Email: ""}
 				return json.Marshal(userInfo)
 			},
 			RequestBody:        specs.UserLoginRequest{AccessToken: "valid_access_token"},
@@ -100,7 +100,7 @@ func TestUserLoginHandler(t *testing.T) {
 			Email:       TestEmail,
 			AccessToken: "valid_access_token",
 			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
-				userInfo := specs.UserInfo{Email: TestEmail}
+				userInfo := specs.UserInfoFilter{Email: TestEmail}
 				return json.Marshal(userInfo)
 			},
 			MockSetup: func(mockUserLoginService *mocks.Service, email string) {
