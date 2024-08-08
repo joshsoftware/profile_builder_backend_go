@@ -15,6 +15,7 @@ import (
 // service implements the Service interface.
 type service struct {
 	UserLoginRepo   repository.UserStorer
+	UserEmailRepo   repository.EmailStorer
 	ProfileRepo     repository.ProfileStorer
 	EducationRepo   repository.EducationStorer
 	ExperienceRepo  repository.ExperienceStorer
@@ -44,11 +45,13 @@ type Service interface {
 	ExperienceService
 	CertificateService
 	AchievementService
+	UserEmailService
 }
 
 // RepoDeps is used to intialize repo dependencies
 type RepoDeps struct {
 	UserLoginDeps   repository.UserStorer
+	UserEmailDeps   repository.EmailStorer
 	ProfileDeps     repository.ProfileStorer
 	EducationDeps   repository.EducationStorer
 	ExperienceDeps  repository.ExperienceStorer
@@ -61,6 +64,7 @@ type RepoDeps struct {
 func NewServices(rp RepoDeps) Service {
 	return &service{
 		UserLoginRepo:   rp.UserLoginDeps,
+		UserEmailRepo:   rp.UserEmailDeps,
 		ProfileRepo:     rp.ProfileDeps,
 		EducationRepo:   rp.EducationDeps,
 		ExperienceRepo:  rp.ExperienceDeps,
@@ -131,27 +135,20 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 	}
 
 	for _, profile := range profiles {
-		isCurrentEmployee := "NO"
-		if profile.IsCurrentEmployee == 1 {
-			isCurrentEmployee = "YES"
-		}
-
-		isActive := "NO"
-		if profile.IsActive == 1 {
-			isActive = "YES"
-		}
-
 		values = append(values, specs.ResponseListProfiles{
 			ID:                profile.ID,
 			Name:              profile.Name,
 			Email:             profile.Email,
 			YearsOfExperience: profile.YearsOfExperience,
 			PrimarySkills:     profile.PrimarySkills,
-			IsCurrentEmployee: isCurrentEmployee,
-			IsActive:          isActive,
+			IsCurrentEmployee: helpers.CheckBoolStatus(profile.IsCurrentEmployee),
+			IsActive:          helpers.CheckBoolStatus(profile.IsActive),
+			JoshJoiningDate:   profile.JoshJoiningDate,
+			CreatedAt:         profile.CreatedAt,
+			UpdatedAt:         profile.UpdatedAt,
+			IsProfileComplete: helpers.CheckBoolStatus(profile.IsProfileComplete),
 		})
 	}
-
 	return values, nil
 }
 

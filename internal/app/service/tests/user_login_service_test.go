@@ -11,6 +11,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	jwttoken "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/jwt_token"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
 )
 
@@ -81,7 +82,7 @@ func TestUserLogin(t *testing.T) {
 				defer patch.Unpatch()
 			}
 
-			token, err := userLoginService.GenerateLoginToken(context.Background(), tt.Email)
+			token, err := userLoginService.GenerateLoginToken(context.Background(), specs.UserInfoFilter{Email: tt.Email})
 			assert.Equal(t, tt.Expectespecsken, token)
 			assert.Equal(t, tt.ExpectedError, err)
 

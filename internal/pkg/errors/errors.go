@@ -19,7 +19,7 @@ var (
 	ErrAuthToken              = errors.New("unauthorized access")
 	ErrAuthHeader             = errors.New("invalid authorization header")
 	ErrSigningMethod          = errors.New("unexpected signing method")
-	ErrInvalispecsken         = errors.New("invalid token")
+	ErrInvalidToken           = errors.New("invalid token")
 	ErrUserID                 = errors.New("error in parsing userID from claims")
 	ErrTokenEmpty             = errors.New("token string is empty")
 	ErrTokenExpirationHours   = errors.New("TOKEN_EXPIRATION_HOURS is not set")
@@ -31,6 +31,13 @@ var (
 	ErrNoData                 = errors.New("no data found")
 	ErrFailedToUpdate         = errors.New("failed to update status")
 	ErrComponentNotSuppoerted = errors.New("component name not supported")
+	ErrUnableToSendEmail      = errors.New("unable to send email")
+	ErrFailedToGet            = errors.New("failed to get data")
+	ErrUserRole               = errors.New("error in parsing role from claims")
+	ErrEmail                  = errors.New("error in parsing email from claims")
+	ErrProfileID              = errors.New("error in parsing profileID from claims")
+	ErrEmptyToken             = errors.New("empty token")
+	ErrTokenNotFound          = errors.New("token not found in whitelist")
 )
 
 // Profile Related variables

@@ -59,13 +59,30 @@ var CreateAchievementColumns = []string{
 
 // ListProfilesColumns defines the columns required for listing user profiles.
 var ListProfilesColumns = []string{
-	"id", "name", "email", "years_of_experience", "primary_skills", "is_current_employee", "is_active",
+	"p.id",
+	"p.name",
+	"p.email",
+	"p.years_of_experience",
+	"p.primary_skills",
+	"p.is_current_employee",
+	"p.is_active",
+	"p.josh_joining_date",
+	"p.created_at",
+	"p.updated_at",
+	`(SELECT 
+			CASE 
+				WHEN COUNT(*) = 0 THEN 0 
+				WHEN COUNT(*) FILTER (WHERE is_profile_complete = 0) > 0 THEN 1 
+				ELSE 0 
+			END 
+		FROM invitations 
+		WHERE invitations.profile_id = p.id) as is_profile_complete`,
 }
 
 // ResponseProfileColumns defines the columns required for returning a specific user profile.
 var ResponseProfileColumns = []string{
 	"id", "name", "email", "gender", "mobile", "designation", "description", "title",
-	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link", "career_objectives",  "josh_joining_date",
+	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link", "career_objectives", "josh_joining_date",
 }
 
 // ResponseEducationColumns defines the columns required for returning a specific user education.
@@ -93,8 +110,18 @@ var ResponseCertificatesColumns = []string{
 	"id", "profile_id", "name", "organization_name", "description", "issued_date", "from_date", "to_date",
 }
 
+// RequestInvitationColumns defines the columns required for creating a new invitation.
+var RequestInvitationColumns = []string{
+	"profile_id", "is_profile_complete", "created_at", "updated_at", "created_by_id", "updated_by_id",
+}
+
 // BackupTables defines the table names required for returning a backup.
 var BackupTables = []string{"users", "profiles", "educations", "certificates", "projects", "experiences", "achievements"}
+
+// RequestUserColumns defines the columns required for creating a new user.
+var RequestUserColumns = []string{
+	"id", "email", "role",
+}
 
 // ListQueryParams for acheivements
 var (
@@ -139,6 +166,8 @@ const (
 	UserIDKey        ContextKey = "user_id"
 	ProfileIDKey     ContextKey = "profile_id"
 	AchievementIDKey ContextKey = "achievement_id"
+	UserRoleKey      ContextKey = "role"
+	Email            ContextKey = "email"
 )
 
 // define default values for the environment variables
@@ -175,4 +204,28 @@ var (
 		Experiences:  true,
 		Certificates: true,
 	}
+)
+
+// DefaultMaxRetries defines the default maximum number of retries for sending an email
+var (
+	DefaultMaxRetries = 3
+	ProfileIncomplete = 0
+	ProfileComplete   = 1
+)
+
+// Default role for the user
+var (
+	Admin    = "admin"
+	Employee = "employee"
+)
+
+// Default profileID for the admin is 0
+var (
+	AdminProfileID = 0
+)
+
+// Email subject for send invitation and update profile
+var (
+	EmployeeInvitationSubject = "Action Required: Complete Your Profile"
+	AdminRequestSubject       = "Profile Update: An Employee Has Completed The Profile"
 )

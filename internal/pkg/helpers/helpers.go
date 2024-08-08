@@ -85,3 +85,55 @@ func JoinValues(values interface{}, sep string) string {
 		return ""
 	}
 }
+
+// ConstructUserMessage constructs the email message for a profile invitation
+func ConstructUserMessage(email string, profileID int) string {
+	link := fmt.Sprintf("%s/%d", os.Getenv("HOST_URL"), profileID)
+	content := fmt.Sprintf(`
+		<html>
+		<body>
+			<div class="email-content">
+				<p>Hello,</p>
+				<p>Your profile has been created successfully. Please <a href="%s">click here</a> to complete your profile.</p>
+				<p>Thank you,</p>
+				<p>The Team</p>
+			</div>
+		</body>
+		</html>
+	`, link)
+	return content
+}
+
+// ConstructAdminEmailMessage constructs the email message for an admin invitation
+func ConstructAdminEmailMessage(email string, profileID int) string {
+	link := fmt.Sprintf("%s/%d", os.Getenv("HOST_URL"), profileID)
+	content := fmt.Sprintf(`
+		<html>
+		<body>
+			<div class="email-content">
+				<p>Hello,</p>
+				<p>Employee completed his/her Profile. Please <a href="%s">click here</a> to download profile.</p>
+				<p>Thank you,</p>
+			</div>
+		</body>
+		</html>
+	`, link)
+	return content
+}
+
+// GetCurrentISTTime returns the current time in the Asia/Kolkata time zone formatted as RFC3339
+func GetCurrentISTTime() string {
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		return ""
+	}
+	return time.Now().In(loc).Format(time.RFC3339)
+}
+
+// CheckBoolStatus returns YES if value is 1 else NO
+func CheckBoolStatus(value int) string {
+	if value == 1 {
+		return "YES"
+	}
+	return "NO"
+}

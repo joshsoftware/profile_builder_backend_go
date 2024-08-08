@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -18,7 +19,7 @@ import (
 // Login returns an HTTP handler that login using profileSvc.
 func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var userInfo specs.UserInfo
+		var userInfo specs.UserInfoFilter
 		req, err := decodeUserLoginRequest(r)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadRequest, err)
@@ -55,21 +56,55 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 			return
 		}
 
-		token, err := profileSvc.GenerateLoginToken(ctx, userInfo.Email)
+		info, err := profileSvc.GenerateLoginToken(ctx, userInfo)
 		if err != nil {
+			if err == errors.ErrNoRecordFound {
+				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+					Message: "User not found",
+				})
+				zap.S().Info("User not found")
+				return
+			}
 			middleware.ErrorResponse(w, http.StatusInternalServerError, err)
 			zap.S().Error(errors.ErrGenerateToken, " : ", err)
 			return
 		}
 
-		w.Header().Set("Authorization", "Bearer "+token)
+		w.Header().Set("Authorization", "Bearer "+info.Token)
 
 		loginResp := specs.UserLoginResponse{
-			Message:    "Login successful",
-			Token:      token,
+			Message:    "Login successfully",
+			ProfileID:  info.ProfileID,
+			Role:       info.Role,
+			Token:      info.Token,
 			StatusCode: http.StatusOK,
 		}
 
 		middleware.SuccessResponse(w, http.StatusOK, loginResp)
+	}
+}
+
+// Logout returns an HTTP handler that logout using profileSvc.
+func Logout(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrEmptyToken)
+			zap.S().Error(errors.ErrEmptyToken)
+			return
+		}
+
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+
+		err := profileSvc.RemoveToken(token)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(errors.ErrTokenNotFound, " : ", err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
+			Message: "Logout successfully",
+		})
 	}
 }

@@ -51,6 +51,7 @@ func main() {
 	defer db.Close()
 	var repodeps = service.RepoDeps{
 		UserLoginDeps:   repository.NewUserLoginRepo(db),
+		UserEmailDeps:   repository.NewUserEmailRepo(db),
 		ProfileDeps:     repository.NewProfileRepo(db),
 		EducationDeps:   repository.NewEducationRepo(db),
 		ExperienceDeps:  repository.NewExperienceRepo(db),

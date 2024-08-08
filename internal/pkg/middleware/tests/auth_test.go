@@ -69,7 +69,7 @@ func TestAuthMiddleware(t *testing.T) {
 			Request: newRequest("GET", "/", "invalispecsken"),
 			MockVerifyJWTToken: func(tokenString string) (jwt.MapClaims, error) {
 				// Return an error instead of a valid claim
-				return nil, errors.ErrInvalispecsken
+				return nil, errors.ErrInvalidToken
 			},
 			ExpectedStatusCode: http.StatusUnauthorized,
 		},

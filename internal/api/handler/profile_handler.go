@@ -56,7 +56,7 @@ func ProfileListHandler(ctx context.Context, profileSvc service.Service) func(ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		profResponse, err := profileSvc.ListProfiles(ctx)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToGet)
 			zap.S().Error("Unable to list profiles : ", err)
 			return
 		}
@@ -137,7 +137,7 @@ func UpdateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 
 		updatedResp, err := profileSvc.UpdateProfile(ctx, profileID, userID, req)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToUpdate)
 			zap.S().Error("Unable to update profile : ", err, "for profile id : ", profileID)
 			return
 		}
@@ -205,7 +205,7 @@ func UpdateSequenceHandler(ctx context.Context, profileSvc service.Service) func
 
 		updatedResp, err := profileSvc.UpdateSequence(ctx, userID, req)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToUpdate)
 			zap.S().Error("Unable to update sequence : ", err, "for profile id : ", updatedResp)
 			return
 		}

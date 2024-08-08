@@ -5,8 +5,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -14,6 +16,9 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"go.uber.org/zap"
 )
 
 // SendRequest used to check valid login request
@@ -100,6 +105,25 @@ func GetUserIDFromContext(r *http.Request) (ID int, err error) {
 		return 0, errors.ErrInvalidUserID
 	}
 	return int(userID), nil
+}
+
+// GetContextValue returns the integer values which is coming from the query parameters
+func GetContextValue(r *http.Request) (specs.UserContext, error) {
+	email, ok := r.Context().Value(constants.Email).(string)
+	if !ok {
+		return specs.UserContext{}, errors.ErrInvalidEmail
+	}
+
+	role, ok := r.Context().Value(constants.UserRoleKey).(string)
+	if !ok {
+		return specs.UserContext{}, errors.ErrUserRole
+	}
+
+	userContext := specs.UserContext{
+		Role:  role,
+		Email: email,
+	}
+	return userContext, nil
 }
 
 // GetMultipleParams returns the multiple IDs which is coming from the query parameters
@@ -239,3 +263,81 @@ func DecodeExperiencesRequest(r *http.Request) (specs.ListExperiencesFilter, err
 	}
 	return filter, nil
 }
+
+// GetQueryStrings returns the string values which is coming from the query parameters
+func getEmailConfig() (from, apiKey string) {
+	from = os.Getenv("FROM_EMAIL")
+	apiKey = os.Getenv("SENDGRID_API_KEY")
+	return
+}
+
+// SendAdminInvitation sends an admin invitation email
+func SendAdminInvitation(email string, profileID int) error {
+	message := ConstructAdminEmailMessage(email, profileID)
+	return SendInvitation(email, constants.AdminRequestSubject, message)
+}
+
+// SendUserInvitation sends a user invitation email
+func SendUserInvitation(email string, profileID int) error {
+	message := ConstructUserMessage(email, profileID)
+	return SendInvitation(email, constants.EmployeeInvitationSubject, message)
+}
+
+// SendInvitation sends an invitation email
+func SendInvitation(email string, subject string, message string) error {
+	from, sendgridAPIKey := getEmailConfig()
+	client := sendgrid.NewSendClient(sendgridAPIKey)
+
+	fromEmail := mail.NewEmail(from, from)
+	toEmail := mail.NewEmail("", email)
+	plainTextContent := message
+	htmlContent := message
+	msg := mail.NewSingleEmail(fromEmail, subject, toEmail, plainTextContent, htmlContent)
+
+	response, err := client.Send(msg)
+	if err != nil {
+		zap.S().Error("failed to send email : ", err)
+		return err
+	}
+
+	if response.StatusCode >= 200 && response.StatusCode < 300 {
+		zap.S().Info("Email sent successfully for email : ", email)
+	} else {
+		zap.S().Error("Failed to send email", zap.String("email", email), zap.String("response", response.Body))
+	}
+	return nil
+}
+
+// GetProfileID returns the profile_id from the request
+func GetProfileID(r *http.Request) (int, error) {
+	vars := mux.Vars(r)
+	profileIDStr, ok := vars["profile_id"]
+	if !ok {
+		return 0, errors.ErrInvalidRequestData
+	}
+
+	profileID, err := strconv.Atoi(profileIDStr)
+	if err != nil {
+		return 0, errors.ErrInvalidRequestData
+	}
+	return profileID, nil
+}
+
+// ProfileIDNotRequiredPath returns true if the profile_id is not required for the given path
+func ProfileIDNotRequiredPath(r *http.Request) bool {
+	pathNotRequired := map[string]bool{
+		"/login":              true,
+		"/api/logout":         true,
+		"/api/profiles":       true,
+		"/api/skills":         true,
+		"/api/updateSequence": true,
+	}
+
+	return pathNotRequired[r.URL.Path]
+}
+
+// define the global variable for the store the token
+var (
+	TokenList       = make(map[string]struct{})
+	WhiteListMutext = &sync.Mutex{}
+)
