@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// SetupLogger is a global variable to store the log file
 func SetupLogger() (*zap.Logger, error) {
 	lumlog.Filename = fmt.Sprintf("./logs/%s_profile-builder-backend.log", time.Now().Format("2006-01-02_15-04-05"))
 	file, err := os.Create(lumlog.Filename)
@@ -27,6 +28,7 @@ func SetupLogger() (*zap.Logger, error) {
 	return logger, nil
 }
 
+// lumberjackZapHook is a hook to write logs to a file
 func lumberjackZapHook(e zapcore.Entry) error {
 	_, err := lumlog.Write([]byte(fmt.Sprintf("%+v\n", e)))
 	if err != nil {

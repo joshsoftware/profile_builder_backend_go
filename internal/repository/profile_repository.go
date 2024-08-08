@@ -411,6 +411,7 @@ func (profileStore *ProfileStore) BackupAllProfiles(backupDir string) {
 	zap.S().Infow("Database backed up successfully", "fileName", backupFile)
 }
 
+// GetProfileIDByEmail returns the profile ID for a given email.
 func (profileStore *ProfileStore) GetProfileIDByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error) {
 	query := psql.Select("id").From("profiles").Where(sq.Eq{"email": email})
 	sql, args, err := query.ToSql()
