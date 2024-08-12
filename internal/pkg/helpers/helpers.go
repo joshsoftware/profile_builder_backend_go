@@ -88,7 +88,7 @@ func JoinValues(values interface{}, sep string) string {
 
 // ConstructUserMessage constructs the email message for a profile invitation
 func ConstructUserMessage(email string, profileID int) string {
-	link := fmt.Sprintf("%s/%d", os.Getenv("HOST_URL"), profileID)
+	link := fmt.Sprintf("%s/profile-builder/%d", os.Getenv("HOST_URL"), profileID)
 	content := fmt.Sprintf(`
 		<html>
 		<body>
@@ -106,14 +106,14 @@ func ConstructUserMessage(email string, profileID int) string {
 
 // ConstructAdminEmailMessage constructs the email message for an admin invitation
 func ConstructAdminEmailMessage(email string, profileID int) string {
-	link := fmt.Sprintf("%s/%d", os.Getenv("HOST_URL"), profileID)
+	link := fmt.Sprintf("%s/profile-builder/%d", os.Getenv("HOST_URL"), profileID)
 	content := fmt.Sprintf(`
 		<html>
 		<body>
 			<div class="email-content">
 				<p>Hello,</p>
 				<p>Employee completed his/her Profile. Please <a href="%s">click here</a> to download profile.</p>
-				<p>Thank you,</p>
+				<p>Thank you</p>
 			</div>
 		</body>
 		</html>

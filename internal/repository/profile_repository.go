@@ -343,7 +343,7 @@ func (profileStore *ProfileStore) UpdateProfileStatus(ctx context.Context, profi
 		updateQuery = updateQuery.Set("is_active", *updateRequest.IsActive)
 	}
 
-	updateQuery = updateQuery.Where(sq.Eq{"id": profileID})
+	updateQuery = updateQuery.Set("updated_at", updateRequest.UpdatedAt).Where(sq.Eq{"id": profileID})
 	query, args, err := updateQuery.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating update profile status query: ", err)

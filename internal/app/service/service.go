@@ -322,6 +322,7 @@ func (profileSvc *service) UpdateProfileStatus(ctx context.Context, profileID in
 	profileStatusRepo := repository.UpdateProfileStatusRepo{
 		IsCurrentEmployee: isCurrentEmployee,
 		IsActive:          isActive,
+		UpdatedAt:         today,
 	}
 
 	err = profileSvc.ProfileRepo.UpdateProfileStatus(ctx, profileID, profileStatusRepo, tx)
