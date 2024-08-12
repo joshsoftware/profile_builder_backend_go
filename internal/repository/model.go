@@ -205,8 +205,9 @@ type UpdateAchievementRepo struct {
 
 // UpdateProfileStatusRepo represents a data access object for profile status information updation.
 type UpdateProfileStatusRepo struct {
-	IsCurrentEmployee *int `db:"is_current_employee , omitempty"`
-	IsActive          *int `db:"is_active , omitempty"`
+	IsCurrentEmployee *int   `db:"is_current_employee , omitempty"`
+	IsActive          *int   `db:"is_active , omitempty"`
+	UpdatedAt         string `db:"updated_at"`
 }
 
 // UpdateRequest represents a data access object for updating invitation information.

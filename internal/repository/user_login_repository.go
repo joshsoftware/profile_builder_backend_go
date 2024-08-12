@@ -79,6 +79,25 @@ func (userStore *UserStore) GetUserInfo(ctx context.Context, filter specs.UserIn
 
 // CreateUser creates a new user with the given email and role
 func (userStore *UserStore) CreateUser(ctx context.Context, email string, role string, tx pgx.Tx) error {
+	checkQuery := psql.Select("1").From(userTable).Where(sq.Eq{"email": email}).Limit(1)
+	checkSql, checkArgs, err := checkQuery.ToSql()
+	if err != nil {
+		zap.S().Error("Error generating select query: ", err)
+		return err
+	}
+
+	var exists int64
+	err = tx.QueryRow(ctx, checkSql, checkArgs...).Scan(&exists)
+	if err != nil && err != pgx.ErrNoRows {
+		zap.S().Error("Error executing select query: ", err)
+		return err
+	}
+
+	if exists > 0 {
+		zap.S().Info("Record already exists for email: ", email)
+		return nil
+	}
+
 	query := psql.Insert(userTable).Columns("email", "role").Values(email, role).Suffix("RETURNING id")
 	sql, args, err := query.ToSql()
 	if err != nil {
@@ -113,8 +132,27 @@ func (userStore *UserStore) CreateUser(ctx context.Context, email string, role s
 
 // RemoveUser removes a user with the given email
 func (userStore *UserStore) RemoveUser(ctx context.Context, email string, tx pgx.Tx) error {
+	var role string
+	roleQuery := psql.Select("role").From(userTable).Where(sq.Eq{"email": email})
+	sql, args, err := roleQuery.ToSql()
+	if err != nil {
+		zap.S().Error("Error generating role query: ", err)
+		return err
+	}
+
+	err = tx.QueryRow(ctx, sql, args...).Scan(&role)
+	if err != nil {
+		zap.S().Error("Error executing role query: ", err)
+		return err
+	}
+
+	if role == constants.Admin {
+		zap.S().Info("Cannot remove user with admin role")
+		return nil
+	}
+
 	query := psql.Delete(userTable).Where(sq.Eq{"email": email})
-	sql, args, err := query.ToSql()
+	sql, args, err = query.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating delete query: ", err)
 		return err
