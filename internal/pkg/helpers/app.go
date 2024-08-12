@@ -288,7 +288,7 @@ func SendInvitation(email string, subject string, message string) error {
 	from, sendgridAPIKey := getEmailConfig()
 	client := sendgrid.NewSendClient(sendgridAPIKey)
 
-	fromEmail := mail.NewEmail(constants.INTRANET, from)
+	fromEmail := mail.NewEmail(constants.Intranet, from)
 	toEmail := mail.NewEmail("", email)
 	plainTextContent := message
 	htmlContent := message

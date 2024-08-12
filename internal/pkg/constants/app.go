@@ -217,7 +217,7 @@ var (
 var (
 	Admin    = "admin"
 	Employee = "employee"
-	INTRANET = "intranet"
+	Intranet = "intranet"
 )
 
 // Default profileID for the admin is 0
