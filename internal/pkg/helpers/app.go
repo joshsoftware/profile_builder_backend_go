@@ -284,7 +284,8 @@ func SendUserInvitation(email string, profileID int) error {
 }
 
 // SendInvitation sends an invitation email
-func SendInvitation(email string, subject string, message string) error {
+func SendInvitation(emailstr string, subject string, message string) error {
+	email := ConvertToLowerCase(emailstr)
 	from, sendgridAPIKey := getEmailConfig()
 	client := sendgrid.NewSendClient(sendgridAPIKey)
 

@@ -137,3 +137,7 @@ func CheckBoolStatus(value int) string {
 	}
 	return "NO"
 }
+
+func ConvertToLowerCase(email string) string {
+	return strings.ToLower(email)
+}
