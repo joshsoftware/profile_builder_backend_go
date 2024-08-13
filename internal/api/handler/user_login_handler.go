@@ -59,9 +59,7 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 		info, err := profileSvc.GenerateLoginToken(ctx, userInfo)
 		if err != nil {
 			if err == errors.ErrNoRecordFound {
-				middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
-					Message: "User not found",
-				})
+				middleware.ErrorResponse(w, http.StatusUnauthorized, errors.ErrAuthToken)
 				zap.S().Info("User not found")
 				return
 			}
