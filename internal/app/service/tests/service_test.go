@@ -2,8 +2,10 @@ package service_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -55,7 +57,23 @@ func TestListProfile(t *testing.T) {
 	}
 	profileService := service.NewServices(repodeps)
 
-	mockListProfile := []specs.ResponseListProfiles{
+	mockListProfile := []specs.ListProfiles{
+		{
+			ID:                1,
+			Name:              "Example profile",
+			Email:             "example.profile@gmail.com",
+			YearsOfExperience: 1.0,
+			PrimarySkills:     []string{"Golang", "Python", "Java", "React"},
+			IsCurrentEmployee: 1,
+			IsActive:          1,
+			JoshJoiningDate:   sql.NullString{String: "2021-01-01", Valid: true},
+			CreatedAt:         time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+			UpdatedAt:         time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+			IsProfileComplete: 1,
+		},
+	}
+
+	mockResponseListProfile := []specs.ResponseListProfiles{
 		{
 			ID:                1,
 			Name:              "Example profile",
@@ -63,6 +81,11 @@ func TestListProfile(t *testing.T) {
 			YearsOfExperience: 1.0,
 			PrimarySkills:     []string{"Golang", "Python", "Java", "React"},
 			IsCurrentEmployee: "YES",
+			IsActive:          "YES",
+			JoshJoiningDate:   sql.NullString{String: "2021-01-01", Valid: true},
+			CreatedAt:         time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+			UpdatedAt:         time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+			IsProfileComplete: "YES",
 		},
 	}
 
@@ -75,18 +98,22 @@ func TestListProfile(t *testing.T) {
 		{
 			name: "Success_get_list_of_Profiles",
 			setup: func(userMock *mocks.ProfileStorer) {
-				userMock.On("ListProfiles", mock.Anything).Return(mockListProfile, nil).Once()
+				userMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				userMock.On("ListProfiles", mock.Anything, mock.Anything).Return(mockListProfile, nil).Once()
+				userMock.On("HandleTransaction", mock.Anything, mock.Anything, nil).Return(nil).Once()
 			},
 			isErrorExpected: false,
-			wantResponse:    mockListProfile,
+			wantResponse:    mockResponseListProfile,
 		},
 		{
 			name: "Fail_get_list_of_Profiles",
 			setup: func(userMock *mocks.ProfileStorer) {
-				userMock.On("ListProfiles", mock.Anything).Return(nil, errors.New("error")).Once()
+				userMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				userMock.On("ListProfiles", mock.Anything, mock.Anything).Return(nil, errors.New("error")).Once()
+				userMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
-			wantResponse:    nil,
+			wantResponse:    []specs.ResponseListProfiles{},
 		},
 	}
 
@@ -94,14 +121,13 @@ func TestListProfile(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockProfileRepo)
 
-			// Test service
 			gotResp, err := profileService.ListProfiles(context.Background())
-
 			assert.Equal(t, test.wantResponse, gotResp)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+			mockProfileRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -122,7 +148,9 @@ func TestListSkills(t *testing.T) {
 		{
 			name: "Success_get_list_of_Skills",
 			setup: func(userMock *mocks.ProfileStorer) {
-				userMock.On("ListSkills", mock.Anything).Return(mockListSkills, nil).Once()
+				userMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				userMock.On("ListSkills", mock.Anything, mock.Anything).Return(mockListSkills, nil).Once()
+				userMock.On("HandleTransaction", mock.Anything, mock.Anything, nil).Return(nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockListSkills,
@@ -130,7 +158,9 @@ func TestListSkills(t *testing.T) {
 		{
 			name: "Fail_get_list_of_Skills",
 			setup: func(userMock *mocks.ProfileStorer) {
-				userMock.On("ListSkills", mock.Anything).Return(specs.ListSkills{}, errors.New("error")).Once()
+				userMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				userMock.On("ListSkills", mock.Anything, mock.Anything).Return(specs.ListSkills{}, errors.New("error")).Once()
+				userMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    specs.ListSkills{},
@@ -172,7 +202,9 @@ func TestCreateProfile(t *testing.T) {
 				Profile: mockProfile,
 			},
 			setup: func(profileMock *mocks.ProfileStorer) {
-				profileMock.On("CreateProfile", mock.Anything, mock.AnythingOfType("ProfileRepo")).Return(1, nil).Once()
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CreateProfile", mock.Anything, mock.AnythingOfType("ProfileRepo"), mock.Anything).Return(1, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
@@ -182,7 +214,9 @@ func TestCreateProfile(t *testing.T) {
 				Profile: mockProfile,
 			},
 			setup: func(profileMock *mocks.ProfileStorer) {
-				profileMock.On("CreateProfile", mock.Anything, mock.AnythingOfType("ProfileRepo")).Return(0, errors.New("profile creation failed")).Once()
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CreateProfile", mock.Anything, mock.AnythingOfType("ProfileRepo"), mock.Anything).Return(0, errors.New("profile creation failed")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -191,13 +225,11 @@ func TestCreateProfile(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockProfileRepo)
-
-			// test service
 			_, err := profileService.CreateProfile(context.TODO(), test.input, 1)
-
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
 			}
+			mockProfileRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -220,8 +252,9 @@ func TestGetProfile(t *testing.T) {
 			name:      "Success_get_profile",
 			profileID: mockProfileID,
 			setup: func(profileMock *mocks.ProfileStorer) {
-				// Mock successful retrieval
-				profileMock.On("GetProfile", mock.Anything, mock.Anything).Return(mockResponseProfile, nil).Once()
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("GetProfile", mock.Anything, mock.Anything, mock.Anything).Return(mockResponseProfile, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseProfile,
@@ -230,8 +263,9 @@ func TestGetProfile(t *testing.T) {
 			name:      "Fail_get_profile",
 			profileID: mockProfileID,
 			setup: func(profileMock *mocks.ProfileStorer) {
-				// Mock retrieval failure
-				profileMock.On("GetProfile", mock.Anything, mock.Anything).Return(specs.ResponseProfile{}, errors.New("error")).Once()
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("GetProfile", mock.Anything, mock.Anything, mock.Anything).Return(specs.ResponseProfile{}, errors.New("error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    specs.ResponseProfile{},
@@ -241,17 +275,13 @@ func TestGetProfile(t *testing.T) {
 	// Iterate through test cases
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// Setup mock
 			test.setup(mockProfileRepo)
-
-			// Call the method being tested
 			gotResp, err := profileService.GetProfile(context.Background(), test.profileID)
-
-			// Assertions
 			assert.Equal(t, test.wantResponse, gotResp)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err)
 			}
+			mockProfileRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -292,7 +322,9 @@ func TestUpdateProfile(t *testing.T) {
 				},
 			},
 			setup: func(profileMock *mocks.ProfileStorer) {
-				profileMock.On("UpdateProfile", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateProfileRepo")).Return(1, nil).Once()
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("UpdateProfile", mock.Anything, 1, mock.AnythingOfType("repository.UpdateProfileRepo"), mock.Anything).Return(1, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
@@ -317,7 +349,9 @@ func TestUpdateProfile(t *testing.T) {
 				},
 			},
 			setup: func(profileMock *mocks.ProfileStorer) {
-				profileMock.On("UpdateProfile", mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateProfileRepo")).Return(0, errors.New("Error")).Once()
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("UpdateProfile", mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateProfileRepo"), mock.Anything).Return(0, errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -342,7 +376,36 @@ func TestUpdateProfile(t *testing.T) {
 				},
 			},
 			setup: func(profileMock *mocks.ProfileStorer) {
-				profileMock.On("UpdateProfile", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateProfileRepo")).Return(0, errors.New("Missing profile name")).Once()
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("UpdateProfile", mock.Anything, 1, mock.AnythingOfType("repository.UpdateProfileRepo"), mock.Anything).Return(0, errors.New("Missing profile name")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name:      "Failed_because_of_invalid_profile_id",
+			profileID: 0,
+			userID:    1,
+			input: specs.UpdateProfileRequest{
+				Profile: specs.Profile{
+					Name:              "Name B",
+					Email:             "example@gmail.com",
+					Gender:            "Male",
+					Mobile:            "1234567890",
+					Designation:       "Designation B",
+					Description:       "Description B",
+					Title:             "Title B",
+					YearsOfExperience: 10,
+					PrimarySkills:     []string{"Java", "C++"},
+					SecondarySkills:   []string{"HTML", "CSS"},
+					GithubLink:        "github.com/userb",
+					LinkedinLink:      "linkedin.com/in/userb",
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("UpdateProfile", mock.Anything, 0, mock.AnythingOfType("repository.UpdateProfileRepo"), mock.Anything).Return(0, errors.New("Invalid profile id")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -357,6 +420,8 @@ func TestUpdateProfile(t *testing.T) {
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+
+			mockProfileRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -415,14 +480,6 @@ func TestProfileDeleteService(t *testing.T) {
 			},
 			isErrorExpected: true,
 		},
-		// {
-		// 	name:      "Failed_because_BeginTransaction_returns_an_error",
-		// 	profileID: 4,
-		// 	setup: func(profileMock *mocks.ProfileStorer) {
-		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("transaction error")).Once()
-		// 	},
-		// 	isErrorExpected: true,
-		// },
 	}
 
 	for _, test := range tests {
@@ -432,6 +489,167 @@ func TestProfileDeleteService(t *testing.T) {
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+			mockProfileRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestUpdateSequence(t *testing.T) {
+	mockProfileRepo := new(mocks.ProfileStorer)
+	var repodeps = service.RepoDeps{
+		ProfileDeps: mockProfileRepo,
+	}
+	profileService := service.NewServices(repodeps)
+
+	tests := []struct {
+		name            string
+		userID          int
+		input           specs.UpdateSequenceRequest
+		setup           func(profileMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name: "Success_to_update_sequence",
+			input: specs.UpdateSequenceRequest{
+				ProfileID: 1,
+				Component: specs.Component{
+					CompName: "Component Name",
+					ComponentPriorities: map[int]int{
+						1: 1,
+					},
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(1, nil).Once()
+				profileMock.On("UpdateSequence", mock.Anything, mock.AnythingOfType("repository.UpdateSequenceRequest"), mock.Anything).Return(1, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name: "Failed_to_update_sequence",
+			input: specs.UpdateSequenceRequest{
+				ProfileID: 1,
+				Component: specs.Component{
+					CompName: "Component Name",
+					ComponentPriorities: map[int]int{
+						1: 1,
+					},
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(1, nil).Once()
+				profileMock.On("UpdateSequence", mock.Anything, mock.AnythingOfType("repository.UpdateSequenceRequest"), mock.Anything).Return(0, errors.New("update sequence failed")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_to_update_sequence_because_of_missing_profile_id",
+			input: specs.UpdateSequenceRequest{
+				ProfileID: 0,
+				Component: specs.Component{
+					CompName: "Component Name",
+					ComponentPriorities: map[int]int{
+						1: 1,
+					},
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(0, errors.New("missing profile id")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_to_update_sequence_because_of_count_records_error",
+			input: specs.UpdateSequenceRequest{
+				ProfileID: 1,
+				Component: specs.Component{
+					CompName: "Component Name",
+					ComponentPriorities: map[int]int{
+						1: 1,
+					},
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(0, errors.New("count records error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
+			isErrorExpected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProfileRepo)
+			_, err := profileService.UpdateSequence(context.Background(), test.userID, test.input)
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
+			}
+			mockProfileRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestUpdateProfileStatus(t *testing.T) {
+	mockProfileRepo := new(mocks.ProfileStorer)
+	var repodeps = service.RepoDeps{
+		ProfileDeps: mockProfileRepo,
+	}
+	profileService := service.NewServices(repodeps)
+
+	tests := []struct {
+		name            string
+		userID          int
+		input           specs.UpdateProfileStatus
+		setup           func(profileMock *mocks.ProfileStorer)
+		isErrorExpected bool
+	}{
+		{
+			name: "Success_to_update_profile_status",
+			input: specs.UpdateProfileStatus{
+				ProfileStatus: specs.UpdateProfileStatusRequest{
+					IsCurrentEmployee: "YES",
+					IsActive:          "YES",
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("UpdateProfileStatus", mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateProfileStatusRepo"), mock.Anything).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: false,
+		},
+		{
+			name: "Failed_to_update_profile_status",
+			input: specs.UpdateProfileStatus{
+				ProfileStatus: specs.UpdateProfileStatusRequest{
+					IsCurrentEmployee: "YES",
+					IsActive:          "YES",
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("UpdateProfileStatus", mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateProfileStatusRepo"), mock.Anything).Return(errors.New("update profile status failed")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
+			isErrorExpected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(mockProfileRepo)
+			err := profileService.UpdateProfileStatus(context.Background(), test.userID, test.input)
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
+			}
+			mockProfileRepo.AssertExpectations(t)
 		})
 	}
 }

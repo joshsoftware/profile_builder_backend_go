@@ -20,7 +20,9 @@ var mockListEduFilter = specs.ListEducationsFilter{
 
 func TestCreateEducation(t *testing.T) {
 	mockEducationRepo := new(mocks.EducationStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps:   mockProfileRepo,
 		EducationDeps: mockEducationRepo,
 	}
 	eduService := service.NewServices(repodeps)
@@ -28,7 +30,9 @@ func TestCreateEducation(t *testing.T) {
 	tests := []struct {
 		name              string
 		input             specs.CreateEducationRequest
-		setup             func(educationMock *mocks.EducationStorer)
+		setup             func(*mocks.EducationStorer, *mocks.ProfileStorer)
+		profileID         int
+		userID            int
 		isErrorExpected   bool
 		expectedProfileID int
 	}{
@@ -45,8 +49,44 @@ func TestCreateEducation(t *testing.T) {
 					},
 				},
 			},
-			setup: func(educationMock *mocks.EducationStorer) {
-				educationMock.On("CreateEducation", mock.Anything, mock.Anything).Return(nil).Once()
+			profileID: 1,
+			userID:    1,
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(2, nil).Once()
+				educationMock.On("CreateEducation", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected:   false,
+			expectedProfileID: 1,
+		},
+		{
+			name: "Success_for_multiple_education_entries",
+			input: specs.CreateEducationRequest{
+				Educations: []specs.Education{
+					{
+						Degree:           "B.Sc in Mathematics",
+						UniversityName:   "XYZ University",
+						Place:            "City A",
+						PercentageOrCgpa: "3.7",
+						PassingYear:      "2023",
+					},
+					{
+						Degree:           "M.Sc in Mathematics",
+						UniversityName:   "XYZ University",
+						Place:            "City A",
+						PercentageOrCgpa: "3.8",
+						PassingYear:      "2025",
+					},
+				},
+			},
+			profileID: 1,
+			userID:    1,
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(2, nil).Once()
+				educationMock.On("CreateEducation", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected:   false,
 			expectedProfileID: 1,
@@ -64,8 +104,13 @@ func TestCreateEducation(t *testing.T) {
 					},
 				},
 			},
-			setup: func(educationMock *mocks.EducationStorer) {
-				educationMock.On("CreateEducation", mock.Anything, mock.Anything).Return(errors.New("Error")).Once()
+			profileID: 1,
+			userID:    1,
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(1, nil).Once()
+				educationMock.On("CreateEducation", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected:   true,
 			expectedProfileID: 0,
@@ -75,7 +120,37 @@ func TestCreateEducation(t *testing.T) {
 			input: specs.CreateEducationRequest{
 				Educations: []specs.Education{},
 			},
-			setup:             func(educationMock *mocks.EducationStorer) {},
+			profileID: 1,
+			userID:    1,
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(1, nil).Once()
+				educationMock.On("CreateEducation", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handler transaction error")).Once()
+			},
+			isErrorExpected:   true,
+			expectedProfileID: 0,
+		},
+		{
+			name: "Failed_due_to_record_count_error",
+			input: specs.CreateEducationRequest{
+				Educations: []specs.Education{
+					{
+						Degree:           "B.Tech in Computer Science",
+						UniversityName:   "SPPU",
+						Place:            "Pune",
+						PercentageOrCgpa: "3.5",
+						PassingYear:      "2022",
+					},
+				},
+			},
+			profileID: 1,
+			userID:    1,
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(0, errors.New("Count records error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handler transaction error")).Once()
+			},
 			isErrorExpected:   true,
 			expectedProfileID: 0,
 		},
@@ -83,7 +158,7 @@ func TestCreateEducation(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(mockEducationRepo)
+			test.setup(mockEducationRepo, mockProfileRepo)
 
 			profileID, err := eduService.CreateEducation(context.Background(), test.input, 1, 1)
 			if (err != nil) != test.isErrorExpected {
@@ -93,6 +168,7 @@ func TestCreateEducation(t *testing.T) {
 				t.Errorf("Test %s failed, expected profileID to be %v, but got %v", test.name, test.expectedProfileID, profileID)
 			}
 
+			mockProfileRepo.AssertExpectations(t)
 			mockEducationRepo.AssertExpectations(t)
 		})
 	}
@@ -100,7 +176,9 @@ func TestCreateEducation(t *testing.T) {
 
 func TestListEducations(t *testing.T) {
 	mockEducationRepo := new(mocks.EducationStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps:   mockProfileRepo,
 		EducationDeps: mockEducationRepo,
 	}
 	educationService := service.NewServices(repodeps)
@@ -120,16 +198,17 @@ func TestListEducations(t *testing.T) {
 	tests := []struct {
 		name            string
 		profileID       int
-		setup           func(eduMock *mocks.EducationStorer)
+		setup           func(*mocks.EducationStorer, *mocks.ProfileStorer)
 		isErrorExpected bool
 		wantResponse    []specs.EducationResponse
 	}{
 		{
 			name:      "Success_get_education",
 			profileID: mockProfileID,
-			setup: func(eduMock *mocks.EducationStorer) {
-				// Mock successful retrieval
-				eduMock.On("GetEducation", mock.Anything, mock.Anything).Return(mockResponseEducation, nil).Once()
+			setup: func(eduMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				eduMock.On("ListEducations", mock.Anything, mockProfileID, mock.Anything, mock.Anything).Return(mockResponseEducation, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseEducation,
@@ -137,36 +216,47 @@ func TestListEducations(t *testing.T) {
 		{
 			name:      "Fail_get_education",
 			profileID: mockProfileID,
-			setup: func(eduMock *mocks.EducationStorer) {
-				// Mock retrieval failure
-				eduMock.On("GetEducation", mock.Anything, mock.Anything).Return([]specs.EducationResponse{}, errors.New("error")).Once()
+			setup: func(eduMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				eduMock.On("ListEducations", mock.Anything, mockProfileID, mock.Anything, mock.Anything).Return([]specs.EducationResponse{}, errors.New("error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
+			isErrorExpected: true,
+			wantResponse:    []specs.EducationResponse{},
+		},
+		{
+			name:      "Fail_get_education_due_to_invalid_profile_id",
+			profileID: -1,
+			setup: func(eduMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				eduMock.On("ListEducations", mock.Anything, -1, mock.Anything, mock.Anything).Return([]specs.EducationResponse{}, errors.New("error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []specs.EducationResponse{},
 		},
 	}
 
-	// Iterate through test cases
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// Setup mock
-			test.setup(mockEducationRepo)
-
-			// Call the method being tested
+			test.setup(mockEducationRepo, mockProfileRepo)
 			gotResp, err := educationService.ListEducations(context.Background(), test.profileID, mockListEduFilter)
-
-			// Assertions
 			assert.Equal(t, test.wantResponse, gotResp)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err)
 			}
+
+			mockProfileRepo.AssertExpectations(t)
+			mockEducationRepo.AssertExpectations(t)
 		})
 	}
 }
 
 func TestUpdateEducation(t *testing.T) {
 	mockEducationRepo := new(mocks.EducationStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps:   mockProfileRepo,
 		EducationDeps: mockEducationRepo,
 	}
 	eduService := service.NewServices(repodeps)
@@ -177,7 +267,7 @@ func TestUpdateEducation(t *testing.T) {
 		educationID     int
 		userID          int
 		input           specs.UpdateEducationRequest
-		setup           func(educationMock *mocks.EducationStorer)
+		setup           func(*mocks.EducationStorer, *mocks.ProfileStorer)
 		isErrorExpected bool
 	}{
 		{
@@ -194,14 +284,16 @@ func TestUpdateEducation(t *testing.T) {
 					PassingYear:      "2023",
 				},
 			},
-			setup: func(educationMock *mocks.EducationStorer) {
-				educationMock.On("UpdateEducation", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(1, nil).Once()
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				educationMock.On("UpdateEducation", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo"), mock.Anything).Return(1, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
 		{
 			name:        "Failed_because_updateeducation_returns_an_error",
-			profileID:   100000,
+			profileID:   1,
 			educationID: 1,
 			userID:      1,
 			input: specs.UpdateEducationRequest{
@@ -213,8 +305,10 @@ func TestUpdateEducation(t *testing.T) {
 					PassingYear:      "2022",
 				},
 			},
-			setup: func(educationMock *mocks.EducationStorer) {
-				educationMock.On("UpdateEducation", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(0, errors.New("Error")).Once()
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				educationMock.On("UpdateEducation", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo"), mock.Anything).Return(0, errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -232,8 +326,10 @@ func TestUpdateEducation(t *testing.T) {
 					PassingYear:      "2023",
 				},
 			},
-			setup: func(educationMock *mocks.EducationStorer) {
-				educationMock.On("UpdateEducation", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo")).Return(0, errors.New("Missing education degree")).Once()
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				educationMock.On("UpdateEducation", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateEducationRepo"), mock.Anything).Return(0, errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -251,20 +347,24 @@ func TestUpdateEducation(t *testing.T) {
 					PassingYear:      "2023",
 				},
 			},
-			setup:           func(educationMock *mocks.EducationStorer) {},
+			setup: func(educationMock *mocks.EducationStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				educationMock.On("UpdateEducation", mock.Anything, -1, 1, mock.AnythingOfType("repository.UpdateEducationRepo"), mock.Anything).Return(0, errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
 			isErrorExpected: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(mockEducationRepo)
-
+			test.setup(mockEducationRepo, mockProfileRepo)
 			_, err := eduService.UpdateEducation(context.TODO(), test.profileID, test.educationID, test.userID, test.input)
-
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+			mockProfileRepo.AssertExpectations(t)
+			mockEducationRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -318,15 +418,6 @@ func TestDeleteEducationService(t *testing.T) {
 			},
 			isErrorExpected: true,
 		},
-		// {
-		// 	name: "Failed_because_BeginTransaction_returns_an_error",
-		// 		achievementID: 4,
-		// 		profileID:     1,
-		// 	setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
-		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("error")).Once()
-		// 	},
-		// 	isErrorExpected: true,
-		// },
 	}
 
 	for _, test := range tests {
@@ -336,6 +427,9 @@ func TestDeleteEducationService(t *testing.T) {
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+
+			mockProfileRepo.AssertExpectations(t)
+			mockEducationSvc.AssertExpectations(t)
 		})
 	}
 }

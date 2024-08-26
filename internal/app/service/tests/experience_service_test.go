@@ -30,15 +30,18 @@ var mockResponseExperience = []specs.ExperienceResponse{
 
 func TestCreateExperience(t *testing.T) {
 	mockExperienceRepo := new(mocks.ExperienceStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps:    mockProfileRepo,
 		ExperienceDeps: mockExperienceRepo,
 	}
 	experienceService := service.NewServices(repodeps)
-
 	tests := []struct {
 		name            string
 		input           specs.CreateExperienceRequest
-		setup           func(experienceMock *mocks.ExperienceStorer)
+		profileID       int
+		userID          int
+		setup           func(*mocks.ExperienceStorer, *mocks.ProfileStorer)
 		isErrorExpected bool
 	}{
 		{
@@ -53,8 +56,13 @@ func TestCreateExperience(t *testing.T) {
 					},
 				},
 			},
-			setup: func(experienceMock *mocks.ExperienceStorer) {
-				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceRepo")).Return(nil).Once()
+			profileID: 1,
+			userID:    1,
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(1, nil).Once()
+				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceRepo"), mock.Anything).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
@@ -70,8 +78,13 @@ func TestCreateExperience(t *testing.T) {
 					},
 				},
 			},
-			setup: func(experienceMock *mocks.ExperienceStorer) {
-				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceRepo")).Return(errors.New("Error")).Once()
+			profileID: 1,
+			userID:    1,
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(1, nil).Once()
+				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceRepo"), mock.Anything).Return(errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -87,8 +100,13 @@ func TestCreateExperience(t *testing.T) {
 					},
 				},
 			},
-			setup: func(experienceMock *mocks.ExperienceStorer) {
-				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceRepo")).Return(errors.New("Missing designation")).Once()
+			profileID: 1,
+			userID:    1,
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(1, nil).Once()
+				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceRepo"), mock.Anything).Return(errors.New("Missing designation")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -97,29 +115,78 @@ func TestCreateExperience(t *testing.T) {
 			input: specs.CreateExperienceRequest{
 				Experiences: []specs.Experience{},
 			},
-			setup:           func(experienceMock *mocks.ExperienceStorer) {},
+			profileID: 1,
+			userID:    1,
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(1, nil).Once()
+				experienceMock.On("CreateExperience", mock.Anything, mock.AnythingOfType("[]repository.ExperienceRepo"), mock.Anything).Return(errors.New("Empty payload")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_because_countrecords_returns_an_error",
+			input: specs.CreateExperienceRequest{
+				Experiences: []specs.Experience{
+					{
+						Designation: "Software Engineer",
+						CompanyName: "Tech Corp",
+						FromDate:    "2023-01-01",
+						ToDate:      "2024-01-01",
+					},
+				},
+			},
+			profileID: 1,
+			userID:    1,
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(0, errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_because_profileid_is_invalid",
+			input: specs.CreateExperienceRequest{
+				Experiences: []specs.Experience{
+					{
+						Designation: "Software Engineer",
+						CompanyName: "Tech Corp",
+						FromDate:    "2023-01-01",
+						ToDate:      "2024-01-01",
+					},
+				},
+			},
+			profileID: -1,
+			userID:    1,
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, mock.Anything, mock.Anything).Return(0, errors.New("invalid profile id")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
 			isErrorExpected: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(mockExperienceRepo)
-
-			// Test the service
+			test.setup(mockExperienceRepo, mockProfileRepo)
 			_, err := experienceService.CreateExperience(context.TODO(), test.input, 1, 1)
-
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+			mockProfileRepo.AssertExpectations(t)
+			mockExperienceRepo.AssertExpectations(t)
 		})
 	}
 }
 
-func TestGetExperience(t *testing.T) {
-	// Initialize mock dependencies
+func TestListExperience(t *testing.T) {
 	mockExperienceRepo := new(mocks.ExperienceStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps:    mockProfileRepo,
 		ExperienceDeps: mockExperienceRepo,
 	}
 	experienceService := service.NewServices(repodeps)
@@ -127,15 +194,17 @@ func TestGetExperience(t *testing.T) {
 	tests := []struct {
 		name            string
 		profileID       int
-		setup           func(expMock *mocks.ExperienceStorer)
+		setup           func(*mocks.ExperienceStorer, *mocks.ProfileStorer)
 		isErrorExpected bool
 		wantResponse    []specs.ExperienceResponse
 	}{
 		{
 			name:      "Success_get_experience",
 			profileID: mockProfileID,
-			setup: func(expMock *mocks.ExperienceStorer) {
-				expMock.On("ListExperiences", mock.Anything, mock.Anything).Return(mockResponseExperience, nil).Once()
+			setup: func(expMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				expMock.On("ListExperiences", mock.Anything, mockProfileID, mock.Anything, mock.Anything).Return(mockResponseExperience, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseExperience,
@@ -143,20 +212,20 @@ func TestGetExperience(t *testing.T) {
 		{
 			name:      "Fail_get_experience",
 			profileID: mockProfileID,
-			setup: func(expMock *mocks.ExperienceStorer) {
-				// Mock retrieval failure
-				expMock.On("ListExperiences", mock.Anything, mock.Anything).Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
+			setup: func(expMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				expMock.On("ListExperiences", mock.Anything, mockProfileID, mock.Anything, mock.Anything).Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []specs.ExperienceResponse{},
 		},
 	}
 
-	// Iterate through test cases
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// Setup mock
-			test.setup(mockExperienceRepo)
+			test.setup(mockExperienceRepo, mockProfileRepo)
 
 			// Call the method being tested
 			gotResp, err := experienceService.ListExperiences(context.Background(), test.profileID, mockListExpFilter)
@@ -166,13 +235,18 @@ func TestGetExperience(t *testing.T) {
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err)
 			}
+
+			mockProfileRepo.AssertExpectations(t)
+			mockExperienceRepo.AssertExpectations(t)
 		})
 	}
 }
 
 func TestUpdateExperience(t *testing.T) {
 	mockExperienceRepo := new(mocks.ExperienceStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps:    mockProfileRepo,
 		ExperienceDeps: mockExperienceRepo,
 	}
 	expService := service.NewServices(repodeps)
@@ -183,7 +257,7 @@ func TestUpdateExperience(t *testing.T) {
 		experienceID    int
 		userID          int
 		input           specs.UpdateExperienceRequest
-		setup           func(experienceMock *mocks.ExperienceStorer)
+		setup           func(*mocks.ExperienceStorer, *mocks.ProfileStorer)
 		isErrorExpected bool
 	}{
 		{
@@ -199,8 +273,10 @@ func TestUpdateExperience(t *testing.T) {
 					ToDate:      "2023-01-01",
 				},
 			},
-			setup: func(experienceMock *mocks.ExperienceStorer) {
-				experienceMock.On("UpdateExperience", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateExperienceRepo")).Return(1, nil).Once()
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				experienceMock.On("UpdateExperience", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateExperienceRepo"), mock.Anything).Return(1, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
@@ -217,13 +293,16 @@ func TestUpdateExperience(t *testing.T) {
 					ToDate:      "2023-01-01",
 				},
 			},
-			setup: func(experienceMock *mocks.ExperienceStorer) {
-				experienceMock.On("UpdateExperience", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateExperienceRepo")).Return(0, errors.New("Error")).Once()
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				experienceMock.On("UpdateExperience", mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateExperienceRepo"), mock.Anything).Return(0, errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
-			name:         "Failed_because_of_missing_experience_designation",
+			name: "Failed_because_of_missing_experience_designation",
+
 			profileID:    1,
 			experienceID: 1,
 			userID:       1,
@@ -235,8 +314,10 @@ func TestUpdateExperience(t *testing.T) {
 					ToDate:      "2023-01-01",
 				},
 			},
-			setup: func(experienceMock *mocks.ExperienceStorer) {
-				experienceMock.On("UpdateExperience", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateExperienceRepo")).Return(0, errors.New("Missing experience designation")).Once()
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				experienceMock.On("UpdateExperience", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateExperienceRepo"), mock.Anything).Return(0, errors.New("Missing experience designation")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -253,20 +334,24 @@ func TestUpdateExperience(t *testing.T) {
 					ToDate:      "2023-01-01",
 				},
 			},
-			setup:           func(experienceMock *mocks.ExperienceStorer) {},
+			setup: func(experienceMock *mocks.ExperienceStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				experienceMock.On("UpdateExperience", mock.Anything, -1, 1, mock.AnythingOfType("repository.UpdateExperienceRepo"), mock.Anything).Return(0, errors.New("Invalid profile id")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
 			isErrorExpected: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(mockExperienceRepo)
-
+			test.setup(mockExperienceRepo, mockProfileRepo)
 			_, err := expService.UpdateExperience(context.TODO(), test.profileID, test.experienceID, test.userID, test.input)
-
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+			mockProfileRepo.AssertExpectations(t)
+			mockExperienceRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -320,15 +405,6 @@ func TestDeleteExperienceService(t *testing.T) {
 			},
 			isErrorExpected: true,
 		},
-		// {
-		// 	name: "Failed_because_BeginTransaction_returns_an_error",
-		// 		achievementID: 4,
-		// 		profileID:     1,
-		// 	setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
-		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("error")).Once()
-		// 	},
-		// 	isErrorExpected: true,
-		// },
 	}
 
 	for _, test := range tests {
@@ -338,6 +414,8 @@ func TestDeleteExperienceService(t *testing.T) {
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+			mockProfileRepo.AssertExpectations(t)
+			mockExperienceSvc.AssertExpectations(t)
 		})
 	}
 }

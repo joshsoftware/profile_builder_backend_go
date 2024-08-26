@@ -13,9 +13,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
+)
+
+var (
+	TestProjectID = 1
 )
 
 func TestCreateProjectHandler(t *testing.T) {
@@ -27,6 +32,7 @@ func TestCreateProjectHandler(t *testing.T) {
 		input              string
 		setup              func(mock *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name: "Success_for_project_Detail",
@@ -44,15 +50,17 @@ func TestCreateProjectHandler(t *testing.T) {
 				}]
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateProject", mock.Anything, mock.AnythingOfType("specs.CreateProjectRequest"), 1).Return(1, nil).Once()
+				mockSvc.On("CreateProject", mock.Anything, mock.AnythingOfType("specs.CreateProjectRequest"), TestProfileID, TestUserID).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
+			expectedResponse:   `{"data":{"message":"Project(s) added successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_name_field",
@@ -71,6 +79,47 @@ func TestCreateProjectHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : name "}`,
+		},
+		{
+			name: "Fail_for_missing_description_field",
+			input: `{
+				"projects":[{
+					"name": "Least Square",
+					"description": "",
+					"role": "Soft Developer",
+					"responsibilities": "Develop a Backend",
+					"technologies": ["Python, Django, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
+					"working_start_date": "May-2020",
+					"working_end_date": "July-2020",
+					"duration": "6 Months"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : description "}`,
+		},
+		{
+			name: "Failed_because_of_service_layer_error",
+			input: `{
+				"projects":[{
+					"name": "Least Square",	
+					"description": "A Webapp Which is Used to Build a Standard Profiles of an Employee for An Organization",
+					"role": "Soft Developer",
+					"responsibilities": "Develop a Backend",
+					"technologies": ["Python, Django, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
+					"working_start_date": "May-2020",
+					"working_end_date": "July-2020",
+					"duration": "6 Months"
+				}]
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("CreateProject", mock.Anything, mock.AnythingOfType("specs.CreateProjectRequest"), TestProfileID, TestUserID).Return(0, errors.New("failed to create project")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to create project"}`,
 		},
 	}
 
@@ -78,12 +127,11 @@ func TestCreateProjectHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(userSvc)
 
-			req, err := http.NewRequest("POST", "/profiles/projects", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
+			req := httptest.NewRequest("POST", "/profiles/projects", bytes.NewBuffer([]byte(test.input)))
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
+
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createProjectHandler)
@@ -91,6 +139,10 @@ func TestCreateProjectHandler(t *testing.T) {
 
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
 		})
 	}
@@ -102,50 +154,116 @@ func TestListProjectHandler(t *testing.T) {
 
 	tests := []struct {
 		name               string
+		profileID          string
 		queryParams        string
-		setup              func(mock *mocks.Service)
+		mockSetup          func(mock *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name:        "Success_for_getting_projects",
-			queryParams: "1",
-			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProject", mock.Anything, 1).Return([]specs.ProjectResponse{
+			profileID:   "1",
+			queryParams: "",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListProjectsFilter{
+					ProjectsIDs: nil,
+					Names:       nil,
+				}
+				projectsResp := []specs.ProjectResponse{
 					{
+						ID:               1,
 						ProfileID:        1,
 						Name:             "Project Alpha",
-						Description:      "A sample project",
+						Description:      "Some Description",
 						Role:             "Lead Developer",
 						Responsibilities: "Developing the core features",
-						Technologies:     []string{"Java", "Selenium"},
+						Technologies:     []string{"Go", "React"},
 						TechWorkedOn:     []string{"Python, C#"},
 						WorkingStartDate: "2020-01-01",
 						WorkingEndDate:   "2021-01-01",
-						Duration:         "1 year",
+						Duration:         "6 months",
 					},
-				}, nil).Once()
+				}
+				mockSvc.On("ListProjects", mock.Anything, 1, listFilter).Return(projectsResp, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"projects":[{"id":1,"profile_id":1,"name":"Project Alpha","description":"Some Description","role":"Lead Developer","responsibilities":"Developing the core features","technologies":["Go","React"],"tech_worked_on":["Python, C#"],"working_start_date":"2020-01-01","working_end_date":"2021-01-01","duration":"6 months"}]}}`,
 		},
 		{
-			name:        "Fail_as_error_in_getproject",
-			queryParams: "2",
-			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetProject", mock.Anything, 2).Return([]specs.ProjectResponse{}, errors.New("error")).Once()
+			name:        "Success_for_getting_projects_with_filters",
+			profileID:   "1",
+			queryParams: "?projects_ids=1&names=Project%20Alpha",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListProjectsFilter{
+					ProjectsIDs: []int{1},
+					Names:       []string{"Project Alpha"},
+				}
+				projectsResp := []specs.ProjectResponse{
+					{
+						ID:               1,
+						ProfileID:        1,
+						Name:             "Project Alpha",
+						Description:      "Some Description",
+						Role:             "Lead Developer",
+						Responsibilities: "Developing the core features",
+						Technologies:     []string{"Go", "React"},
+						TechWorkedOn:     []string{"Python, C#"},
+						WorkingStartDate: "2020-01-01",
+						WorkingEndDate:   "2021-01-01",
+						Duration:         "6 months",
+					},
+				}
+				mockSvc.On("ListProjects", mock.Anything, 1, listFilter).Return(projectsResp, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"projects":[{"id":1,"profile_id":1,"name":"Project Alpha","description":"Some Description","role":"Lead Developer","responsibilities":"Developing the core features","technologies":["Go","React"],"tech_worked_on":["Python, C#"],"working_start_date":"2020-01-01","working_end_date":"2021-01-01","duration":"6 months"}]}}`,
+		},
+		{
+			name:      "Empty_Response_From_Service",
+			profileID: "1",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListProjectsFilter{
+					ProjectsIDs: nil,
+					Names:       nil,
+				}
+				mockSvc.On("ListProjects", mock.Anything, 1, listFilter).Return([]specs.ProjectResponse{}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"projects":[]}}`,
+		},
+		{
+			name:        "Fail_as_error_in_getprojects",
+			profileID:   "1",
+			queryParams: "?projects_ids=2",
+			mockSetup: func(mockSvc *mocks.Service) {
+				mockSvc.On("ListProjects", mock.Anything, 1, specs.ListProjectsFilter{ProjectsIDs: []int{2}}).Return(nil, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
+		},
+		{
+			name:      "Service_returns_Error",
+			profileID: "1",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListProjectsFilter{
+					ProjectsIDs: nil,
+					Names:       nil,
+				}
+				mockSvc.On("ListProjects", mock.Anything, 1, listFilter).Return(nil, errors.New("service error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(projSvc)
+			test.mockSetup(projSvc)
+			req := httptest.NewRequest("GET", "/profiles/"+test.profileID+"/projects"+test.queryParams, nil)
+			req = mux.SetURLVars(req, map[string]string{"profile_id": test.profileID})
 
-			req, err := http.NewRequest("GET", "profiles/"+test.queryParams+"/projects", nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-			req = mux.SetURLVars(req, map[string]string{"profile_id": test.queryParams})
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(getProjectHandler)
@@ -153,6 +271,10 @@ func TestListProjectHandler(t *testing.T) {
 
 			if rr.Code != test.expectedStatusCode {
 				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Code)
+			}
+
+			if strings.TrimSpace(rr.Body.String()) != strings.TrimSpace(test.expectedResponse) {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
 
 			projSvc.AssertExpectations(t)
@@ -169,6 +291,7 @@ func TestUpdateProjectHandler(t *testing.T) {
 		input              string
 		setup              func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name: "Success_for_updating_project_detail",
@@ -187,15 +310,17 @@ func TestUpdateProjectHandler(t *testing.T) {
 				}
 				`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateProject", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateProjectRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateProject", context.Background(), TestProfileID, TestProjectID, TestUserID, mock.AnythingOfType("specs.UpdateProjectRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Project updated successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_name_field",
@@ -203,35 +328,71 @@ func TestUpdateProjectHandler(t *testing.T) {
 				"project": {
 					"name": "",
 					"description": "Updated Description",
+					"role": "Software Developer",
+					"responsibilities": "Develop a full stack app",
+					"technologies": ["Ruby, Rails, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
+					"working_start_date": "May-2020",
+					"working_end_date": "July-2020",
+					"duration": "6 Years"
 				}
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : name"}`,
 		},
 		{
 			name: "Fail_for_missing_description_field",
 			input: `{
 				"project": {
 					"name": "Updated Project",
-					"description": ""
+					"description": "",
+					"role": "Software Developer",
+					"responsibilities": "Develop a full stack app",
+					"technologies": ["Ruby, Rails, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
+					"working_start_date": "May-2020",
+					"working_end_date": "July-2020",
+					"duration": "6 Years"
 				}
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : description"}`,
+		},
+		{
+			name: "Failed_because_of_service_layer_error",
+			input: `{
+				"project": {
+					"name": "Updated Project",
+					"description": "Updated Description",
+					"role": "Software Developer",
+					"responsibilities": "Develop a full stack app",
+					"technologies": ["Ruby, Rails, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
+					"working_start_date": "May-2020",
+					"working_end_date": "July-2020",
+					"duration": "6 Years"
+				}
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateProject", context.Background(), TestProfileID, TestProjectID, TestUserID, mock.AnythingOfType("specs.UpdateProjectRequest")).Return(0, errors.New("failed to update project")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to update project"}`,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(projSvc)
-
-			req, err := http.NewRequest("PUT", "/profiles/1/projects/1", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
+			defer projSvc.AssertExpectations(t)
+			req := httptest.NewRequest("PUT", "/profiles/1/projects/1", bytes.NewBuffer([]byte(test.input)))
 
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "id": "1"})
+
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(updateProjectHandler)
@@ -239,6 +400,10 @@ func TestUpdateProjectHandler(t *testing.T) {
 
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
 		})
 	}
@@ -273,7 +438,7 @@ func TestDeleteProjectHandler(t *testing.T) {
 				mockSvc.On("DeleteProject", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse:   "No data found for deletion",
+			expectedResponse:   `{"data":{"message":"Resource not found for the given request ID"}}`,
 		},
 		{
 			name:      "Error_while_deleting_project",

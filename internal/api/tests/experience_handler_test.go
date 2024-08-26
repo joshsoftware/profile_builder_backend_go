@@ -13,9 +13,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
+)
+
+var (
+	TestExperienceID = 1
 )
 
 func TestCreateExperienceHandler(t *testing.T) {
@@ -28,6 +33,7 @@ func TestCreateExperienceHandler(t *testing.T) {
 		input              string
 		setup              func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name: "Success_for_experience_detail",
@@ -40,15 +46,17 @@ func TestCreateExperienceHandler(t *testing.T) {
 				}]
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateExperience", mock.Anything, mock.AnythingOfType("specs.CreateExperienceRequest"), 1).Return(1, nil).Once()
+				mockSvc.On("CreateExperience", mock.Anything, mock.AnythingOfType("specs.CreateExperienceRequest"), TestProfileID, TestUserID).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
+			expectedResponse:   `{"data":{"message":"Experience(s) added successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_designation_field",
@@ -62,19 +70,35 @@ func TestCreateExperienceHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : designation "}`,
+		},
+		{
+			name: "Fail_because_of_service_layer_error",
+			input: `{
+				"experiences": [{	
+					"designation": "Software Engineer",	
+					"company_name": "ABC Corp",
+					"from_date": "2023-01-01",
+					"to_date": "2024-01-01"
+				}]
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("CreateExperience", mock.Anything, mock.AnythingOfType("specs.CreateExperienceRequest"), TestProfileID, TestUserID).Return(0, errors.New("Service Error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"Service Error"}`,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(profileSvc)
-
-			req, err := http.NewRequest("POST", "/profiles/experiences", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
+			defer profileSvc.AssertExpectations(t)
+			req := httptest.NewRequest("POST", "/profiles/experiences", bytes.NewBuffer([]byte(test.input)))
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
+
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createExperienceHandler)
@@ -82,6 +106,10 @@ func TestCreateExperienceHandler(t *testing.T) {
 
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
 		})
 	}
@@ -93,45 +121,106 @@ func TestListExperienceHandler(t *testing.T) {
 
 	tests := []struct {
 		name               string
+		profileID          string
 		queryParams        string
-		setup              func(mock *mocks.Service)
+		mockSetup          func(mock *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
-			name:        "Success_for_getting_experiences",
-			queryParams: "1",
-			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetExperience", mock.Anything, 1).Return([]specs.ExperienceResponse{
+			name:        "Success_for_getting_experience",
+			profileID:   "1",
+			queryParams: "",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListExperiencesFilter{
+					ExperiencesIDs: nil,
+					Names:          nil,
+				}
+				expResp := []specs.ExperienceResponse{
 					{
+						ID:          1,
 						ProfileID:   1,
 						Designation: "Software Engineer",
-						CompanyName: "Tech Corp",
-						FromDate:    "2018-01-01",
-						ToDate:      "2020-01-01",
+						CompanyName: "Example Corp",
+						FromDate:    "2016",
+						ToDate:      "2019",
 					},
-				}, nil).Once()
+				}
+				mockSvc.On("ListExperiences", mock.Anything, 1, listFilter).Return(expResp, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"experiences":[{"id":1,"profile_id":1,"designation":"Software Engineer","company_name":"Example Corp","from_date":"2016","to_date":"2019"}]}}`,
+		},
+		{
+			name:        "Success_for_getting_experience_with_filters",
+			profileID:   "1",
+			queryParams: "?experiences_ids=1&names=Example%20Corp",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListExperiencesFilter{
+					ExperiencesIDs: []int{1},
+					Names:          []string{"Example Corp"},
+				}
+				expResp := []specs.ExperienceResponse{
+					{
+						ID:          1,
+						ProfileID:   1,
+						Designation: "Software Engineer",
+						CompanyName: "Example Corp",
+						FromDate:    "2016",
+						ToDate:      "2019",
+					},
+				}
+				mockSvc.On("ListExperiences", mock.Anything, 1, listFilter).Return(expResp, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"experiences":[{"id":1,"profile_id":1,"designation":"Software Engineer","company_name":"Example Corp","from_date":"2016","to_date":"2019"}]}}`,
+		},
+		{
+			name:      "Empty_Response_From_Service",
+			profileID: "1",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListExperiencesFilter{
+					ExperiencesIDs: nil,
+					Names:          nil,
+				}
+				mockSvc.On("ListExperiences", mock.Anything, 1, listFilter).Return([]specs.ExperienceResponse{}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"experiences":[]}}`,
 		},
 		{
 			name:        "Fail_as_error_in_getexperience",
-			queryParams: "2",
-			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetExperience", mock.Anything, 2).Return([]specs.ExperienceResponse{}, errors.New("error")).Once()
+			profileID:   "1",
+			queryParams: "?experiences_ids=2",
+			mockSetup: func(mockSvc *mocks.Service) {
+				mockSvc.On("ListExperiences", mock.Anything, 1, specs.ListExperiencesFilter{ExperiencesIDs: []int{2}}).Return(nil, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
+		},
+		{
+			name:      "Service_returns_Error",
+			profileID: "1",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListExperiencesFilter{
+					ExperiencesIDs: nil,
+					Names:          nil,
+				}
+				mockSvc.On("ListExperiences", mock.Anything, 1, listFilter).Return(nil, errors.New("service error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// Setup the mock service
-			test.setup(expSvc)
-			req, err := http.NewRequest("GET", "profiles/"+test.queryParams+"/experiences", nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-			req = mux.SetURLVars(req, map[string]string{"profile_id": test.queryParams})
+			test.mockSetup(expSvc)
+			req := httptest.NewRequest("GET", "/profiles/"+test.profileID+"/experiences"+test.queryParams, nil)
+			req = mux.SetURLVars(req, map[string]string{"profile_id": test.profileID})
+
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(getExperienceHandler)
@@ -139,6 +228,10 @@ func TestListExperienceHandler(t *testing.T) {
 
 			if rr.Code != test.expectedStatusCode {
 				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Code)
+			}
+
+			if strings.TrimSpace(rr.Body.String()) != strings.TrimSpace(test.expectedResponse) {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
 
 			expSvc.AssertExpectations(t)
@@ -155,6 +248,7 @@ func TestUpdateExperienceHandler(t *testing.T) {
 		input              string
 		setup              func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name: "Success_for_updating_experience_detail",
@@ -167,15 +261,17 @@ func TestUpdateExperienceHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateExperience", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateExperienceRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateExperience", context.Background(), TestProfileID, TestUserID, TestExperienceID, mock.AnythingOfType("specs.UpdateExperienceRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Experience updated successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_designation_field",
@@ -189,6 +285,7 @@ func TestUpdateExperienceHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : designation "}`,
 		},
 		{
 			name: "Fail_for_missing_company_name_field",
@@ -202,6 +299,7 @@ func TestUpdateExperienceHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : company name "}`,
 		},
 		{
 			name: "Fail_for_service_error",
@@ -214,23 +312,22 @@ func TestUpdateExperienceHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateExperience", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateExperienceRequest")).Return(0, errors.New("Service Error")).Once()
+				mockSvc.On("UpdateExperience", context.Background(), TestProfileID, TestUserID, TestExperienceID, mock.AnythingOfType("specs.UpdateExperienceRequest")).Return(0, errors.New("Service Error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"Service Error"}`,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(expSvc)
-
-			req, err := http.NewRequest("PUT", "/profiles/1/experience/1", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
-
+			defer expSvc.AssertExpectations(t)
+			req := httptest.NewRequest("PUT", "/profiles/1/experience/1", bytes.NewBuffer([]byte(test.input)))
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "id": "1"})
+
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(updateExperienceHandler)
@@ -239,6 +336,11 @@ func TestUpdateExperienceHandler(t *testing.T) {
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
 			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
+			}
+
 		})
 	}
 }
@@ -272,7 +374,7 @@ func TestDeleteExperienceHandler(t *testing.T) {
 				mockSvc.On("DeleteExperience", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse:   "No data found for deletion",
+			expectedResponse:   `{"data":{"message":"Resource not found for the given request ID"}}`,
 		},
 		{
 			name:         "Error_while_deleting_education",
@@ -310,6 +412,10 @@ func TestDeleteExperienceHandler(t *testing.T) {
 			reqPath := "/profiles/" + tt.profileID + "/experiences/" + tt.experienceID
 			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.experienceID})
+
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
+
 			rr := httptest.NewRecorder()
 
 			handler := handler.DeleteExperienceHandler(context.Background(), expSvc)

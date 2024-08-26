@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
@@ -29,9 +30,6 @@ func getProfileMock(t *testing.T) *mocks.ProfileStorer {
 func TestCreateAchievement(t *testing.T) {
 	mockAchievementRepo := getMock(t)
 	mockProfileRepo := getProfileMock(t)
-
-	mockProfileRepo.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
-	mockProfileRepo.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 	repoDeps := service.RepoDeps{
 		ProfileDeps:     mockProfileRepo,
@@ -56,7 +54,10 @@ func TestCreateAchievement(t *testing.T) {
 				},
 			},
 			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, constants.Achievements, mock.Anything).Return(0, nil).Once()
 				achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementRepo"), mock.Anything).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
@@ -71,7 +72,10 @@ func TestCreateAchievement(t *testing.T) {
 				},
 			},
 			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, constants.Achievements, mock.Anything).Return(0, nil).Once()
 				achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementRepo"), mock.Anything).Return(errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -86,7 +90,10 @@ func TestCreateAchievement(t *testing.T) {
 				},
 			},
 			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
-				// Ensure CreateAchievement is not called
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, constants.Achievements, mock.Anything).Return(0, nil).Once()
+				achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementRepo"), mock.Anything).Return(errors.New("missing achievement name")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("transaction handling failed")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -96,7 +103,45 @@ func TestCreateAchievement(t *testing.T) {
 				Achievements: []specs.Achievement{},
 			},
 			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
-				// Ensure CreateAchievement is not called
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, constants.Achievements, mock.Anything).Return(0, nil).Once()
+				achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementRepo"), mock.Anything).Return(errors.New("empty payload")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("transaction handling failed")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_because_counting_records_fails",
+			input: specs.CreateAchievementRequest{
+				Achievements: []specs.Achievement{
+					{
+						Name:        "Star Performer",
+						Description: "Description",
+					},
+				},
+			},
+			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, constants.Achievements, mock.Anything).Return(0, errors.New("Error counting records")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_because_transaction_handling_failed",
+			input: specs.CreateAchievementRequest{
+				Achievements: []specs.Achievement{
+					{
+						Name:        "Star Performer",
+						Description: "Description",
+					},
+				},
+			},
+			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, 1, constants.Achievements, mock.Anything).Return(0, nil).Once()
+				achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementRepo"), mock.Anything).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("transaction handling failed")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -107,121 +152,22 @@ func TestCreateAchievement(t *testing.T) {
 			if test.setup != nil {
 				test.setup(mockAchievementRepo, mockProfileRepo)
 			}
-
 			_, err := achService.CreateAchievement(context.TODO(), test.input, 1, 1)
-
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err)
 			}
-
 			mockProfileRepo.AssertExpectations(t)
 			mockAchievementRepo.AssertExpectations(t)
 		})
 	}
 }
 
-// func TestCreateAchievement(t *testing.T) {
-// 	mockAchievementRepo := getMock(t)
-// 	mockProfileRepo := getProfileMock(t)
-// 	txMock, err := pgxmock.NewPool()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	db, _ := repository.InitializeDatabase(context.TODO())
-
-// 	repo := repository.NewProfileRepo(db)
-
-// 	defer txMock.Close()
-
-// 	var repodeps = service.RepoDeps{
-
-// 		ProfileDeps: mockProfileRepo,
-// 		AchievementDeps: mockAchievementRepo,
-// 	}
-// 	achService := service.NewServices(repodeps)
-
-// 	tests := []struct {
-// 		name            string
-// 		input           specs.CreateAchievementRequest
-// 		setup           func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer)
-// 		isErrorExpected bool
-// 	}{
-// 		{
-// 			name: "Success_for_achievement_details",
-// 			input: specs.CreateAchievementRequest{
-// 				Achievements: []specs.Achievement{
-// 					{
-// 						Name:        "Star Performer",
-// 						Description: "Description",
-// 					},
-// 				},
-// 			},
-// 			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
-
-// 				// tx, _ := repodeps.ProfileDeps.BeginTransaction(context.TODO())
-// 				tx, _ :=repo.BeginTransaction(context.Background())
-// 				profileMock.On("BeginTransaction", mock.Anything).Return(tx,nil).Once()
-// 				achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementRepo"), mock.Anything).Return(nil).Once()
-// 			},
-// 			isErrorExpected: false,
-// 		},
-// 		// {
-// 		// 	name: "Failed_because_createachievement_returns_an_error",
-// 		// 	input: specs.CreateAchievementRequest{
-// 		// 		Achievements: []specs.Achievement{
-// 		// 			{
-// 		// 				Name:        "Achievement B",
-// 		// 				Description: "Description B",
-// 		// 			},
-// 		// 		},
-// 		// 	},
-// 		// 	setup: func(achievementMock *mocks.AchievementStorer) {
-// 		// 		achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementRepo")).Return(errors.New("Error")).Once()
-// 		// 	},
-// 		// 	isErrorExpected: true,
-// 		// },
-// 		// {
-// 		// 	name: "Failed_because_of_missing_achievement_name",
-// 		// 	input: specs.CreateAchievementRequest{
-// 		// 		Achievements: []specs.Achievement{
-// 		// 			{
-// 		// 				Name:        "",
-// 		// 				Description: "Description",
-// 		// 			},
-// 		// 		},
-// 		// 	},
-// 		// 	setup: func(achievementMock *mocks.AchievementStorer) {
-// 		// 		achievementMock.On("CreateAchievement", mock.Anything, mock.AnythingOfType("[]repository.AchievementRepo")).Return(errors.New("Missing achievement name")).Once()
-// 		// 	},
-// 		// 	isErrorExpected: true,
-// 		// },
-// 		// {
-// 		// 	name: "Failed_because_of_empty_payload",
-// 		// 	input: specs.CreateAchievementRequest{
-// 		// 		Achievements: []specs.Achievement{},
-// 		// 	},
-// 		// 	setup:           func(achievementMock *mocks.AchievementStorer) {},
-// 		// 	isErrorExpected: true,
-// 		// },
-// 	}
-
-// 	for _, test := range tests {
-// 		t.Run(test.name, func(t *testing.T) {
-// 			test.setup(mockAchievementRepo,mockProfileRepo)
-
-// 			_, err := achService.CreateAchievement(context.TODO(), test.input, 1, 1)
-
-// 			if (err != nil) != test.isErrorExpected {
-// 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
-// 			}
-// 		})
-// 	}
-// }
-
 func TestUpdateAchievement(t *testing.T) {
 	mockAchievementRepo := new(mocks.AchievementStorer)
-	var repodeps = service.RepoDeps{
+	mockProfileRepo := new(mocks.ProfileStorer)
+
+	repodeps := service.RepoDeps{
+		ProfileDeps:     mockProfileRepo,
 		AchievementDeps: mockAchievementRepo,
 	}
 	achService := service.NewServices(repodeps)
@@ -232,7 +178,7 @@ func TestUpdateAchievement(t *testing.T) {
 		achievementID   int
 		userID          int
 		input           specs.UpdateAchievementRequest
-		setup           func(achievementMock *mocks.AchievementStorer)
+		setup           func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer)
 		isErrorExpected bool
 	}{
 		{
@@ -246,14 +192,16 @@ func TestUpdateAchievement(t *testing.T) {
 					Description: "Updated Description",
 				},
 			},
-			setup: func(achievementMock *mocks.AchievementStorer) {
-				achievementMock.On("UpdateAchievement", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateAchievementRepo")).Return(1, nil).Once()
+			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				achievementMock.On("UpdateAchievement", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateAchievementRepo"), mock.Anything).Return(1, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
 		{
 			name:          "Failed_because_updateachievement_returns_an_error",
-			profileID:     100000,
+			profileID:     1,
 			achievementID: 1,
 			userID:        1,
 			input: specs.UpdateAchievementRequest{
@@ -262,8 +210,10 @@ func TestUpdateAchievement(t *testing.T) {
 					Description: "Description B",
 				},
 			},
-			setup: func(achievementMock *mocks.AchievementStorer) {
-				achievementMock.On("UpdateAchievement", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateAchievementRepo")).Return(0, errors.New("Error")).Once()
+			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				achievementMock.On("UpdateAchievement", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateAchievementRepo"), mock.Anything).Return(0, errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("error in handle transaction")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -278,8 +228,10 @@ func TestUpdateAchievement(t *testing.T) {
 					Description: "Description",
 				},
 			},
-			setup: func(achievementMock *mocks.AchievementStorer) {
-				achievementMock.On("UpdateAchievement", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateAchievementRepo")).Return(0, errors.New("Missing achievement name")).Once()
+			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				achievementMock.On("UpdateAchievement", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateAchievementRepo"), mock.Anything).Return(0, errors.New("Missing achievement name")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("transaction handling failed")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -294,20 +246,26 @@ func TestUpdateAchievement(t *testing.T) {
 					Description: "Valid Description",
 				},
 			},
-			setup:           func(achievementMock *mocks.AchievementStorer) {},
+			setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				achievementMock.On("UpdateAchievement", mock.Anything, -1, 1, mock.AnythingOfType("repository.UpdateAchievementRepo"), mock.Anything).Return(0, errors.New("Invalid profileID")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("transaction handling failed")).Once()
+			},
 			isErrorExpected: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(mockAchievementRepo)
-
-			_, err := achService.UpdateAchievement(context.TODO(), test.profileID, test.achievementID, test.userID, test.input)
-
-			if (err != nil) != test.isErrorExpected {
-				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
+			if test.setup != nil {
+				test.setup(mockAchievementRepo, mockProfileRepo)
 			}
+			_, err := achService.UpdateAchievement(context.TODO(), test.profileID, test.achievementID, test.userID, test.input)
+			if (err != nil) != test.isErrorExpected {
+				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err)
+			}
+			mockProfileRepo.AssertExpectations(t)
+			mockAchievementRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -318,7 +276,9 @@ var (
 
 func TestListAchievements(t *testing.T) {
 	mockAchievementRepo := new(mocks.AchievementStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps:     mockProfileRepo,
 		AchievementDeps: mockAchievementRepo,
 	}
 	achService := service.NewServices(repodeps)
@@ -336,15 +296,17 @@ func TestListAchievements(t *testing.T) {
 	tests := []struct {
 		Name            string
 		ProfileID       string
-		MockSetup       func(*mocks.AchievementStorer, int)
+		MockSetup       func(*mocks.AchievementStorer, *mocks.ProfileStorer, int)
 		isErrorExpected bool
 		wantResponse    []specs.AchievementResponse
 	}{
 		{
 			Name:      "success_get_achievement",
 			ProfileID: strconv.Itoa(mockProfileId),
-			MockSetup: func(mockAchievementStorer *mocks.AchievementStorer, profileID int) {
-				mockAchievementStorer.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return(mockResponseAchievement, nil).Once()
+			MockSetup: func(mockAchievementStorer *mocks.AchievementStorer, mockProfileStorer *mocks.ProfileStorer, profileID int) {
+				mockProfileStorer.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				mockAchievementStorer.On("ListAchievements", mock.Anything, profileID, mock.Anything, mock.Anything).Return(mockResponseAchievement, nil).Once()
+				mockProfileStorer.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseAchievement,
@@ -352,8 +314,10 @@ func TestListAchievements(t *testing.T) {
 		{
 			Name:      "fail_get_achievement",
 			ProfileID: "123",
-			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
-				achMock.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]specs.AchievementResponse{}, errors.New("error")).Once()
+			MockSetup: func(achMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer, profileID int) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				achMock.On("ListAchievements", mock.Anything, profileID, mock.Anything, mock.Anything).Return([]specs.AchievementResponse{}, errors.New("error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []specs.AchievementResponse{},
@@ -361,8 +325,10 @@ func TestListAchievements(t *testing.T) {
 		{
 			Name:      "sucess_with_empty_resultset",
 			ProfileID: "123",
-			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
-				achMock.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]specs.AchievementResponse{}, nil).Once()
+			MockSetup: func(achMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer, profileID int) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				achMock.On("ListAchievements", mock.Anything, profileID, mock.Anything, mock.Anything).Return([]specs.AchievementResponse{}, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    []specs.AchievementResponse{},
@@ -370,8 +336,10 @@ func TestListAchievements(t *testing.T) {
 		{
 			Name:      "invalid_profile_id",
 			ProfileID: "invalid",
-			MockSetup: func(achMock *mocks.AchievementStorer, profileID int) {
-				achMock.On("ListAchievements", mock.Anything, mock.Anything, mock.Anything).Return([]specs.AchievementResponse{}, errors.New("invalid profile ID")).Once()
+			MockSetup: func(achMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer, profileID int) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				achMock.On("ListAchievements", mock.Anything, profileID, mock.Anything, mock.Anything).Return([]specs.AchievementResponse{}, errors.New("invalid profile ID")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []specs.AchievementResponse{},
@@ -381,7 +349,7 @@ func TestListAchievements(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
 			profileIDInt, _ := strconv.Atoi(tt.ProfileID)
-			tt.MockSetup(mockAchievementRepo, profileIDInt)
+			tt.MockSetup(mockAchievementRepo, mockProfileRepo, profileIDInt)
 			gotResponse, err := achService.ListAchievements(context.Background(), profileIDInt, specs.ListAchievementFilter{})
 
 			assert.Equal(t, tt.wantResponse, gotResponse)
@@ -441,15 +409,6 @@ func TestDeleteAchievementService(t *testing.T) {
 			},
 			isErrorExpected: true,
 		},
-		// {
-		// 	name: "Failed_because_BeginTransaction_returns_an_error",
-		// 		achievementID: 4,
-		// 		profileID:     1,
-		// 	setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
-		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("error")).Once()
-		// 	},
-		// 	isErrorExpected: true,
-		// },
 	}
 
 	for _, test := range tests {
@@ -459,6 +418,9 @@ func TestDeleteAchievementService(t *testing.T) {
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+
+			mockAchievementRepo.AssertExpectations(t)
+			mockProfileRepo.AssertExpectations(t)
 		})
 	}
 }

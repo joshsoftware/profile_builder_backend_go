@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -30,25 +31,62 @@ func TestCreateAchievementHandler(t *testing.T) {
 		input              string
 		setup              func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
-			name: "Success_for_achievement_detail",
+			name: "Success for valid achievement details",
 			input: `{
 				"achievements":[{
 				    "name": "Star Performer",
-						"description": "Description of Award"
+					"description": "Description of Award"
 				  }]
 				}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateAchievement", mock.Anything, mock.AnythingOfType("specs.CreateAchievementRequest"), 1).Return(1, nil).Once()
+				mockSvc.On("CreateAchievement", mock.Anything, mock.AnythingOfType("specs.CreateAchievementRequest"), 1, 1).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
+			expectedResponse:   `{"data":{"message":"Achievement(s) added successfully","profile_id":1}}`,
+		},
+		{
+			name: "Success_for_multiple_achievements",
+			input: `{
+				"achievements":[
+					{
+						"name": "Star Performer",
+						"description": "First Achievement"
+					},
+					{
+						"name": "Best Developer",
+						"description": "Second Achievement"
+					}
+				]
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("CreateAchievement", mock.Anything, mock.AnythingOfType("specs.CreateAchievementRequest"), 1, 1).Return(1, nil).Once()
+			},
+			expectedStatusCode: http.StatusCreated,
+			expectedResponse:   `{"data":{"message":"Achievement(s) added successfully","profile_id":1}}`,
+		},
+		{
+			name: "Success_without_description",
+			input: `{
+				"achievements":[{
+					"name": "Star Performer",
+					"description": ""
+				}]
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("CreateAchievement", mock.Anything, mock.AnythingOfType("specs.CreateAchievementRequest"), 1, 1).Return(1, nil).Once()
+			},
+			expectedStatusCode: http.StatusCreated,
+			expectedResponse:   `{"data":{"message":"Achievement(s) added successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_name_field",
@@ -60,98 +98,119 @@ func TestCreateAchievementHandler(t *testing.T) {
 				}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : name "}`,
 		},
 		{
-			name: "Fail_for_missing_description_field",
+			name: "Fail_when_CreateAchievement_fails",
 			input: `{
 				"achievements":[{
-				    "name": "Star Performer",
-					"description": ""
-				    }]
-				}`,
-			setup:              func(mockSvc *mocks.Service) {},
-			expectedStatusCode: http.StatusBadRequest,
+					"name": "Star Performer",
+					"description": "Description of Award"
+				}]
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("CreateAchievement", mock.Anything, mock.AnythingOfType("specs.CreateAchievementRequest"), 1, 1).Return(0, errors.New("service failure")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"service failure"}`,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(profileSvc)
-
-			req, err := http.NewRequest("POST", "/profiles/achievements", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
+			defer profileSvc.AssertExpectations(t)
+			req := httptest.NewRequest("POST", "/profiles/achievements", bytes.NewBuffer([]byte(test.input)))
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
 			rr := httptest.NewRecorder()
 
-			ctx := context.WithValue(req.Context(), userIDKey, 1)
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
 
 			handler := http.HandlerFunc(createAchievementHandler)
 			handler.ServeHTTP(rr, req)
 
 			if rr.Result().StatusCode != test.expectedStatusCode {
-				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+				t.Errorf("Expected status %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
 		})
 	}
 }
 
-// Define a custom type for context key
-type contextKey string
-
-// Define constants for context keys
-const (
-	userIDKey        contextKey = "user_id"
-	profileIDKey     contextKey = "profile_id"
-	achievementIDKey contextKey = "achievement_id"
-)
-
 func TestUpdateAchievementHandler(t *testing.T) {
 	achSvc := new(mocks.Service)
-
+	updateAchievementHandler := handler.UpdateAchievementHandler(context.Background(), achSvc)
 	tests := []struct {
 		name               string
 		input              string
 		setup              func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name: "Success_for_achievement_update",
 			input: `{
-				"name": "Updated Star Performer",
-				"description": "Updated description of Award"
-			}`,
+						"achievement":{
+    						"name": "Star Performer of JOSH",
+							"description": "Description of Award"
+    					}
+					}`,
 			setup: func(mockSvc *mocks.Service) {
 				mockSvc.On("UpdateAchievement", mock.Anything, 1, 1, 1, mock.AnythingOfType("specs.UpdateAchievementRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Achievement updated successfully","profile_id":1}}`,
+		},
+		{
+			name: "Success_without_description",
+			input: `{
+						"achievement":{
+							"name": "Star Performer of JOSH",
+							"description": ""
+						}
+					}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateAchievement", mock.Anything, 1, 1, 1, mock.AnythingOfType("specs.UpdateAchievementRequest")).Return(1, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Achievement updated successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_name_field",
 			input: `{
-				"name": "",
-				"description": "Updated description of Award"
-			}`,
+						"achievement":{
+							"name": "",
+							"description": "Description of Award"
+						}
+					}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : name "}`,
 		},
 		{
-			name: "Fail_for_missing_description_field",
+			name: "Fail_for_service_error",
 			input: `{
-				"name": "Updated Star Performer",
-				"description": ""
-			}`,
-			setup:              func(mockSvc *mocks.Service) {},
-			expectedStatusCode: http.StatusBadRequest,
+						"achievement":{
+							"name": "Star Performer of JOSH",
+							"description": "Description of Award"
+						}
+					}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateAchievement", mock.Anything, 1, 1, 1, mock.AnythingOfType("specs.UpdateAchievementRequest")).Return(0, errors.New("service error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"service error"}`,
 		},
 	}
 
@@ -159,25 +218,22 @@ func TestUpdateAchievementHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(achSvc)
 
-			req, err := http.NewRequest("PUT", "/profiles/achievements/1", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
-			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "achievement_id": "1"})
+			req := httptest.NewRequest("PUT", "/profiles/achievements/1", bytes.NewBuffer([]byte(test.input)))
+			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "id": "1"})
 
-			// Set the user_id in the context
-			ctx := context.WithValue(req.Context(), userIDKey, 1)
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
 
 			rr := httptest.NewRecorder()
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handler.UpdateAchievementHandler(ctx, achSvc)(w, r)
-			})
+			handler := http.HandlerFunc(updateAchievementHandler)
 			handler.ServeHTTP(rr, req)
 
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
 		})
 	}
@@ -199,16 +255,17 @@ func TestListAchievementsHandler(t *testing.T) {
 		mockDecodeRequest  func()
 		MockSvc            func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name:        "success_achievement",
 			pathParams:  profileID,
-			queryParams: "achievement_ids=1,2&names=Client Appreciation,Another Achievement",
+			queryParams: "achievement_ids=1&names=Client Appreciation",
 			mockDecodeRequest: func() {
 				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (specs.ListAchievementFilter, error) {
 					return specs.ListAchievementFilter{
-						AchievementIDs: []int{1, 2},
-						Names:          []string{"Client Appreciation", "Another Achievement"},
+						AchievementIDs: []int{1},
+						Names:          []string{"Client Appreciation"},
 					}, nil
 				})
 			},
@@ -222,6 +279,7 @@ func TestListAchievementsHandler(t *testing.T) {
 				}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"achievements":[{"id":0,"profile_id":1,"name":"Client Appreciation","description":"Description of Appreciation"}]}}`,
 		},
 		{
 			name:        "success_achievements",
@@ -250,6 +308,22 @@ func TestListAchievementsHandler(t *testing.T) {
 				}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"achievements":[{"id":0,"profile_id":1,"name":"Client Appreciation","description":"Description of Appreciation"},{"id":0,"profile_id":1,"name":"Another Achievement","description":"Description of Another Achievement"}]}}`,
+		},
+		{
+			name:        "sucess_with_empty_resultset",
+			pathParams:  profileID,
+			queryParams: "",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (specs.ListAchievementFilter, error) {
+					return specs.ListAchievementFilter{}, nil
+				})
+			},
+			MockSvc: func(mockSvc *mocks.Service) {
+				mockSvc.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]specs.AchievementResponse{}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"achievements":[]}}`,
 		},
 		{
 			name:        "fail_to_fetch_achievements",
@@ -264,20 +338,7 @@ func TestListAchievementsHandler(t *testing.T) {
 				mockSvc.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]specs.AchievementResponse{}, errors.New("some error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
-		},
-		{
-			name:        "sucess_with_empty_resultset",
-			pathParams:  profileID,
-			queryParams: "",
-			mockDecodeRequest: func() {
-				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (specs.ListAchievementFilter, error) {
-					return specs.ListAchievementFilter{}, nil
-				})
-			},
-			MockSvc: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]specs.AchievementResponse{}, nil).Once()
-			},
-			expectedStatusCode: http.StatusNotFound,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
 		},
 		{
 			name:        "fail_to_fetch_achievements_with_invalid_profile_id",
@@ -292,26 +353,43 @@ func TestListAchievementsHandler(t *testing.T) {
 				mockSvc.On("ListAchievements", mock.Anything, profileID0, mock.Anything).Return(nil, errors.New("invalid profile id")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
+		},
+		{
+			name:        "failed_because_service_layer_caused_error",
+			pathParams:  profileID,
+			queryParams: "achievement_ids=1,2&names=Client Appreciation,Another Achievement",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (specs.ListAchievementFilter, error) {
+					return specs.ListAchievementFilter{
+						AchievementIDs: []int{1, 2},
+						Names:          []string{"Client Appreciation", "Another Achievement"},
+					}, nil
+				})
+			},
+			MockSvc: func(mockSvc *mocks.Service) {
+				mockSvc.On("ListAchievements", mock.Anything, profileID, mock.Anything).Return([]specs.AchievementResponse{}, errors.New("serive layer error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.MockSvc(achSvc)
-			req, err := http.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/achievements", nil)
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
-
+			req := httptest.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/achievements", nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.pathParams)})
 			resp := httptest.NewRecorder()
-
 			handler := http.HandlerFunc(getAchievementHandler)
 			handler.ServeHTTP(resp, req)
 
 			if resp.Code != tt.expectedStatusCode {
 				t.Errorf("Expected status code %d but got %d", tt.expectedStatusCode, resp.Code)
+			}
+
+			if resp.Body.String() != tt.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", tt.expectedResponse, resp.Body.String())
 			}
 		})
 	}
@@ -347,7 +425,7 @@ func TestDeleteAchievementHandler(t *testing.T) {
 				mockSvc.On("DeleteAchievement", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse:   "No data found for deletion",
+			expectedResponse:   `{"data":{"message":"Resource not found for the given request ID"}}`,
 		},
 		{
 			name:          "Error_while_deleting_achievement",
