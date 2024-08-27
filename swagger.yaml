@@ -393,6 +393,62 @@ paths:
         "200":
           description: Successful login
 
+  /api/logout:
+    delete:
+      summary: User Logout
+      description: Use this endpoint to log out the currently authenticated user. Requires a JWT token in the Authorization header.
+      tags:
+        - Login/Logout
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Successful logout.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logout successfully
+        "401":
+          description: Unauthorized - User is not authenticated or the token is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: unauthorized access
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 500
+                  error_message:
+                    type: string
+                    example: internal server error
+        "502":
+          description: Invalid request data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code:
+                    type: integer
+                    example: 502
+                  error_message:
+                    type: string
+                    example: invalid request data
+
   /api/profiles/{profileId}/educations/{educationId}:
     put:
       summary: Update Education of Specific ID
@@ -1098,3 +1154,157 @@ paths:
                   error_message:
                     type: string
                     example: invalid request data
+
+  /api/profiles/{profile_id}/employee_invite:
+    post:
+      summary: Send Employee Invitation
+      description: This api is used to send employee invitation on email for complete their profile
+      tags:
+        - Email
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Contains the profile ID of the employee to whom the invitation will be sent.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile_id:
+                  type: number
+                  example: 80
+      responses:
+        "200":
+          description: Invitation sent successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invitation sent successfully to employee
+        "400":
+          description: Bad Request - Invalid profile_id or other parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: invalid request body
+        "401":
+          description: Unauthorized - User is not authenticated or the token is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: unauthorized access
+        "404":
+          description: Not Found - Profile not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: profile not found
+        "500":
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: internal Server Error
+
+  /api/profiles/{profile_id}/profile_complete:
+    post:
+      summary: Update Profile Completion To Admin
+      description: This api is used to send email to admin for update the completion of employee profile
+      tags:
+        - Email
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Contains the profile ID of the admin to whom the send email
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile_id:
+                  type: number
+                  example: 80
+      responses:
+        "200":
+          description: Invitation sent successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Profile Completed Successfully
+        "400":
+          description: Bad Request - Invalid profile_id or other parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: invalid request body
+        "401":
+          description: Unauthorized - User is not authenticated or the token is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: unauthorized access
+        "404":
+          description: Not Found - Profile not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: profile not found
+        "500":
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: internal Server Error
