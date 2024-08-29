@@ -33,7 +33,7 @@ func (userService *service) SendUserInvitation(ctx context.Context, userID int, 
 		return err
 	}
 
-	err = helpers.SendUserInvitation(profile.Email, profileID)
+	err = helpers.SendUserInvitation(profile.Email, profile.Name, profileID)
 	if err != nil {
 		zap.S().Errorf("Error sending invitation:%v  for email:%s and profile ID : %d ", err, profile.Email, profileID)
 		return err

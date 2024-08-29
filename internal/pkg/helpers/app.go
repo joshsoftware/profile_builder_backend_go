@@ -278,8 +278,8 @@ func SendAdminInvitation(email string, profileID int) error {
 }
 
 // SendUserInvitation sends a user invitation email
-func SendUserInvitation(email string, profileID int) error {
-	message := ConstructUserMessage(email, profileID)
+func SendUserInvitation(email, name string, profileID int) error {
+	message := ConstructUserMessage(email, name, profileID)
 	return SendInvitation(email, constants.EmployeeInvitationSubject, message)
 }
 

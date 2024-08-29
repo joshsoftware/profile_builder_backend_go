@@ -225,8 +225,8 @@ var (
 	AdminProfileID = 0
 )
 
-// Email subject for send invitation and update profile
+// // Email subject for send invitation and update profile
 var (
-	EmployeeInvitationSubject = "Action Required: Complete Your Profile"
-	AdminRequestSubject       = "Profile Update: An Employee Has Completed The Profile"
+	EmployeeInvitationSubject = "Action Required: Profile Successfully Created - Please Complete Your Profile"
+	AdminRequestSubject       = "Profile Update: Employee Profile Completed - Please Review and Download"
 )

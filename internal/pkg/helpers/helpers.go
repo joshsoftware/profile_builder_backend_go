@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"go.uber.org/zap"
@@ -87,37 +88,43 @@ func JoinValues(values interface{}, sep string) string {
 }
 
 // ConstructUserMessage constructs the email message for a profile invitation
-func ConstructUserMessage(email string, profileID int) string {
+func ConstructUserMessage(email, name string, profileID int) string {
+	firstName := strings.Split(name, " ")[0]
 	link := fmt.Sprintf("%s/profile-builder/%d", os.Getenv("HOST_URL"), profileID)
 	content := fmt.Sprintf(`
 		<html>
 		<body>
 			<div class="email-content">
-				<p>Hello,</p>
-				<p>Your profile has been created successfully. Please <a href="%s">click here</a> to complete your profile.</p>
-				<p>Thank you,</p>
-				<p>The Team</p>
+				<p>Hello %s,</p>
+				<p>We are pleased to inform you that your Josh profile has been successfully created in Profile Builder.</p>
+				<p>Please <a href="%s">Click HERE</a> to review your profile and update the remaining details as soon as possible.</p>
+				<p>Once all the required information has been provided, kindly submit your profile for final approval.</p>
+				<p>Feel free to reach out to Ruchira Kulkarni if you have any questions or need assistance.</p>
+				<p>Best Regards,</p>
+				<p>Profile Builder Team</p>
 			</div>
 		</body>
 		</html>
-	`, link)
+	`, firstName, link)
 	return content
 }
 
 // ConstructAdminEmailMessage constructs the email message for an admin invitation
 func ConstructAdminEmailMessage(email string, profileID int) string {
+	firstName := GetFirstName(email)
 	link := fmt.Sprintf("%s/profile-builder/%d", os.Getenv("HOST_URL"), profileID)
 	content := fmt.Sprintf(`
 		<html>
 		<body>
 			<div class="email-content">
-				<p>Hello,</p>
-				<p>Employee completed his/her Profile. Please <a href="%s">click here</a> to download profile.</p>
-				<p>Thank you</p>
+				<p>Hello %s,</p>
+				<p>The candidate has completed their profile. Please <a href="%s">click here</a> to review and download the profile.</p>
+				<p>Best Regards,</p>
+				<p>Profile Builder Team</p>
 			</div>
 		</body>
 		</html>
-	`, link)
+	`, firstName, link)
 	return content
 }
 
@@ -140,4 +147,14 @@ func CheckBoolStatus(value int) string {
 
 func ConvertToLowerCase(email string) string {
 	return strings.ToLower(email)
+}
+
+// GetFirstName returns the first name from the email
+func GetFirstName(email string) string {
+	namePart := strings.Split(email, "@")[0] // Get the part before @
+	name := strings.Split(namePart, ".")[0]
+	if len(name) > 0 {
+		return string(unicode.ToUpper(rune(name[0]))) + name[1:]
+	}
+	return name
 }
