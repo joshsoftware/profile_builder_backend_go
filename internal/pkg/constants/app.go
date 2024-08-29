@@ -120,7 +120,7 @@ var BackupTables = []string{"users", "profiles", "educations", "certificates", "
 
 // RequestUserColumns defines the columns required for creating a new user.
 var RequestUserColumns = []string{
-	"id", "email", "role",
+	"id", "email", "role", "name",
 }
 
 // ListQueryParams for acheivements
