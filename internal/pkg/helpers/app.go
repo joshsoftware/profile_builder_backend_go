@@ -272,8 +272,8 @@ func getEmailConfig() (from, apiKey string) {
 }
 
 // SendAdminInvitation sends an admin invitation email
-func SendAdminInvitation(email string, profileID int) error {
-	message := ConstructAdminEmailMessage(email, profileID)
+func SendAdminInvitation(email, name string, profileID int) error {
+	message := ConstructAdminEmailMessage(email, name, profileID)
 	return SendInvitation(email, constants.AdminRequestSubject, message)
 }
 

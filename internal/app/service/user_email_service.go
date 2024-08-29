@@ -55,7 +55,7 @@ func (userService *service) SendUserInvitation(ctx context.Context, userID int, 
 		return err
 	}
 
-	err = userService.UserLoginRepo.CreateUser(ctx, profile.Email, constants.Employee, tx)
+	err = userService.UserLoginRepo.CreateUser(ctx, profile.Name, profile.Email, constants.Employee, tx)
 	if err != nil {
 		zap.S().Errorf("Error creating user employee: %v for user %s: ", err, profile.Email)
 		return err
@@ -97,7 +97,7 @@ func (userService *service) UpdateInvitation(ctx context.Context, userID int, pr
 		return err
 	}
 
-	err = helpers.SendAdminInvitation(admin.Email, profileID)
+	err = helpers.SendAdminInvitation(admin.Email, admin.Name, profileID)
 	if err != nil {
 		zap.S().Errorf("Error sending invitation %v for user email : %s and profile ID : %d: ", err, admin.Email, profileID)
 		return err

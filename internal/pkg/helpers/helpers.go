@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"go.uber.org/zap"
@@ -89,7 +88,6 @@ func JoinValues(values interface{}, sep string) string {
 
 // ConstructUserMessage constructs the email message for a profile invitation
 func ConstructUserMessage(email, name string, profileID int) string {
-	firstName := strings.Split(name, " ")[0]
 	link := fmt.Sprintf("%s/profile-builder/%d", os.Getenv("HOST_URL"), profileID)
 	content := fmt.Sprintf(`
 		<html>
@@ -97,7 +95,7 @@ func ConstructUserMessage(email, name string, profileID int) string {
 			<div class="email-content">
 				<p>Hello %s,</p>
 				<p>We are pleased to inform you that your Josh profile has been successfully created in Profile Builder.</p>
-				<p>Please <a href="%s">Click HERE</a> to review your profile and update the remaining details as soon as possible.</p>
+				<p>Please <a href="%s">click here</a> to review your profile and update the remaining details as soon as possible.</p>
 				<p>Once all the required information has been provided, kindly submit your profile for final approval.</p>
 				<p>Feel free to reach out to Ruchira Kulkarni if you have any questions or need assistance.</p>
 				<p>Best Regards,</p>
@@ -105,13 +103,12 @@ func ConstructUserMessage(email, name string, profileID int) string {
 			</div>
 		</body>
 		</html>
-	`, firstName, link)
+	`, name, link)
 	return content
 }
 
 // ConstructAdminEmailMessage constructs the email message for an admin invitation
-func ConstructAdminEmailMessage(email string, profileID int) string {
-	firstName := GetFirstName(email)
+func ConstructAdminEmailMessage(email, name string, profileID int) string {
 	link := fmt.Sprintf("%s/profile-builder/%d", os.Getenv("HOST_URL"), profileID)
 	content := fmt.Sprintf(`
 		<html>
@@ -124,7 +121,7 @@ func ConstructAdminEmailMessage(email string, profileID int) string {
 			</div>
 		</body>
 		</html>
-	`, firstName, link)
+	`, name, link)
 	return content
 }
 
@@ -145,16 +142,7 @@ func CheckBoolStatus(value int) string {
 	return "NO"
 }
 
+// ConvertToLowerCase converts the email to lowercase
 func ConvertToLowerCase(email string) string {
 	return strings.ToLower(email)
-}
-
-// GetFirstName returns the first name from the email
-func GetFirstName(email string) string {
-	namePart := strings.Split(email, "@")[0] // Get the part before @
-	name := strings.Split(namePart, ".")[0]
-	if len(name) > 0 {
-		return string(unicode.ToUpper(rune(name[0]))) + name[1:]
-	}
-	return name
 }
