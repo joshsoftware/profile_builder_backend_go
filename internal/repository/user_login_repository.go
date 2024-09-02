@@ -28,7 +28,7 @@ var (
 // UserStorer defines methods to interact with user data.
 type UserStorer interface {
 	GetUserInfo(ctx context.Context, filter specs.UserInfoFilter) (User, error)
-	CreateUser(ctx context.Context, email string, role string, tx pgx.Tx) error
+	CreateUser(ctx context.Context, name, email string, role string, tx pgx.Tx) error
 	RemoveUser(ctx context.Context, email string, tx pgx.Tx) error
 }
 
@@ -60,7 +60,7 @@ func (userStore *UserStore) GetUserInfo(ctx context.Context, filter specs.UserIn
 
 	// execute the query using pgx
 	row := userStore.db.QueryRow(ctx, selectQuery, args...)
-	err = row.Scan(&user.ID, &user.Email, &user.Role)
+	err = row.Scan(&user.ID, &user.Email, &user.Role, &user.Name)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return User{}, errs.ErrNoRecordFound
@@ -78,7 +78,7 @@ func (userStore *UserStore) GetUserInfo(ctx context.Context, filter specs.UserIn
 }
 
 // CreateUser creates a new user with the given email and role
-func (userStore *UserStore) CreateUser(ctx context.Context, email string, role string, tx pgx.Tx) error {
+func (userStore *UserStore) CreateUser(ctx context.Context, name, email string, role string, tx pgx.Tx) error {
 	checkQuery := psql.Select("1").From(userTable).Where(sq.Eq{"email": email}).Limit(1)
 	checkSql, checkArgs, err := checkQuery.ToSql()
 	if err != nil {
@@ -98,7 +98,7 @@ func (userStore *UserStore) CreateUser(ctx context.Context, email string, role s
 		return nil
 	}
 
-	query := psql.Insert(userTable).Columns("email", "role").Values(email, role).Suffix("RETURNING id")
+	query := psql.Insert(userTable).Columns("email", "role", "name").Values(email, role, name).Suffix("RETURNING id")
 	sql, args, err := query.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating insert query: ", err)
