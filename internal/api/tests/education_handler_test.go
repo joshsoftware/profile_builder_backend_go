@@ -13,9 +13,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/stretchr/testify/mock"
+)
+
+var (
+	TestProfileID   = 1
+	TestUserID      = 1
+	TestEducationID = 1
 )
 
 func TestCreateEducationHandler(t *testing.T) {
@@ -27,6 +34,7 @@ func TestCreateEducationHandler(t *testing.T) {
 		input              string
 		setup              func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name: "Success_for_education_detail",
@@ -40,15 +48,34 @@ func TestCreateEducationHandler(t *testing.T) {
 				}]
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateEducation", mock.Anything, mock.AnythingOfType("specs.CreateEducationRequest"), 1).Return(1, nil).Once()
+				mockSvc.On("CreateEducation", mock.Anything, mock.AnythingOfType("specs.CreateEducationRequest"), TestProfileID, TestUserID).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusCreated,
+			expectedResponse:   `{"data":{"message":"Education(s) added successfully","profile_id":1}}`,
+		},
+		{
+			name: "Success_for_education_detail_with_empty_passing_year",
+			input: `{
+				"educations":[{
+					"degree": "BSc in Data Science",
+					"university_name": "Shivaji University",
+					"place": "Kolhapur",
+					"percent_or_cgpa": "90.50%",
+					"passing_year": ""
+				}]
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("CreateEducation", mock.Anything, mock.AnythingOfType("specs.CreateEducationRequest"), TestProfileID, TestUserID).Return(1, nil).Once()
+			},
+			expectedStatusCode: http.StatusCreated,
+			expectedResponse:   `{"data":{"message":"Education(s) added successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_degree_field",
@@ -63,20 +90,54 @@ func TestCreateEducationHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : degree "}`,
 		},
 		{
-			name: "Fail_for_missing_passing_year_field",
+			name: "Fail_because_of_service_layer_error",
 			input: `{
 				"educations":[{
-					"degree": "BSc in Data Science",
+					"degree": "BSc in Data Science",	
 					"university_name": "Shivaji University",
 					"place": "Kolhapur",
 					"percent_or_cgpa": "90.50%",
-					"passing_year": ""
+					"passing_year": "2020"
+				}]
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("CreateEducation", mock.Anything, mock.AnythingOfType("specs.CreateEducationRequest"), TestProfileID, TestUserID).Return(0, errors.New("Service Error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"Service Error"}`,
+		},
+		{
+			name: "Fail for invalid profile ID",
+			input: `{
+				"educations":[{
+					"degree": "BSc in Data Science",	
+					"university_name": "Shivaji University",
+					"place": "Kolhapur",
+					"percent_or_cgpa": "90.50%",
+					"passing_year": "2020"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail for missing UserID in context",
+			input: `{
+				"educations":[{
+					"degree": "BSc in Data Science",	
+					"university_name": "Shivaji University",
+					"place": "Kolhapur",
+					"percent_or_cgpa": "90.50%",
+					"passing_year": "2020"
 				}]
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
 		},
 	}
 
@@ -84,12 +145,19 @@ func TestCreateEducationHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(userSvc)
 
-			req, err := http.NewRequest("POST", "/profiles/educations", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
+			req := httptest.NewRequest("POST", "/profiles/educations", bytes.NewBuffer([]byte(test.input)))
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
+
+			if test.name == "Fail for invalid profile ID" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid"})
+			}
+
+			if test.name == "Fail for missing UserID in context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createEducationHandler)
@@ -98,6 +166,11 @@ func TestCreateEducationHandler(t *testing.T) {
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
 			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
+			}
+
 		})
 	}
 }
@@ -105,48 +178,120 @@ func TestCreateEducationHandler(t *testing.T) {
 func TestListEducationHandler(t *testing.T) {
 	eduSvc := mocks.NewService(t)
 	getEducationHandler := handler.ListEducationHandler(context.Background(), eduSvc)
-
 	tests := []struct {
 		name               string
+		profileID          string
 		queryParams        string
-		setup              func(mock *mocks.Service)
+		mockSetup          func(mock *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name:        "Success_for_getting_education",
-			queryParams: "1",
-			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetEducation", mock.Anything, 1).Return([]specs.EducationResponse{
+			profileID:   "1",
+			queryParams: "",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListEducationsFilter{
+					EduationsIDs: nil,
+					Names:        nil,
+				}
+				eduResp := []specs.EducationResponse{
 					{
+						ID:               1,
 						ProfileID:        1,
-						Degree:           "BSc Computer Science",
+						Degree:           "Bachelor of Science",
 						UniversityName:   "Example University",
 						Place:            "City A",
 						PercentageOrCgpa: "3.8",
 						PassingYear:      "2015",
 					},
-				}, nil).Once()
+				}
+				mockSvc.On("ListEducations", mock.Anything, TestProfileID, listFilter).Return(eduResp, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"educations":[{"id":1,"profile_id":1,"degree":"Bachelor of Science","university_name":"Example University","place":"City A","percent_or_cgpa":"3.8","passing_year":"2015"}]}}`,
+		},
+		{
+			name:        "Success_for_getting_education_with_filters",
+			profileID:   "1",
+			queryParams: "?educations_ids=1&names=Bachelor%20of%20Science",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListEducationsFilter{
+					EduationsIDs: []int{1},
+					Names:        []string{"Bachelor of Science"},
+				}
+				eduResp := []specs.EducationResponse{
+					{
+						ID:               1,
+						ProfileID:        1,
+						Degree:           "Bachelor of Science",
+						UniversityName:   "Example University",
+						Place:            "City A",
+						PercentageOrCgpa: "3.8",
+						PassingYear:      "2015",
+					},
+				}
+				mockSvc.On("ListEducations", mock.Anything, 1, listFilter).Return(eduResp, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"educations":[{"id":1,"profile_id":1,"degree":"Bachelor of Science","university_name":"Example University","place":"City A","percent_or_cgpa":"3.8","passing_year":"2015"}]}}`,
+		},
+		{
+			name:      "Empty_Response_From_Service",
+			profileID: "1",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListEducationsFilter{
+					EduationsIDs: nil,
+					Names:        nil,
+				}
+				mockSvc.On("ListEducations", mock.Anything, 1, listFilter).Return([]specs.EducationResponse{}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"educations":[]}}`,
 		},
 		{
 			name:        "Fail_as_error_in_geteducation",
-			queryParams: "2",
-			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("GetEducation", mock.Anything, 2).Return([]specs.EducationResponse{}, errors.New("error")).Once()
+			profileID:   "1",
+			queryParams: "?educations_ids=2",
+			mockSetup: func(mockSvc *mocks.Service) {
+				mockSvc.On("ListEducations", mock.Anything, 1, specs.ListEducationsFilter{EduationsIDs: []int{2}}).Return(nil, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
+		},
+		{
+			name:      "Service_returns_Error",
+			profileID: "1",
+			mockSetup: func(mockSvc *mocks.Service) {
+				listFilter := specs.ListEducationsFilter{
+					EduationsIDs: nil,
+					Names:        nil,
+				}
+				mockSvc.On("ListEducations", mock.Anything, 1, listFilter).Return(nil, errors.New("service error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   ` {"error_code":502,"error_message":"failed to fetch data"}`,
+		},
+		{
+			name:               "invalid_profile_id",
+			mockSetup:          func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(eduSvc)
-			req, err := http.NewRequest("GET", "profiles/"+test.queryParams+"/educations", nil)
-			if err != nil {
-				t.Fatal(err)
+			test.mockSetup(eduSvc)
+			req := httptest.NewRequest("GET", "/profiles/"+test.profileID+"/educations"+test.queryParams, nil)
+			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
+
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
+
+			if test.name == "invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{})
 			}
-			req = mux.SetURLVars(req, map[string]string{"profile_id": test.queryParams})
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(getEducationHandler)
@@ -155,6 +300,11 @@ func TestListEducationHandler(t *testing.T) {
 			if rr.Code != test.expectedStatusCode {
 				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Code)
 			}
+
+			if strings.TrimSpace(rr.Body.String()) != strings.TrimSpace(test.expectedResponse) {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
+			}
+			eduSvc.AssertExpectations(t)
 		})
 	}
 }
@@ -168,6 +318,7 @@ func TestUpdateEducationHandler(t *testing.T) {
 		input              string
 		setup              func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name: "Success_for_updating_education_detail",
@@ -181,15 +332,17 @@ func TestUpdateEducationHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateEducation", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateEducationRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateEducation", context.Background(), TestProfileID, TestEducationID, TestUserID, mock.AnythingOfType("specs.UpdateEducationRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Education updated successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_degree_field",
@@ -204,6 +357,7 @@ func TestUpdateEducationHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_university_name_field",
@@ -218,6 +372,7 @@ func TestUpdateEducationHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_service_error",
@@ -231,9 +386,55 @@ func TestUpdateEducationHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateEducation", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateEducationRequest")).Return(0, errors.New("Service Error")).Once()
+				mockSvc.On("UpdateEducation", context.Background(), TestProfileID, TestEducationID, TestUserID, mock.AnythingOfType("specs.UpdateEducationRequest")).Return(0, errors.New("Service Error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"Service Error"}`,
+		},
+		{
+			name: "Fail_for_invalid_profile_id",
+			input: `{
+				"education":{
+					  "degree": "MS in CS",
+					  "university_name": "Cambridge University",
+					  "place": "London",
+					  "percent_or_cgpa": "87.50%",
+					  "passing_year": "2005"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail_for_missing_user_id_in_context",
+			input: `{
+				"education":{
+					  "degree": "MS in CS",
+					  "university_name": "Cambridge University",
+					  "place": "London",
+					  "percent_or_cgpa": "87.50%",
+					  "passing_year": "2005"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
+		{
+			name: "validation_error",
+			input: `{
+				"education":{
+					  "degree": "",
+					  "university_name": "Cambridge University",
+					  "place": "London",
+					  "percent_or_cgpa": "87.50%",
+					  "passing_year": "2005"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : degree"}`,
 		},
 	}
 
@@ -241,20 +442,31 @@ func TestUpdateEducationHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(eduSvc)
 
-			req, err := http.NewRequest("PUT", "/profiles/1/education/1", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
-
+			req := httptest.NewRequest("PUT", "/profiles/1/education/1", bytes.NewBuffer([]byte(test.input)))
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "id": "1"})
 
 			rr := httptest.NewRecorder()
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
+
+			if test.name == "Fail_for_invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid", "id": "1"})
+			}
+
+			if test.name == "Fail_for_missing_user_id_in_context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
+
 			handler := http.HandlerFunc(updateEducationHandler)
 			handler.ServeHTTP(rr, req)
 
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
 		})
 	}
@@ -289,7 +501,7 @@ func TestDeleteEducationHandler(t *testing.T) {
 				mockSvc.On("DeleteEducation", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse:   "No data found for deletion",
+			expectedResponse:   `{"data":{"message":"Resource not found for the given request ID"}}`,
 		},
 		{
 			name:        "Error_while_deleting_education",
@@ -327,6 +539,9 @@ func TestDeleteEducationHandler(t *testing.T) {
 			reqPath := "/profiles/" + tt.profileID + "/educations/" + tt.educationID
 			req := httptest.NewRequest(http.MethodDelete, reqPath, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": tt.profileID, "id": tt.educationID})
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
+
 			rr := httptest.NewRecorder()
 
 			handler := handler.DeleteEducationHandler(context.Background(), educationSvc)
@@ -347,6 +562,7 @@ func TestDeleteEducationHandler(t *testing.T) {
 			if !strings.Contains(string(body), tt.expectedResponse) {
 				t.Errorf("expected response to contain %q, got %q", tt.expectedResponse, body)
 			}
+
 		})
 	}
 

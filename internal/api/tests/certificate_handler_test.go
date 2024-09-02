@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -30,6 +31,7 @@ func TestCreateCertificateHandler(t *testing.T) {
 		input              string
 		setup              func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name: "Success_for_certificate_detail",
@@ -44,15 +46,35 @@ func TestCreateCertificateHandler(t *testing.T) {
 				}]
 				}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("CreateCertificate", mock.Anything, mock.AnythingOfType("specs.CreateCertificateRequest"), 1).Return(1, nil).Once()
+				mockSvc.On("CreateCertificate", mock.Anything, mock.AnythingOfType("specs.CreateCertificateRequest"), 1, 1).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Certificate(s) added successfully","profile_id":1}}`,
+		},
+		{
+			name: "Success_for_certificate_detail_with_empty_description",
+			input: `{
+				"certificates":[{
+					"name": "Full Stack Data Science",
+					"organization_name": "Josh Software Pvt.Ltd.",
+					"description": "",
+					"issued_date": "Dec-2023",
+					"from_date": "June-2023",
+					"to_date": "Dec-2023"
+				}]
+				}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("CreateCertificate", mock.Anything, mock.AnythingOfType("specs.CreateCertificateRequest"), 1, 1).Return(1, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Certificate(s) added successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_name_field",
@@ -68,14 +90,49 @@ func TestCreateCertificateHandler(t *testing.T) {
 				}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : certificate name"}`,
 		},
 		{
-			name: "Fail_for_missing_description_field",
+			name: "Failed_because_of_service_layer_error",
 			input: `{
 				"certificates":[{
 					"name": "Full Stack Data Science",
 					"organization_name": "Josh Software Pvt.Ltd.",
-					"description": "",
+					"description": "A Bootcamp for Mastering Data Science Concepts",
+					"issued_date": "Dec-2023",
+					"from_date": "June-2023",
+					"to_date": "Dec-2023"
+				}]
+				}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("CreateCertificate", mock.Anything, mock.AnythingOfType("specs.CreateCertificateRequest"), 1, 1).Return(0, errors.New("service layer error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"service layer error"}`,
+		},
+		{
+			name: "Fail for invalid profile ID",
+			input: `{
+				"certificates":[{
+					"name": "Full Stack Data Science",
+					"organization_name": "Josh Software Pvt.Ltd.",
+					"description": "A Bootcamp for Mastering Data Science Concepts",
+					"issued_date": "Dec-2023",
+					"from_date": "June-2023",
+					"to_date": "Dec-2023"
+				}]
+				}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail for missing UserID in context",
+			input: `{
+				"certificates":[{
+					"name": "Full Stack Data Science",
+					"organization_name": "Josh Software Pvt.Ltd.",
+					"description": "A Bootcamp for Mastering Data Science Concepts",
 					"issued_date": "Dec-2023",
 					"from_date": "June-2023",
 					"to_date": "Dec-2023"
@@ -83,6 +140,7 @@ func TestCreateCertificateHandler(t *testing.T) {
 				}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
 		},
 	}
 
@@ -90,18 +148,31 @@ func TestCreateCertificateHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(profileSvc)
 
-			req, err := http.NewRequest("POST", "/profiles/1/certificates", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
+			req := httptest.NewRequest("POST", "/profiles/1/certificates", bytes.NewBuffer([]byte(test.input)))
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
+
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
+
+			if test.name == "Fail for invalid profile ID" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid"})
+			}
+
+			if test.name == "Fail for missing UserID in context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
+
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createCertificateHandler)
 			handler.ServeHTTP(rr, req)
 
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
 		})
 	}
@@ -118,6 +189,7 @@ func TestListCertificatesHandler(t *testing.T) {
 		mockDecodeRequest  func()
 		mockSvcSetup       func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name:        "Success_for_fetching_single_certificate",
@@ -145,6 +217,7 @@ func TestListCertificatesHandler(t *testing.T) {
 				}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"certificates":[{"id":0,"profile_id":1,"name":"Golang Master Class","organization_name":"Udemy","description":"A Bootcamp for Mastering Golang Concepts","issued_date":"Dec-2023","from_date":"June-2023","to_date":"Dec-2023"}]}}`,
 		},
 		{
 			name:        "success_for_fetching_multiple_certificates",
@@ -173,21 +246,7 @@ func TestListCertificatesHandler(t *testing.T) {
 				}, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
-		},
-
-		{
-			name:        "fail_to_fetch_certificates",
-			pathParams:  profileID,
-			queryParams: "",
-			mockDecodeRequest: func() {
-				mpatch.PatchMethod(helpers.DecodeCertificateRequest, func(r *http.Request) (specs.ListCertificateFilter, error) {
-					return specs.ListCertificateFilter{}, nil
-				})
-			},
-			mockSvcSetup: func(mockSvc *mocks.Service) {
-				mockSvc.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]specs.CertificateResponse{}, errors.New("some error")).Once()
-			},
-			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"data":{"certificates":[{"id":0,"profile_id":1,"name":"Certificate 1","organization_name":"","description":"Description of Certificate 1","issued_date":"","from_date":"","to_date":""},{"id":0,"profile_id":1,"name":"Certificate 2","organization_name":"","description":"Description of Certificate 2","issued_date":"","from_date":"","to_date":""}]}}`,
 		},
 		{
 			name:        "sucess_with_empty_resultset",
@@ -201,7 +260,23 @@ func TestListCertificatesHandler(t *testing.T) {
 			mockSvcSetup: func(mockSvc *mocks.Service) {
 				mockSvc.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]specs.CertificateResponse{}, nil).Once()
 			},
-			expectedStatusCode: http.StatusNotFound,
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"certificates":[]}}`,
+		},
+		{
+			name:        "fail_to_fetch_certificates",
+			pathParams:  profileID,
+			queryParams: "",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeCertificateRequest, func(r *http.Request) (specs.ListCertificateFilter, error) {
+					return specs.ListCertificateFilter{}, nil
+				})
+			},
+			mockSvcSetup: func(mockSvc *mocks.Service) {
+				mockSvc.On("ListCertificates", mock.Anything, profileID, mock.Anything).Return([]specs.CertificateResponse{}, errors.New("some error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
 		},
 		{
 			name:        "fail_to_fetch_certificates_with_invalid_profile_id",
@@ -216,6 +291,27 @@ func TestListCertificatesHandler(t *testing.T) {
 				mockSvc.On("ListCertificates", mock.Anything, profileID0, mock.Anything).Return(nil, errors.New("invalid profile id")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
+		},
+		{
+			name:               "invalid_profile_id",
+			mockDecodeRequest:  func() {},
+			mockSvcSetup:       func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name:        "failed_to_decode_request",
+			pathParams:  profileID,
+			queryParams: "achievement_ids=a",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeCertificateRequest, func(r *http.Request) (specs.ListCertificateFilter, error) {
+					return specs.ListCertificateFilter{}, errors.New("failed to decode request")
+				})
+			},
+			mockSvcSetup:       func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"unable to decode request"}`, // Adjust error message & code here
 		},
 	}
 
@@ -223,12 +319,19 @@ func TestListCertificatesHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSvcSetup(certficateSvc)
 
-			req, err := http.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/certificates", nil)
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
+			req := httptest.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/certificates"+tt.queryParams, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.pathParams)})
+
+			if tt.name == "invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{})
+			}
+
+			if tt.name == "failed_to_decode_request" {
+				tt.mockDecodeRequest()
+			}
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
+
 			resp := httptest.NewRecorder()
 
 			handler := http.HandlerFunc(getCertificateHandler)
@@ -236,6 +339,10 @@ func TestListCertificatesHandler(t *testing.T) {
 
 			if resp.Code != tt.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", tt.expectedStatusCode, resp.Result().StatusCode)
+			}
+
+			if resp.Body.String() != tt.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", tt.expectedResponse, resp.Body.String())
 			}
 		})
 	}
@@ -250,6 +357,7 @@ func TestUpdateCertificateHandler(t *testing.T) {
 		input              string
 		setup              func(mockSvc *mocks.Service)
 		expectedStatusCode int
+		expectedResponse   string
 	}{
 		{
 			name: "Success_for_updating_certificate_detail",
@@ -264,15 +372,35 @@ func TestUpdateCertificateHandler(t *testing.T) {
 				}
 			}`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateCertificate", context.Background(), "1", "1", mock.AnythingOfType("specs.UpdateCertificateRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateCertificate", context.Background(), 1, 1, 1, mock.AnythingOfType("specs.UpdateCertificateRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Certificate updated successfully","profile_id":1}}`,
+		},
+		{
+			name: "Success_for_updating_certificate_detail_with_empty_organization_name",
+			input: `{
+				"certificate": {
+					"name": "Updated Certificate",
+					"organization_name": "",
+					"description": "Updated Description",
+					"issued_date": "2024-05-30",
+					"from_date": "2023-01-01",
+					"to_date": "2023-12-31"
+				}
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateCertificate", context.Background(), 1, 1, 1, mock.AnythingOfType("specs.UpdateCertificateRequest")).Return(1, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Certificate updated successfully","profile_id":1}}`,
 		},
 		{
 			name:               "Fail_for_incorrect_json",
 			input:              "",
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request body"}`,
 		},
 		{
 			name: "Fail_for_missing_name_field",
@@ -288,21 +416,57 @@ func TestUpdateCertificateHandler(t *testing.T) {
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : name"}`,
 		},
 		{
-			name: "Fail_for_missing_organization_name_field",
+			name: "Failed_because_of_service_layer_error",
 			input: `{
 				"certificate": {
 					"name": "Updated Certificate",
-					"organization_name": "",
+					"organization_name": "Updated Organization",
 					"description": "Updated Description",
 					"issued_date": "2024-05-30",
 					"from_date": "2023-01-01",
 					"to_date": "2023-12-31"
-				}
+					}
+			}`,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("UpdateCertificate", context.Background(), 1, 1, 1, mock.AnythingOfType("specs.UpdateCertificateRequest")).Return(0, errors.New("service layer error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"service layer error"}`,
+		},
+		{
+			name: "Fail_for_invalid_profile_id",
+			input: `{
+				"certificate": {
+					"name": "Updated Certificate",
+					"organization_name": "Updated Organization",
+					"description": "Updated Description",
+					"issued_date": "2024-05-30",
+					"from_date": "2023-01-01",
+					"to_date": "2023-12-31"
+					}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail_for_missing_user_id_in_context",
+			input: `{
+				"certificate": {
+					"name": "Updated Certificate",
+					"organization_name": "Updated Organization",
+					"description": "Updated Description",
+					"issued_date": "2024-05-30",
+					"from_date": "2023-01-01",
+					"to_date": "2023-12-31"
+					}
 			}`,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
 		},
 	}
 
@@ -310,13 +474,20 @@ func TestUpdateCertificateHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(certificateSvc)
 
-			req, err := http.NewRequest("PUT", "/profiles/1/certificates/1", bytes.NewBuffer([]byte(test.input)))
-			if err != nil {
-				t.Fatal(err)
-				return
-			}
+			req := httptest.NewRequest("PUT", "/profiles/1/certificates/1", bytes.NewBuffer([]byte(test.input)))
 
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "id": "1"})
+			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
+			req = req.WithContext(ctx)
+
+			if test.name == "Fail_for_invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid", "id": "1"})
+			}
+
+			if test.name == "Fail_for_missing_user_id_in_context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(updateCertificateHandler)
@@ -325,6 +496,11 @@ func TestUpdateCertificateHandler(t *testing.T) {
 			if rr.Result().StatusCode != test.expectedStatusCode {
 				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
 			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected response body %s but got %s", test.expectedResponse, rr.Body.String())
+			}
+
 		})
 	}
 }
@@ -358,7 +534,7 @@ func TestDeleteCertificateHandler(t *testing.T) {
 				mockSvc.On("DeleteCertificate", mock.Anything, 1, 2).Return(errs.ErrNoData).Once()
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse:   "No data found for deletion",
+			expectedResponse:   `{"data":{"message":"Resource not found for the given request ID"}}`,
 		},
 		{
 			name:          "Error_while_deleting_certificate",

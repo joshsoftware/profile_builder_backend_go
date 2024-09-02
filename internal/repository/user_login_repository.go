@@ -80,14 +80,14 @@ func (userStore *UserStore) GetUserInfo(ctx context.Context, filter specs.UserIn
 // CreateUser creates a new user with the given email and role
 func (userStore *UserStore) CreateUser(ctx context.Context, name, email string, role string, tx pgx.Tx) error {
 	checkQuery := psql.Select("1").From(userTable).Where(sq.Eq{"email": email}).Limit(1)
-	checkSql, checkArgs, err := checkQuery.ToSql()
+	checkSQL, checkArgs, err := checkQuery.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating select query: ", err)
 		return err
 	}
 
 	var exists int64
-	err = tx.QueryRow(ctx, checkSql, checkArgs...).Scan(&exists)
+	err = tx.QueryRow(ctx, checkSQL, checkArgs...).Scan(&exists)
 	if err != nil && err != pgx.ErrNoRows {
 		zap.S().Error("Error executing select query: ", err)
 		return err

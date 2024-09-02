@@ -20,7 +20,9 @@ var mockListProjectsResp = specs.ListProjectsFilter{
 
 func TestCreateProject(t *testing.T) {
 	mockProjectRepo := new(mocks.ProjectStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps: mockProfileRepo,
 		ProjectDeps: mockProjectRepo,
 	}
 	profileService := service.NewServices(repodeps)
@@ -28,7 +30,9 @@ func TestCreateProject(t *testing.T) {
 	tests := []struct {
 		name            string
 		input           specs.CreateProjectRequest
-		setup           func(projectMock *mocks.ProjectStorer)
+		profileID       int
+		userID          int
+		setup           func(*mocks.ProjectStorer, *mocks.ProfileStorer)
 		isErrorExpected bool
 	}{
 		{
@@ -48,8 +52,11 @@ func TestCreateProject(t *testing.T) {
 					},
 				},
 			},
-			setup: func(projectMock *mocks.ProjectStorer) {
-				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectRepo")).Return(nil).Once()
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(1, nil).Once()
+				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectRepo"), mock.Anything).Return(nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
@@ -70,8 +77,11 @@ func TestCreateProject(t *testing.T) {
 					},
 				},
 			},
-			setup: func(projectMock *mocks.ProjectStorer) {
-				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectRepo")).Return(errors.New("Error")).Once()
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(1, nil).Once()
+				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectRepo"), mock.Anything).Return(errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
@@ -80,28 +90,83 @@ func TestCreateProject(t *testing.T) {
 			input: specs.CreateProjectRequest{
 				Projects: []specs.Project{},
 			},
-			setup:           func(projectMock *mocks.ProjectStorer) {},
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(1, nil).Once()
+				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectRepo"), mock.Anything).Return(errors.New("invalid request body")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_because_countrecords_returns_an_error",
+			input: specs.CreateProjectRequest{
+				Projects: []specs.Project{
+					{
+						Name:             "Project Z",
+						Description:      "Description of Project Z",
+						Role:             "Tester",
+						Responsibilities: "Testing",
+						Technologies:     []string{"Java", "Selenium"},
+						TechWorkedOn:     []string{"Python, C#"},
+						WorkingStartDate: "2024-01-01",
+						WorkingEndDate:   "2024-06-01",
+						Duration:         "5 months",
+					},
+				},
+			},
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(0, errors.New("error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
+			isErrorExpected: true,
+		},
+		{
+			name: "Failed_because_invalid_profileID",
+			input: specs.CreateProjectRequest{
+				Projects: []specs.Project{
+					{
+						Name:             "Project Z",
+						Description:      "Description of Project Z",
+						Role:             "Tester",
+						Responsibilities: "Testing",
+						Technologies:     []string{"Java", "Selenium"},
+						TechWorkedOn:     []string{"Python, C#"},
+						WorkingStartDate: "2024-01-01",
+						WorkingEndDate:   "2024-06-01",
+						Duration:         "5 months",
+					},
+				},
+			},
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				profileMock.On("CountRecords", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(1, nil).Once()
+				projectMock.On("CreateProject", mock.Anything, mock.AnythingOfType("[]repository.ProjectRepo"), mock.Anything).Return(errors.New("invalid profileID")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
 			isErrorExpected: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(mockProjectRepo)
-
-			// test service
+			test.setup(mockProjectRepo, mockProfileRepo)
 			_, err := profileService.CreateProject(context.TODO(), test.input, 1, 1)
-
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test Failed, expected error to be %v, but got err %v", test.isErrorExpected, err != nil)
 			}
+			mockProjectRepo.AssertExpectations(t)
+			mockProfileRepo.AssertExpectations(t)
 		})
 	}
 }
 
 func TestListProjects(t *testing.T) {
 	mockProjectRepo := new(mocks.ProjectStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps: mockProfileRepo,
 		ProjectDeps: mockProjectRepo,
 	}
 	projectService := service.NewServices(repodeps)
@@ -124,15 +189,17 @@ func TestListProjects(t *testing.T) {
 	tests := []struct {
 		name            string
 		profileID       int
-		setup           func(projMock *mocks.ProjectStorer)
+		setup           func(*mocks.ProjectStorer, *mocks.ProfileStorer)
 		isErrorExpected bool
 		wantResponse    []specs.ProjectResponse
 	}{
 		{
 			name:      "Success_get_project",
 			profileID: mockProfileID,
-			setup: func(projMock *mocks.ProjectStorer) {
-				projMock.On("ListProjects", mock.Anything, mock.Anything, mock.Anything).Return(mockResponseProject, nil).Once()
+			setup: func(projMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				projMock.On("ListProjects", mock.Anything, profileID, mock.Anything, mock.Anything).Return(mockResponseProject, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 			wantResponse:    mockResponseProject,
@@ -140,8 +207,10 @@ func TestListProjects(t *testing.T) {
 		{
 			name:      "Fail_get_project",
 			profileID: mockProfileID,
-			setup: func(projMock *mocks.ProjectStorer) {
-				projMock.On("ListProjects", mock.Anything, mock.Anything, mock.Anything).Return([]specs.ProjectResponse{}, errors.New("error")).Once()
+			setup: func(projMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				projMock.On("ListProjects", mock.Anything, profileID, mock.Anything, mock.Anything).Return([]specs.ProjectResponse{}, errors.New("error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 			wantResponse:    []specs.ProjectResponse{},
@@ -150,24 +219,23 @@ func TestListProjects(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			// Setup mock
-			test.setup(mockProjectRepo)
-
-			// Call the method being tested
+			test.setup(mockProjectRepo, mockProfileRepo)
 			gotResp, err := projectService.ListProjects(context.Background(), test.profileID, mockListProjectsResp)
-
-			// Assertions
 			assert.Equal(t, test.wantResponse, gotResp)
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err)
 			}
+			mockProfileRepo.AssertExpectations(t)
+			mockProjectRepo.AssertExpectations(t)
 		})
 	}
 }
 
 func TestUpdateProject(t *testing.T) {
 	mockProjectRepo := new(mocks.ProjectStorer)
+	mockProfileRepo := new(mocks.ProfileStorer)
 	var repodeps = service.RepoDeps{
+		ProfileDeps: mockProfileRepo,
 		ProjectDeps: mockProjectRepo,
 	}
 	projService := service.NewServices(repodeps)
@@ -178,11 +246,11 @@ func TestUpdateProject(t *testing.T) {
 		projectID       int
 		userID          int
 		input           specs.UpdateProjectRequest
-		setup           func(projectMock *mocks.ProjectStorer)
+		setup           func(*mocks.ProjectStorer, *mocks.ProfileStorer)
 		isErrorExpected bool
 	}{
 		{
-			name:      "Success for updating project details",
+			name:      "Success_for_updating_project_details",
 			profileID: 1,
 			projectID: 1,
 			userID:    1,
@@ -199,13 +267,15 @@ func TestUpdateProject(t *testing.T) {
 					Duration:         "1 year",
 				},
 			},
-			setup: func(projectMock *mocks.ProjectStorer) {
-				projectMock.On("UpdateProject", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateProjectRepo")).Return(1, nil).Once()
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				projectMock.On("UpdateProject", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateProjectRepo"), mock.Anything).Return(1, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 			},
 			isErrorExpected: false,
 		},
 		{
-			name:      "Failed because UpdateProject returns an error",
+			name:      "Failed_because_UpdateProject_returns_an_error",
 			profileID: 10000000,
 			projectID: 1,
 			userID:    1,
@@ -222,13 +292,15 @@ func TestUpdateProject(t *testing.T) {
 					Duration:         "1 year",
 				},
 			},
-			setup: func(projectMock *mocks.ProjectStorer) {
-				projectMock.On("UpdateProject", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateProjectRepo")).Return(0, errors.New("Error")).Once()
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				projectMock.On("UpdateProject", mock.Anything, mock.Anything, mock.Anything, mock.AnythingOfType("repository.UpdateProjectRepo"), mock.Anything).Return(0, errors.New("Error")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
-			name:      "Failed because of missing project name",
+			name:      "Failed_because_of_missing_project_name",
 			profileID: 1,
 			projectID: 1,
 			userID:    1,
@@ -245,13 +317,15 @@ func TestUpdateProject(t *testing.T) {
 					Duration:         "1 year",
 				},
 			},
-			setup: func(projectMock *mocks.ProjectStorer) {
-				projectMock.On("UpdateProject", mock.Anything, 1, 1, 1, mock.AnythingOfType("repository.UpdateProjectRepo")).Return(0, errors.New("Missing project name")).Once()
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				projectMock.On("UpdateProject", mock.Anything, 1, 1, mock.AnythingOfType("repository.UpdateProjectRepo"), mock.Anything).Return(0, errors.New("Missing project name")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,
 		},
 		{
-			name:      "Failed because of invalid profileID or projectID",
+			name:      "Failed_because_of_invalid_profileID_or_projectID",
 			profileID: -1,
 			projectID: 1,
 			userID:    1,
@@ -268,20 +342,24 @@ func TestUpdateProject(t *testing.T) {
 					Duration:         "1 year",
 				},
 			},
-			setup:           func(projectMock *mocks.ProjectStorer) {},
+			setup: func(projectMock *mocks.ProjectStorer, profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				projectMock.On("UpdateProject", mock.Anything, -1, 1, mock.AnythingOfType("repository.UpdateProjectRepo"), mock.Anything).Return(0, errors.New("Invalid profileID")).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
+			},
 			isErrorExpected: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.setup(mockProjectRepo)
-
+			test.setup(mockProjectRepo, mockProfileRepo)
 			_, err := projService.UpdateProject(context.TODO(), test.profileID, test.projectID, test.userID, test.input)
-
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+			mockProfileRepo.AssertExpectations(t)
+			mockProjectRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -335,15 +413,6 @@ func TestDeleteProjectService(t *testing.T) {
 			},
 			isErrorExpected: true,
 		},
-		// {
-		// 	name: "Failed_because_BeginTransaction_returns_an_error",
-		// 		achievementID: 4,
-		// 		profileID:     1,
-		// 	setup: func(achievementMock *mocks.AchievementStorer, profileMock *mocks.ProfileStorer) {
-		// 		profileMock.On("BeginTransaction", mock.Anything).Return(nil, errors.New("error")).Once()
-		// 	},
-		// 	isErrorExpected: true,
-		// },
 	}
 
 	for _, test := range tests {
@@ -353,6 +422,8 @@ func TestDeleteProjectService(t *testing.T) {
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)
 			}
+			mockProjectSvc.AssertExpectations(t)
+			mockProfileRepo.AssertExpectations(t)
 		})
 	}
 }
