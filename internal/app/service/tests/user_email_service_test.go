@@ -114,13 +114,13 @@ func (s *ServiceTestSuite) TestSendUserInvitation() {
 				s.profileRepo.On("BeginTransaction", args.ctx).Return(mockTx, nil).Once()
 				s.profileRepo.On("GetProfile", args.ctx, args.profileID, mock.Anything).Return(mockResponseProfile, nil).Once()
 
-				patch, _ := mpatch.PatchMethod(helpers.SendUserInvitation, func(email string, profileID int) error {
+				patch, _ := mpatch.PatchMethod(helpers.SendUserInvitation, func(email, name string, profileID int) error {
 					return nil
 				})
 				defer patch.Unpatch()
 
 				s.emailRepo.On("CreateInvitation", args.ctx, mockInvitationRequest, mock.Anything).Return(nil).Once()
-				s.loginRepo.On("CreateUser", args.ctx, mockResponseProfile.Email, constants.Employee, mock.Anything).Return(nil).Once()
+				s.loginRepo.On("CreateUser", args.ctx, mockResponseProfile.Name, mockResponseProfile.Email, constants.Employee, mock.Anything).Return(nil).Once()
 				s.profileRepo.On("HandleTransaction", args.ctx, mock.Anything, nil).Return(nil).Once()
 			},
 		},
@@ -153,7 +153,7 @@ func (s *ServiceTestSuite) TestSendUserInvitation() {
 				s.profileRepo.On("BeginTransaction", args.ctx).Return(mockTx, nil).Once()
 				s.profileRepo.On("GetProfile", args.ctx, args.profileID, mock.Anything).Return(mockResponseProfile, nil).Once()
 
-				patch, _ := mpatch.PatchMethod(helpers.SendUserInvitation, func(email string, profileID int) error {
+				patch, _ := mpatch.PatchMethod(helpers.SendUserInvitation, func(email, name string, profileID int) error {
 					return nil
 				})
 				defer patch.Unpatch()
@@ -176,13 +176,13 @@ func (s *ServiceTestSuite) TestSendUserInvitation() {
 				s.profileRepo.On("BeginTransaction", args.ctx).Return(mockTx, nil).Once()
 				s.profileRepo.On("GetProfile", args.ctx, args.profileID, mock.Anything).Return(mockResponseProfile, nil).Once()
 
-				patch, _ := mpatch.PatchMethod(helpers.SendUserInvitation, func(email string, profileID int) error {
+				patch, _ := mpatch.PatchMethod(helpers.SendUserInvitation, func(email, name string, profileID int) error {
 					return nil
 				})
 				defer patch.Unpatch()
 
 				s.emailRepo.On("CreateInvitation", args.ctx, mockInvitationRequest, mock.Anything).Return(nil).Once()
-				s.loginRepo.On("CreateUser", args.ctx, mockResponseProfile.Email, constants.Employee, mock.Anything).Return(args.err).Once()
+				s.loginRepo.On("CreateUser", args.ctx, mockResponseProfile.Name, mockResponseProfile.Email, constants.Employee, mock.Anything).Return(args.err).Once()
 				s.profileRepo.On("HandleTransaction", args.ctx, mock.Anything, args.err).Return(args.err).Once()
 			},
 		},
@@ -262,7 +262,7 @@ func (s *ServiceTestSuite) TestUpdateInvitation() {
 				s.profileRepo.On("BeginTransaction", args.ctx).Return(mockTx, nil).Once()
 				s.emailRepo.On("GetInvitations", args.ctx, mockRequest, mock.Anything).Return(mockInvitationRequest, nil).Once()
 				s.loginRepo.On(("GetUserInfo"), args.ctx, mockUserInfoFilter).Return(mockAdminInfo, nil).Once()
-				patch, _ := mpatch.PatchMethod(helpers.SendAdminInvitation, func(email string, profileID int) error {
+				patch, _ := mpatch.PatchMethod(helpers.SendAdminInvitation, func(email, name string, profileID int) error {
 					return nil
 				})
 				defer patch.Unpatch()
@@ -339,7 +339,7 @@ func (s *ServiceTestSuite) TestUpdateInvitation() {
 				s.profileRepo.On("BeginTransaction", args.ctx).Return(mockTx, nil).Once()
 				s.emailRepo.On("GetInvitations", args.ctx, mockRequest, mock.Anything).Return(mockInvitationRequest, nil).Once()
 				s.loginRepo.On(("GetUserInfo"), args.ctx, mockUserInfoFilter).Return(mockAdminInfo, nil).Once()
-				patch, _ := mpatch.PatchMethod(helpers.SendAdminInvitation, func(email string, profileID int) error {
+				patch, _ := mpatch.PatchMethod(helpers.SendAdminInvitation, func(email, name string, profileID int) error {
 					return nil
 				})
 				defer patch.Unpatch()
@@ -362,7 +362,7 @@ func (s *ServiceTestSuite) TestUpdateInvitation() {
 				s.profileRepo.On("BeginTransaction", args.ctx).Return(mockTx, nil).Once()
 				s.emailRepo.On("GetInvitations", args.ctx, mockRequest, mock.Anything).Return(mockInvitationRequest, nil).Once()
 				s.loginRepo.On(("GetUserInfo"), args.ctx, mockUserInfoFilter).Return(mockAdminInfo, nil).Once()
-				patch, _ := mpatch.PatchMethod(helpers.SendAdminInvitation, func(email string, profileID int) error {
+				patch, _ := mpatch.PatchMethod(helpers.SendAdminInvitation, func(email, name string, profileID int) error {
 					return nil
 				})
 				defer patch.Unpatch()
