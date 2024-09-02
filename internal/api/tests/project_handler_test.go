@@ -121,6 +121,44 @@ func TestCreateProjectHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"failed to create project"}`,
 		},
+		{
+			name: "Fail for invalid profile ID",
+			input: `{
+				"projects":[{
+					"name": "Least Square",	
+					"description": "A Webapp Which is Used to Build a Standard Profiles of an Employee for An Organization",
+					"role": "Soft Developer",
+					"responsibilities": "Develop a Backend",
+					"technologies": ["Python, Django, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
+					"working_start_date": "May-2020",
+					"working_end_date": "July-2020",
+					"duration": "6 Months"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail for missing UserID in context",
+			input: `{
+				"projects":[{
+					"name": "Least Square",	
+					"description": "A Webapp Which is Used to Build a Standard Profiles of an Employee for An Organization",
+					"role": "Soft Developer",
+					"responsibilities": "Develop a Backend",
+					"technologies": ["Python, Django, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
+					"working_start_date": "May-2020",
+					"working_end_date": "July-2020",
+					"duration": "6 Months"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -132,6 +170,15 @@ func TestCreateProjectHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail for invalid profile ID" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid"})
+			}
+
+			if test.name == "Fail for missing UserID in context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createProjectHandler)
@@ -253,6 +300,12 @@ func TestListProjectHandler(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
+		},
+		{
+			name:               "invalid_profile_id",
+			mockSetup:          func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
 		},
 	}
 
@@ -381,6 +434,44 @@ func TestUpdateProjectHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"failed to update project"}`,
 		},
+		{
+			name: "Fail_for_invalid_profile_id",
+			input: `{
+				"project": {
+					"name": "Updated Project",
+					"description": "Updated Description",
+					"role": "Software Developer",
+					"responsibilities": "Develop a full stack app",
+					"technologies": ["Ruby, Rails, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
+					"working_start_date": "May-2020",
+					"working_end_date": "July-2020",
+					"duration": "6 Years"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail_for_missing_user_id_in_context",
+			input: `{
+				"project": {
+					"name": "Updated Project",
+					"description": "Updated Description",
+					"role": "Software Developer",
+					"responsibilities": "Develop a full stack app",
+					"technologies": ["Ruby, Rails, MongoDB, AWS"],
+					"tech_worked_on": ["Django, AWS"],
+					"working_start_date": "May-2020",
+					"working_end_date": "July-2020",
+					"duration": "6 Years"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -393,6 +484,15 @@ func TestUpdateProjectHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail_for_invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid", "id": "1"})
+			}
+
+			if test.name == "Fail_for_missing_user_id_in_context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(updateProjectHandler)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api/handler"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service/mocks"
@@ -114,6 +116,30 @@ func TestCreateAchievementHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"service failure"}`,
 		},
+		{
+			name: "Fail for invalid profile ID",
+			input: `{
+				"achievements":[{
+					"name": "Star Performer",
+					"description": "Description of Award"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail for missing UserID in context",
+			input: `{
+				"achievements":[{
+					"name": "Star Performer",
+					"description": "Description of Award"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -126,6 +152,15 @@ func TestCreateAchievementHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail for invalid profile ID" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid"})
+			}
+
+			if test.name == "Fail for missing UserID in context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			handler := http.HandlerFunc(createAchievementHandler)
 			handler.ServeHTTP(rr, req)
@@ -212,6 +247,30 @@ func TestUpdateAchievementHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"service error"}`,
 		},
+		{
+			name: "Fail_for_invalid_profile_id",
+			input: `{
+						"achievement":{
+							"name": "Star Performer of JOSH",
+							"description": "Description of Award"
+						}
+					}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail_for_missing_user_id_in_context",
+			input: `{
+						"achievement":{
+							"name": "Star Performer of JOSH",
+							"description": "Description of Award"
+						}
+					}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -223,6 +282,15 @@ func TestUpdateAchievementHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail_for_invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid", "id": "1"})
+			}
+
+			if test.name == "Fail_for_missing_user_id_in_context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(updateAchievementHandler)
@@ -260,7 +328,7 @@ func TestListAchievementsHandler(t *testing.T) {
 		{
 			name:        "success_achievement",
 			pathParams:  profileID,
-			queryParams: "achievement_ids=1&names=Client Appreciation",
+			queryParams: "achievement_ids=1,2&names=Client%20Appreciation",
 			mockDecodeRequest: func() {
 				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (specs.ListAchievementFilter, error) {
 					return specs.ListAchievementFilter{
@@ -284,7 +352,7 @@ func TestListAchievementsHandler(t *testing.T) {
 		{
 			name:        "success_achievements",
 			pathParams:  profileID,
-			queryParams: "achievement_ids=1,2&achievement_names=Client Appreciation,Another Achievement",
+			queryParams: "achievement_ids=1,2&achievement_names=Client%20Appreciation,Another%20Achievement",
 			mockDecodeRequest: func() {
 				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (specs.ListAchievementFilter, error) {
 					return specs.ListAchievementFilter{
@@ -358,7 +426,7 @@ func TestListAchievementsHandler(t *testing.T) {
 		{
 			name:        "failed_because_service_layer_caused_error",
 			pathParams:  profileID,
-			queryParams: "achievement_ids=1,2&names=Client Appreciation,Another Achievement",
+			queryParams: "achievement_ids=1",
 			mockDecodeRequest: func() {
 				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (specs.ListAchievementFilter, error) {
 					return specs.ListAchievementFilter{
@@ -373,13 +441,41 @@ func TestListAchievementsHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
 		},
+		{
+			name:               "invalid_profile_id",
+			mockDecodeRequest:  func() {},
+			MockSvc:            func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid profile id"}`,
+		},
+		{
+			name:        "failed_to_decode_request",
+			pathParams:  profileID,
+			queryParams: "achievement_ids=a",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeAchievementRequest, func(r *http.Request) (specs.ListAchievementFilter, error) {
+					return specs.ListAchievementFilter{}, errors.New("failed to decode request")
+				})
+			},
+			MockSvc:            func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"unable to decode request"}`, // Adjust error message & code here
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.MockSvc(achSvc)
-			req := httptest.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/achievements", nil)
+			req := httptest.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/achievements"+tt.queryParams, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.pathParams)})
+
+			if tt.name == "invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{})
+			}
+
+			if tt.name == "failed_to_decode_request" {
+				tt.mockDecodeRequest()
+			}
 			resp := httptest.NewRecorder()
 			handler := http.HandlerFunc(getAchievementHandler)
 			handler.ServeHTTP(resp, req)
@@ -389,8 +485,11 @@ func TestListAchievementsHandler(t *testing.T) {
 			}
 
 			if resp.Body.String() != tt.expectedResponse {
-				t.Errorf("Expected response body %s but got %s", tt.expectedResponse, resp.Body.String())
+				t.Errorf("Expected response body %s but got %s, \n\n ######diff :%+v", tt.expectedResponse, resp.Body.String(), cmp.Diff(tt.expectedResponse, resp.Body.String()))
 			}
+
+			body := resp.Body.String()
+			fmt.Println(body)
 		})
 	}
 

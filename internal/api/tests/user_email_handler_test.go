@@ -28,8 +28,8 @@ func (s *HandlerTestSuite) SetupTest() {
 	s.service = &mocks.Service{}
 }
 
-func (suite *HandlerTestSuite) TearDownSuite() {
-	suite.service.AssertExpectations(suite.T())
+func (s *HandlerTestSuite) TearDownSuite() {
+	s.service.AssertExpectations(s.T())
 }
 
 func (s *HandlerTestSuite) TestSendUserInvitation() {
@@ -102,6 +102,18 @@ func (s *HandlerTestSuite) TestSendUserInvitation() {
 				s.service.On("SendUserInvitation", mock.Anything, TestUserID, TestProfileID).Return(nil).Once()
 			},
 		},
+		// NEGATIVE || Fail due to invalid profile id
+		{
+			name: "Fail_due_to_invalid_profile_id",
+			args: args{
+				userID:    "1",
+				profileID: "invalid",
+				ctx:       context.WithValue(context.Background(), constants.UserIDKey, 1.0),
+			},
+			wantResponse: `{"error_code":400,"error_message":"invalid request data"}`,
+			wantStatus:   http.StatusBadRequest,
+			prepare:      func(a args) {},
+		},
 	}
 
 	for _, tt := range tests {
@@ -109,7 +121,7 @@ func (s *HandlerTestSuite) TestSendUserInvitation() {
 			tt.prepare(tt.args)
 			r := httptest.NewRequest(http.MethodPost, "/employee_invite", nil)
 			r = r.WithContext(tt.args.ctx)
-			r = mux.SetURLVars(r, map[string]string{"profile_id": "1"})
+			r = mux.SetURLVars(r, map[string]string{"profile_id": tt.args.profileID})
 			w := httptest.NewRecorder()
 			handler := http.HandlerFunc(handler.SendUserInvitation(tt.args.ctx, s.service))
 			handler.ServeHTTP(w, r)

@@ -110,6 +110,38 @@ func TestCreateCertificateHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"service layer error"}`,
 		},
+		{
+			name: "Fail for invalid profile ID",
+			input: `{
+				"certificates":[{
+					"name": "Full Stack Data Science",
+					"organization_name": "Josh Software Pvt.Ltd.",
+					"description": "A Bootcamp for Mastering Data Science Concepts",
+					"issued_date": "Dec-2023",
+					"from_date": "June-2023",
+					"to_date": "Dec-2023"
+				}]
+				}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail for missing UserID in context",
+			input: `{
+				"certificates":[{
+					"name": "Full Stack Data Science",
+					"organization_name": "Josh Software Pvt.Ltd.",
+					"description": "A Bootcamp for Mastering Data Science Concepts",
+					"issued_date": "Dec-2023",
+					"from_date": "June-2023",
+					"to_date": "Dec-2023"
+				}]
+				}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -121,6 +153,15 @@ func TestCreateCertificateHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail for invalid profile ID" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid"})
+			}
+
+			if test.name == "Fail for missing UserID in context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createCertificateHandler)
@@ -252,15 +293,42 @@ func TestListCertificatesHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
 		},
+		{
+			name:               "invalid_profile_id",
+			mockDecodeRequest:  func() {},
+			mockSvcSetup:       func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name:        "failed_to_decode_request",
+			pathParams:  profileID,
+			queryParams: "achievement_ids=a",
+			mockDecodeRequest: func() {
+				mpatch.PatchMethod(helpers.DecodeCertificateRequest, func(r *http.Request) (specs.ListCertificateFilter, error) {
+					return specs.ListCertificateFilter{}, errors.New("failed to decode request")
+				})
+			},
+			mockSvcSetup:       func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"unable to decode request"}`, // Adjust error message & code here
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSvcSetup(certficateSvc)
 
-			req := httptest.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/certificates", nil)
+			req := httptest.NewRequest("GET", "/profiles/"+strconv.Itoa(tt.pathParams)+"/certificates"+tt.queryParams, nil)
 			req = mux.SetURLVars(req, map[string]string{"profile_id": strconv.Itoa(tt.pathParams)})
 
+			if tt.name == "invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{})
+			}
+
+			if tt.name == "failed_to_decode_request" {
+				tt.mockDecodeRequest()
+			}
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
 
@@ -368,6 +436,38 @@ func TestUpdateCertificateHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"service layer error"}`,
 		},
+		{
+			name: "Fail_for_invalid_profile_id",
+			input: `{
+				"certificate": {
+					"name": "Updated Certificate",
+					"organization_name": "Updated Organization",
+					"description": "Updated Description",
+					"issued_date": "2024-05-30",
+					"from_date": "2023-01-01",
+					"to_date": "2023-12-31"
+					}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail_for_missing_user_id_in_context",
+			input: `{
+				"certificate": {
+					"name": "Updated Certificate",
+					"organization_name": "Updated Organization",
+					"description": "Updated Description",
+					"issued_date": "2024-05-30",
+					"from_date": "2023-01-01",
+					"to_date": "2023-12-31"
+					}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -379,6 +479,15 @@ func TestUpdateCertificateHandler(t *testing.T) {
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1", "id": "1"})
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail_for_invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid", "id": "1"})
+			}
+
+			if test.name == "Fail_for_missing_user_id_in_context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(updateCertificateHandler)

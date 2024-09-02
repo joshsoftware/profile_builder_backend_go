@@ -88,6 +88,34 @@ func TestCreateExperienceHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"Service Error"}`,
 		},
+		{
+			name: "Fail for invalid profile ID",
+			input: `{
+				"experiences": [{	
+					"designation": "Software Engineer",	
+					"company_name": "ABC Corp",
+					"from_date": "2023-01-01",
+					"to_date": "2024-01-01"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail for missing UserID in context",
+			input: `{
+				"experiences": [{	
+					"designation": "Software Engineer",	
+					"company_name": "ABC Corp",
+					"from_date": "2023-01-01",
+					"to_date": "2024-01-01"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -99,6 +127,15 @@ func TestCreateExperienceHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail for invalid profile ID" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid"})
+			}
+
+			if test.name == "Fail for missing UserID in context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createExperienceHandler)
@@ -211,6 +248,12 @@ func TestListExperienceHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"failed to fetch data"}`,
 		},
+		{
+			name:               "invalid_profile_id",
+			mockSetup:          func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -221,6 +264,10 @@ func TestListExperienceHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{})
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(getExperienceHandler)
@@ -317,6 +364,34 @@ func TestUpdateExperienceHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"Service Error"}`,
 		},
+		{
+			name: "Fail_for_invalid_profile_id",
+			input: `{
+				"experience": {
+					"designation": "Updated Designation",
+					"company_name": "Updated Company",
+					"from_date": "2022-01-01",
+					"to_date": "2023-12-31"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail_for_missing_user_id_in_context",
+			input: `{
+				"experience": {
+					"designation": "Updated Designation",
+					"company_name": "Updated Company",
+					"from_date": "2022-01-01",
+					"to_date": "2023-12-31"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -328,6 +403,15 @@ func TestUpdateExperienceHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail_for_invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid", "id": "1"})
+			}
+
+			if test.name == "Fail_for_missing_user_id_in_context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(updateExperienceHandler)

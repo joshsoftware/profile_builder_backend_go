@@ -59,6 +59,7 @@ func TestUserLoginHandler(t *testing.T) {
 			ExpectedStatusCode: http.StatusOK,
 			ExpectedResponse:   `{"data":{"message":"Login successfully","profile_id":1,"role":"user","token":"valid_token","status_code":200}}`,
 		},
+
 		{
 			Name:               "decoding_request_error",
 			RequestBody:        specs.UserLoginRequest{},
@@ -112,6 +113,20 @@ func TestUserLoginHandler(t *testing.T) {
 			RequestBody:        specs.UserLoginRequest{AccessToken: "valid_access_token"},
 			ExpectedStatusCode: http.StatusUnauthorized,
 			ExpectedResponse:   `{"error_code":401,"error_message":"unauthorized access"}`,
+		},
+		{
+			Name:        "service layer error",
+			AccessToken: "valid_access_token",
+			MockSendRequest: func(ctx context.Context, methodType, url, accessToken string, body io.Reader, headers map[string]string) ([]byte, error) {
+				userInfo := specs.UserInfoFilter{ID: 0, Email: TestEmail}
+				return json.Marshal(userInfo)
+			},
+			MockSetup: func(mockUserLoginService *mocks.Service, email string) {
+				mockUserLoginService.On("GenerateLoginToken", context.Background(), specs.UserInfoFilter{Email: TestEmail}).Return(specs.LoginResponse{}, errors.New("internal server error")).Once()
+			},
+			RequestBody:        specs.UserLoginRequest{AccessToken: "valid_access_token"},
+			ExpectedStatusCode: http.StatusInternalServerError,
+			ExpectedResponse:   `{"error_code":500,"error_message":"internal server error"}`,
 		},
 	}
 

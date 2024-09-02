@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -138,6 +137,26 @@ func TestCreateProfileHandler(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
+		{
+			name: "Fail_for_invalid_user_id",
+			input: `{ "profile" : {
+                "name": "Example User",
+                "email": "example.user@gmail.com",
+                "gender": "Male",
+                "mobile": "8888999955",
+                "designation": "Employee",
+                "description": "i am ml engineer",
+                "title": "Software Engineer",
+                "years_of_experience": 4,
+				"career_objectives":"Description of the career objectives",
+                "primary_skills": ["Python","SQL","Golang"],
+                "secondary_skills": ["Docker", "Github"],
+                "github_link": "github.com/dummy-user"
+                }
+            }`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
 	}
 
 	for _, test := range tests {
@@ -148,6 +167,11 @@ func TestCreateProfileHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail_for_invalid_user_id" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, "invalid")
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createProfileHandler)
@@ -333,9 +357,6 @@ func TestGetProfileHandler(t *testing.T) {
 			if rr.Code != test.expectedStatusCode {
 				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Code)
 			}
-
-			body, _ := io.ReadAll(rr.Body)
-			fmt.Println(string(body))
 		})
 	}
 }
@@ -436,6 +457,54 @@ func TestUpdateProfileHandler(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
+		{
+			name:      "Fail_for_invalid_profile_id",
+			url:       "/profiles/invalid",
+			profileID: "invalid",
+			input: `{
+                "profile": {
+                    "id": 1,
+                    "name": "Updated Name",
+                    "email": "updated.email@example.com",
+                    "gender": "Male",
+                    "mobile": "9999999999",
+                    "designation": "Senior Software Engineer",
+                    "description": "Experienced software engineer with expertise in Golang",
+                    "title": "Golang Developer",
+                    "years_of_experience": 7,
+                    "primary_skills": ["Golang", "Python"],
+                    "secondary_skills": ["JavaScript", "SQL"],
+                    "github_link": "https://github.com/updated",
+                    "linkedin_link": "https://www.linkedin.com/in/updated"
+                }
+            }`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+		},
+		{
+			name:      "Fail_for_missing_user_id_in_context",
+			url:       "/profiles/1",
+			profileID: "1",
+			input: `{
+		        "profile": {
+		            "id": 1,
+		            "name": "Updated Name",
+		            "email": "updated.email@example.com",
+		            "gender": "Male",
+		            "mobile": "9999999999",
+		            "designation": "Senior Software Engineer",
+		            "description": "Experienced software engineer with expertise in Golang",
+		            "title": "Golang Developer",
+		            "years_of_experience": 7,
+		            "primary_skills": ["Golang", "Python"],
+		            "secondary_skills": ["JavaScript", "SQL"],
+		            "github_link": "https://github.com/updated",
+		            "linkedin_link": "https://www.linkedin.com/in/updated"
+		        }
+		    }`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
 	}
 
 	for _, test := range tests {
@@ -447,6 +516,11 @@ func TestUpdateProfileHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail_for_missing_user_id_in_context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(updateProfileHandler)
@@ -765,9 +839,6 @@ func TestUpdateProfileStatusHandler(t *testing.T) {
 			if rr.Body.String() != test.expectedResponse {
 				t.Errorf("Expected body %s but got %s", test.expectedResponse, rr.Body.String())
 			}
-
-			body, _ := io.ReadAll(rr.Body)
-			fmt.Println(string(body))
 		})
 	}
 }

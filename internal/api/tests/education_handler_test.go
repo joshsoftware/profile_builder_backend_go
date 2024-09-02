@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -110,6 +109,36 @@ func TestCreateEducationHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"Service Error"}`,
 		},
+		{
+			name: "Fail for invalid profile ID",
+			input: `{
+				"educations":[{
+					"degree": "BSc in Data Science",	
+					"university_name": "Shivaji University",
+					"place": "Kolhapur",
+					"percent_or_cgpa": "90.50%",
+					"passing_year": "2020"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail for missing UserID in context",
+			input: `{
+				"educations":[{
+					"degree": "BSc in Data Science",	
+					"university_name": "Shivaji University",
+					"place": "Kolhapur",
+					"percent_or_cgpa": "90.50%",
+					"passing_year": "2020"
+				}]
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -120,6 +149,16 @@ func TestCreateEducationHandler(t *testing.T) {
 			req = mux.SetURLVars(req, map[string]string{"profile_id": "1"})
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail for invalid profile ID" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid"})
+			}
+
+			if test.name == "Fail for missing UserID in context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
+
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(createEducationHandler)
 			handler.ServeHTTP(rr, req)
@@ -139,7 +178,6 @@ func TestCreateEducationHandler(t *testing.T) {
 func TestListEducationHandler(t *testing.T) {
 	eduSvc := mocks.NewService(t)
 	getEducationHandler := handler.ListEducationHandler(context.Background(), eduSvc)
-
 	tests := []struct {
 		name               string
 		profileID          string
@@ -234,6 +272,12 @@ func TestListEducationHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   ` {"error_code":502,"error_message":"failed to fetch data"}`,
 		},
+		{
+			name:               "invalid_profile_id",
+			mockSetup:          func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -244,6 +288,10 @@ func TestListEducationHandler(t *testing.T) {
 
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{})
+			}
 
 			rr := httptest.NewRecorder()
 			handler := http.HandlerFunc(getEducationHandler)
@@ -343,6 +391,51 @@ func TestUpdateEducationHandler(t *testing.T) {
 			expectedStatusCode: http.StatusBadGateway,
 			expectedResponse:   `{"error_code":502,"error_message":"Service Error"}`,
 		},
+		{
+			name: "Fail_for_invalid_profile_id",
+			input: `{
+				"education":{
+					  "degree": "MS in CS",
+					  "university_name": "Cambridge University",
+					  "place": "London",
+					  "percent_or_cgpa": "87.50%",
+					  "passing_year": "2005"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadGateway,
+			expectedResponse:   `{"error_code":502,"error_message":"invalid request data"}`,
+		},
+		{
+			name: "Fail_for_missing_user_id_in_context",
+			input: `{
+				"education":{
+					  "degree": "MS in CS",
+					  "university_name": "Cambridge University",
+					  "place": "London",
+					  "percent_or_cgpa": "87.50%",
+					  "passing_year": "2005"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid user id"}`,
+		},
+		{
+			name: "validation_error",
+			input: `{
+				"education":{
+					  "degree": "",
+					  "university_name": "Cambridge University",
+					  "place": "London",
+					  "percent_or_cgpa": "87.50%",
+					  "passing_year": "2005"
+				}
+			}`,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"parameter missing : degree"}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -355,6 +448,15 @@ func TestUpdateEducationHandler(t *testing.T) {
 			rr := httptest.NewRecorder()
 			ctx := context.WithValue(req.Context(), constants.UserIDKey, 1.0)
 			req = req.WithContext(ctx)
+
+			if test.name == "Fail_for_invalid_profile_id" {
+				req = mux.SetURLVars(req, map[string]string{"profile_id": "invalid", "id": "1"})
+			}
+
+			if test.name == "Fail_for_missing_user_id_in_context" {
+				ctx := context.WithValue(req.Context(), constants.UserIDKey, 1)
+				req = req.WithContext(ctx)
+			}
 
 			handler := http.HandlerFunc(updateEducationHandler)
 			handler.ServeHTTP(rr, req)
@@ -461,7 +563,6 @@ func TestDeleteEducationHandler(t *testing.T) {
 				t.Errorf("expected response to contain %q, got %q", tt.expectedResponse, body)
 			}
 
-			fmt.Println("Response Body: ", string(body))
 		})
 	}
 
