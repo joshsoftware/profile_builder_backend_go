@@ -138,6 +138,7 @@ func CheckBoolStatus(value int) string {
 	return "NO"
 }
 
+// ConvertToLowerCase converts the email to lowercase
 func ConvertToLowerCase(email string) string {
 	return strings.ToLower(email)
 }
