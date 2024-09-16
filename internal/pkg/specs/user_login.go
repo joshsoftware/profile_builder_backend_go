@@ -15,6 +15,8 @@ type UserLoginRequest struct {
 type UserLoginResponse struct {
 	Message    string `json:"message"`
 	ProfileID  int    `json:"profile_id"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
 	Role       string `json:"role"`
 	Token      string `json:"token"`
 	StatusCode int    `json:"status_code"`
@@ -23,6 +25,8 @@ type UserLoginResponse struct {
 // LoginResponse to respond with login
 type LoginResponse struct {
 	ProfileID int    `json:"profile_id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
 	Role      string `json:"role"`
 	Token     string `json:"token"`
 }

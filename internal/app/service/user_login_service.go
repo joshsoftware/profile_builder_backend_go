@@ -54,6 +54,8 @@ func (userService *service) GenerateLoginToken(ctx context.Context, filter specs
 
 	loginResponse := specs.LoginResponse{
 		ProfileID: profileID,
+		Name:      userInfo.Name,
+		Email:     userInfo.Email,
 		Role:      userInfo.Role,
 		Token:     token,
 	}
