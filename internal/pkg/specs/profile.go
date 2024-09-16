@@ -102,6 +102,7 @@ type ResponseProfile struct {
 	GithubLink        string         `json:"github_link"`
 	LinkedinLink      string         `json:"linkedin_link"`
 	CareerObjectives  string         `json:"career_objectives"`
+	IsInvited         string         `json:"is_invited"`
 }
 
 // UpdateSequenceRequest struct represents a request to update a sequence of component.
