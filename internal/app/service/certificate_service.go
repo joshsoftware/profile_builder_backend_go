@@ -5,6 +5,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
@@ -28,6 +29,8 @@ func (certificateSvc *service) CreateCertificate(ctx context.Context, cDetail sp
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	count, err := certificateSvc.ProfileRepo.CountRecords(ctx, profileID, constants.Achievements, tx)
 	if err != nil {
@@ -75,6 +78,8 @@ func (certificateSvc *service) UpdateCertificate(ctx context.Context, profileID 
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	var value repository.UpdateCertificateRepo
 	value.Name = req.Certificate.Name

@@ -5,6 +5,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
@@ -28,6 +29,8 @@ func (projSvc *service) CreateProject(ctx context.Context, projDetail specs.Crea
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	count, err := projSvc.ProfileRepo.CountRecords(ctx, profileID, constants.Projects, tx)
 	if err != nil {
@@ -98,6 +101,8 @@ func (projSvc *service) UpdateProject(ctx context.Context, profileID int, projID
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	var value repository.UpdateProjectRepo
 	value.Name = req.Project.Name
