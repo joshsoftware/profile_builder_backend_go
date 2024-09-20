@@ -5,6 +5,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
@@ -28,6 +29,8 @@ func (eduSvc *service) CreateEducation(ctx context.Context, eduDetail specs.Crea
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	count, err := eduSvc.ProfileRepo.CountRecords(ctx, profileID, constants.Achievements, tx)
 	if err != nil {
@@ -93,6 +96,8 @@ func (eduSvc *service) UpdateEducation(ctx context.Context, profileID int, eduID
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	var value repository.UpdateEducationRepo
 	value.Degree = req.Education.Degree

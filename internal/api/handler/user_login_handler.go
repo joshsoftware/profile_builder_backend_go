@@ -73,6 +73,8 @@ func Login(ctx context.Context, profileSvc service.Service) func(http.ResponseWr
 		loginResp := specs.UserLoginResponse{
 			Message:    "Login successfully",
 			ProfileID:  info.ProfileID,
+			Name:       info.Name,
+			Email:      info.Email,
 			Role:       info.Role,
 			Token:      info.Token,
 			StatusCode: http.StatusOK,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
@@ -28,6 +29,8 @@ func (achSvc *service) CreateAchievement(ctx context.Context, cDetail specs.Crea
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	count, err := achSvc.ProfileRepo.CountRecords(ctx, profileID, constants.Achievements, tx)
 	if err != nil {
@@ -72,6 +75,8 @@ func (achSvc *service) UpdateAchievement(ctx context.Context, profileID int, ach
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	var value repository.UpdateAchievementRepo
 	value.Name = req.Achievement.Name

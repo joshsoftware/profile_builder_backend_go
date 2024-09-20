@@ -160,8 +160,15 @@ func (profileStore *ProfileStore) ListSkills(ctx context.Context, tx pgx.Tx) (va
 
 // GetProfile returns a details profile in the Database that are currently available for perticular ID
 func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int, tx pgx.Tx) (value specs.ResponseProfile, err error) {
-	query, args, err := psql.Select(constants.ResponseProfileColumns...).From(ProfileTable).
-		Where(sq.Eq{"id": profileID}).ToSql()
+	query, args, err := psql.Select(constants.ResponseProfileColumns...).
+		Column(sq.Expr(`(CASE 
+				WHEN EXISTS (
+					SELECT 1 FROM invitations 
+					WHERE profile_id = ? AND is_profile_complete = 0
+				) THEN 'YES' 
+				ELSE 'NO' 
+			END) AS is_invited`, profileID)).From(ProfileTable).Where(sq.Eq{"id": profileID}).ToSql()
+
 	if err != nil {
 		zap.S().Error("Error generating list project select query: ", err)
 		return specs.ResponseProfile{}, err
@@ -174,7 +181,7 @@ func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int,
 	}
 
 	if rows.Next() {
-		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink, &value.CareerObjectives, &value.JoshJoiningDate); err != nil {
+		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink, &value.CareerObjectives, &value.JoshJoiningDate, &value.IsInvited); err != nil {
 			zap.S().Error("Error scanning row: ", err)
 			return specs.ResponseProfile{}, err
 		}

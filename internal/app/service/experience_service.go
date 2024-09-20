@@ -5,6 +5,7 @@ import (
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
 	"go.uber.org/zap"
@@ -28,6 +29,8 @@ func (expSvc *service) CreateExperience(ctx context.Context, expDetail specs.Cre
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	count, err := expSvc.ProfileRepo.CountRecords(ctx, profileID, constants.Experiences, tx)
 	if err != nil {
@@ -93,6 +96,8 @@ func (expSvc *service) UpdateExperience(ctx context.Context, profileID int, expI
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	var value repository.UpdateExperienceRepo
 	value.Designation = req.Experience.Designation

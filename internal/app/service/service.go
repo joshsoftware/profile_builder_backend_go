@@ -74,8 +74,6 @@ func NewServices(rp RepoDeps) Service {
 	}
 }
 
-var today = helpers.GetTodaysDate()
-
 // CreateProfile : Service layer function creates a new user profile using the provided details.
 func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail specs.CreateProfileRequest, userID int) (profileID int, err error) {
 	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
@@ -86,6 +84,8 @@ func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail spec
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	var profileRepo repository.ProfileRepo
 	profileRepo.Name = profileDetail.Profile.Name
@@ -201,6 +201,8 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, use
 		}
 	}()
 
+	today := helpers.GetTodaysDate()
+
 	var profileRepo repository.UpdateProfileRepo
 	profileRepo.Name = profileDetail.Profile.Name
 	profileRepo.Email = profileDetail.Profile.Email
@@ -263,6 +265,8 @@ func (profileSvc *service) UpdateSequence(ctx context.Context, userID int, seqDe
 		}
 	}()
 
+	today := helpers.GetTodaysDate()
+
 	Count, err := profileSvc.ProfileRepo.CountRecords(ctx, seqDetail.ProfileID, seqDetail.CompName, tx)
 	if err != nil {
 		return 0, errors.ErrInvalidRequestData
@@ -301,6 +305,8 @@ func (profileSvc *service) UpdateProfileStatus(ctx context.Context, profileID in
 			return
 		}
 	}()
+
+	today := helpers.GetTodaysDate()
 
 	var isCurrentEmployee, isActive *int
 	if req.ProfileStatus.IsCurrentEmployee != "" {
