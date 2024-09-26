@@ -260,7 +260,27 @@ func (profileStore *ProfileStore) DeleteProfile(ctx context.Context, profileID i
 		return errors.ErrNoData
 	}
 
-	if email != "" {
+	if email == "" {
+		zap.S().Info("No email found for profile ID: ", profileID)
+		return nil
+	}
+
+	selectRoleQuery, args, err := psql.Select("role").From(userTable).Where(sq.Eq{"email": email}).ToSql()
+	if err != nil {
+		zap.S().With("email", email).Error("Error generating role select query: ", err)
+		return err
+	}
+
+	var role string
+	err = tx.QueryRow(ctx, selectRoleQuery, args...).Scan(&role)
+	if err == pgx.ErrNoRows {
+		zap.S().Info("No user found for email: ", email, " skipping user deletion.")
+	} else if err != nil {
+		zap.S().Error("Error fetching role: ", err)
+		return err
+	}
+
+	if role == constants.Employee {
 		deleteQuery, args, err := psql.Delete("users").Where(sq.Eq{"email": email}).ToSql()
 		if err != nil {
 			zap.S().With("email", email).Error("Error generating user delete query: ", err)
@@ -274,11 +294,12 @@ func (profileStore *ProfileStore) DeleteProfile(ctx context.Context, profileID i
 		}
 
 		if result.RowsAffected() == 0 {
-			zap.S().Info("No user found for email: ", email)
+			zap.S().Info("No user found for email : ", email)
 		}
 	} else {
-		zap.S().Info("No email found for profile ID: ", profileID)
+		zap.S().Info("User with email: ", email, " is an admin,, skipping delete.")
 	}
+
 	return nil
 }
 
