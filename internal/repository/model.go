@@ -49,6 +49,7 @@ type UpdateProfileRepo struct {
 	JoshJoiningDate   string   `db:"josh_joining_date"`
 	GithubLink        string   `db:"github_link"`
 	LinkedinLink      string   `db:"linkedin_link"`
+	CareerObjectives  string   `db:"career_objectives"`
 	UpdatedAt         string   `db:"updated_at"`
 	UpdatedByID       int      `db:"updated_by_id"`
 }

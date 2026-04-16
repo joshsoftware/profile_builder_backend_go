@@ -217,6 +217,7 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, use
 	profileRepo.JoshJoiningDate = profileDetail.Profile.JoshJoiningDate
 	profileRepo.GithubLink = profileDetail.Profile.GithubLink
 	profileRepo.LinkedinLink = profileDetail.Profile.LinkedinLink
+	profileRepo.CareerObjectives = profileDetail.Profile.CareerObjectives
 	profileRepo.UpdatedAt = today
 	profileRepo.UpdatedByID = userID
 
