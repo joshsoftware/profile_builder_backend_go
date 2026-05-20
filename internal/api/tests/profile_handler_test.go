@@ -842,3 +842,80 @@ func TestUpdateProfileStatusHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveEmployeeHandler(t *testing.T) {
+	profileSvc := new(mocks.Service)
+	resolveEmployeeHandler := handler.ResolveEmployeeHandler(context.Background(), profileSvc)
+
+	tests := []struct {
+		name               string
+		employeeID         string
+		setVars            bool
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+		expectedResponse   string
+	}{
+		{
+			name:       "Success_for_resolving_employee_id",
+			employeeID: "12345",
+			setVars:    true,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("ResolveEmployeeID", context.Background(), int64(12345)).Return(42, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Employee resolved successfully","profile_id":42}}`,
+		},
+		{
+			name:               "Fail_for_missing_employee_id_vars",
+			employeeID:         "",
+			setVars:            false,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request data"}`,
+		},
+		{
+			name:               "Fail_for_invalid_employee_id_format",
+			employeeID:         "invalid",
+			setVars:            true,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request data"}`,
+		},
+		{
+			name:       "Fail_for_service_layer_resolution_failure",
+			employeeID: "99999",
+			setVars:    true,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("ResolveEmployeeID", context.Background(), int64(99999)).Return(0, errors.New("resolution failed")).Once()
+			},
+			expectedStatusCode: http.StatusNotFound,
+			expectedResponse:   `{"error_code":404,"error_message":"no record found"}`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(profileSvc)
+
+			req := httptest.NewRequest("GET", "/employees/resolve", nil)
+			if test.setVars {
+				req = mux.SetURLVars(req, map[string]string{"employee_id": test.employeeID})
+			}
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(resolveEmployeeHandler)
+			handler.ServeHTTP(rr, req)
+
+			if rr.Result().StatusCode != test.expectedStatusCode {
+				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected body %s but got %s", test.expectedResponse, rr.Body.String())
+			}
+
+			profileSvc.AssertExpectations(t)
+		})
+	}
+}
+
