@@ -326,6 +326,9 @@ func GetProfileID(r *http.Request) (int, error) {
 
 // ProfileIDNotRequiredPath returns true if the profile_id is not required for the given path
 func ProfileIDNotRequiredPath(r *http.Request) bool {
+	if strings.HasPrefix(r.URL.Path, "/api/profiles/resolve/") {
+		return true
+	}
 	pathNotRequired := map[string]bool{
 		"/login":              true,
 		"/api/logout":         true,

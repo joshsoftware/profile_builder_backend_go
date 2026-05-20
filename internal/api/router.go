@@ -25,6 +25,7 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	profileSubrouter.Handle("/profiles", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.CreateProfileHandler(ctx, svc)))).Methods(http.MethodPost)
 	profileSubrouter.Handle("/profiles/{profile_id}", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.UpdateProfileHandler(ctx, svc)))).Methods(http.MethodPut)
 	profileSubrouter.Handle("/profiles", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.ProfileListHandler(ctx, svc)))).Methods(http.MethodGet)
+	profileSubrouter.Handle("/profiles/resolve/{employee_id}", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.ResolveEmployeeHandler(ctx, svc)))).Methods(http.MethodGet)
 	profileSubrouter.Handle("/profiles/{profile_id}", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.GetProfileHandler(ctx, svc)))).Methods(http.MethodGet)
 	profileSubrouter.Handle("/skills", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.SkillsListHandler(ctx, svc)))).Methods(http.MethodGet)
 	profileSubrouter.Handle("/profiles/{profile_id}", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.DeleteProfileHandler(ctx, svc)))).Methods(http.MethodDelete)
