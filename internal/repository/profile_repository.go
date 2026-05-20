@@ -44,6 +44,7 @@ type ProfileStorer interface {
 	HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error)
 	BackupAllProfiles(backupDir string)
 	GetProfileIDByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error)
+	GetProfileIDByEmployeeID(ctx context.Context, employeeID int64, tx pgx.Tx) (int, error)
 }
 
 // NewProfileRepo creates a new instance of ProfileRepo.
@@ -123,6 +124,7 @@ func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) (
 			&profile.JoshJoiningDate,
 			&profile.CreatedAt,
 			&profile.UpdatedAt,
+			&profile.EmployeeID,
 			&profile.IsProfileComplete,
 		)
 		if err != nil {
@@ -442,6 +444,28 @@ func (profileStore *ProfileStore) BackupAllProfiles(backupDir string) {
 // GetProfileIDByEmail returns the profile ID for a given email.
 func (profileStore *ProfileStore) GetProfileIDByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error) {
 	query := psql.Select("id").From("profiles").Where(sq.Eq{"email": email})
+	sql, args, err := query.ToSql()
+	if err != nil {
+		zap.S().Error("Error generating select query: ", err)
+		return 0, err
+	}
+
+	var profileID int
+	err = tx.QueryRow(ctx, sql, args...).Scan(&profileID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return 0, errors.ErrNoRecordFound
+		}
+		zap.S().Error("Error executing select query: ", err)
+		return 0, err
+	}
+
+	return profileID, nil
+}
+
+// GetProfileIDByEmployeeID returns the profile ID for a given employee ID.
+func (profileStore *ProfileStore) GetProfileIDByEmployeeID(ctx context.Context, employeeID int64, tx pgx.Tx) (int, error) {
+	query := psql.Select("id").From("profiles").Where(sq.Eq{"employee_id": employeeID})
 	sql, args, err := query.ToSql()
 	if err != nil {
 		zap.S().Error("Error generating select query: ", err)

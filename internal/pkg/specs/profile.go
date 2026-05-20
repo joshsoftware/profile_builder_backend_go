@@ -53,6 +53,7 @@ type ListProfiles struct {
 	CreatedAt         time.Time      `json:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at"`
 	IsProfileComplete int            `json:"is_profile_complete"`
+	EmployeeID        sql.NullInt64  `json:"employee_id"`
 }
 
 // ResponseListProfiles struct represents response of user profiles for listing.
@@ -68,6 +69,7 @@ type ResponseListProfiles struct {
 	CreatedAt         time.Time      `json:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at"`
 	IsProfileComplete string         `json:"is_profile_complete"`
+	EmployeeID        *int64         `json:"employee_id"`
 }
 
 // ListSkills struct represents details of skills for listing.
