@@ -44,7 +44,7 @@ type ProfileStorer interface {
 	HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error)
 	BackupAllProfiles(backupDir string)
 	GetProfileIDByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error)
-	GetProfileIDByEmployeeID(ctx context.Context, employeeID int64, tx pgx.Tx) (int, error)
+	GetProfileIDByEmployeeID(ctx context.Context, employeeID string, tx pgx.Tx) (int, error)
 }
 
 // NewProfileRepo creates a new instance of ProfileRepo.
@@ -464,7 +464,7 @@ func (profileStore *ProfileStore) GetProfileIDByEmail(ctx context.Context, email
 }
 
 // GetProfileIDByEmployeeID returns the profile ID for a given employee ID.
-func (profileStore *ProfileStore) GetProfileIDByEmployeeID(ctx context.Context, employeeID int64, tx pgx.Tx) (int, error) {
+func (profileStore *ProfileStore) GetProfileIDByEmployeeID(ctx context.Context, employeeID string, tx pgx.Tx) (int, error) {
 	query := psql.Select("id").From("profiles").Where(sq.Eq{"employee_id": employeeID})
 	sql, args, err := query.ToSql()
 	if err != nil {

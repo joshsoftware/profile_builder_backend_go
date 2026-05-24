@@ -34,7 +34,7 @@ type Service interface {
 	UpdateSequence(ctx context.Context, userID int, seqDetail specs.UpdateSequenceRequest) (ID int, err error)
 	UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error)
 	DeleteProfile(ctx context.Context, profileID int) (err error)
-	ResolveEmployeeID(ctx context.Context, employeeID int64) (int, error)
+	ResolveEmployeeID(ctx context.Context, employeeID string) (int, error)
 
 	// Description: It takes backups of all user profiles and stores them in an SQL file.
 	// Intentionally added here because, going forward, if there is any requirement for an API endpoint, it is currently being used by a cron job.
@@ -136,9 +136,9 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 	}
 
 	for _, profile := range profiles {
-		var empID *int64
+		var empID *string
 		if profile.EmployeeID.Valid {
-			val := profile.EmployeeID.Int64
+			val := profile.EmployeeID.String
 			empID = &val
 		}
 		values = append(values, specs.ResponseListProfiles{
@@ -263,7 +263,7 @@ func (profileSvc *service) DeleteProfile(ctx context.Context, profileID int) (er
 }
 
 // ResolveEmployeeID resolves employee_id to its internal profile_id in the service layer.
-func (profileSvc *service) ResolveEmployeeID(ctx context.Context, employeeID int64) (profileID int, err error) {
+func (profileSvc *service) ResolveEmployeeID(ctx context.Context, employeeID string) (profileID int, err error) {
 	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
 	defer func() {
 		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)

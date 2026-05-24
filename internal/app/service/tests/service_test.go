@@ -57,6 +57,7 @@ func TestListProfile(t *testing.T) {
 	}
 	profileService := service.NewServices(repodeps)
 
+	empID := "EMP123"
 	mockListProfile := []specs.ListProfiles{
 		{
 			ID:                1,
@@ -70,6 +71,7 @@ func TestListProfile(t *testing.T) {
 			CreatedAt:         time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 			UpdatedAt:         time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 			IsProfileComplete: 1,
+			EmployeeID:        sql.NullString{String: empID, Valid: true},
 		},
 	}
 
@@ -86,6 +88,7 @@ func TestListProfile(t *testing.T) {
 			CreatedAt:         time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 			UpdatedAt:         time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 			IsProfileComplete: "YES",
+			EmployeeID:        &empID,
 		},
 	}
 
@@ -663,17 +666,17 @@ func TestResolveEmployeeID(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		employeeID      int64
+		employeeID      string
 		setup           func(profileMock *mocks.ProfileStorer)
 		isErrorExpected bool
 		wantResponse    int
 	}{
 		{
 			name:       "Success_resolve_employee_id",
-			employeeID: 12345,
+			employeeID: "12345",
 			setup: func(profileMock *mocks.ProfileStorer) {
 				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
-				profileMock.On("GetProfileIDByEmployeeID", mock.Anything, int64(12345), mock.Anything).Return(42, nil).Once()
+				profileMock.On("GetProfileIDByEmployeeID", mock.Anything, "12345", mock.Anything).Return(42, nil).Once()
 				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, nil).Return(nil).Once()
 			},
 			isErrorExpected: false,
@@ -681,10 +684,10 @@ func TestResolveEmployeeID(t *testing.T) {
 		},
 		{
 			name:       "Fail_get_profile_id_by_employee_id",
-			employeeID: 99999,
+			employeeID: "99999",
 			setup: func(profileMock *mocks.ProfileStorer) {
 				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
-				profileMock.On("GetProfileIDByEmployeeID", mock.Anything, int64(99999), mock.Anything).Return(0, errors.New("record not found")).Once()
+				profileMock.On("GetProfileIDByEmployeeID", mock.Anything, "99999", mock.Anything).Return(0, errors.New("record not found")).Once()
 				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("handle transaction error")).Once()
 			},
 			isErrorExpected: true,

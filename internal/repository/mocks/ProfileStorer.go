@@ -184,7 +184,7 @@ func (_m *ProfileStorer) GetProfileIDByEmail(ctx context.Context, email string, 
 }
 
 // GetProfileIDByEmployeeID provides a mock function with given fields: ctx, employeeID, tx
-func (_m *ProfileStorer) GetProfileIDByEmployeeID(ctx context.Context, employeeID int64, tx pgx.Tx) (int, error) {
+func (_m *ProfileStorer) GetProfileIDByEmployeeID(ctx context.Context, employeeID string, tx pgx.Tx) (int, error) {
 	ret := _m.Called(ctx, employeeID, tx)
 
 	if len(ret) == 0 {
@@ -193,16 +193,16 @@ func (_m *ProfileStorer) GetProfileIDByEmployeeID(ctx context.Context, employeeI
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, pgx.Tx) (int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, pgx.Tx) (int, error)); ok {
 		return rf(ctx, employeeID, tx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, pgx.Tx) int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, pgx.Tx) int); ok {
 		r0 = rf(ctx, employeeID, tx)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64, pgx.Tx) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string, pgx.Tx) error); ok {
 		r1 = rf(ctx, employeeID, tx)
 	} else {
 		r1 = ret.Error(1)

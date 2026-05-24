@@ -184,6 +184,7 @@ func TestCreateProfileHandler(t *testing.T) {
 	}
 }
 
+var mockEmpID = "EMP123"
 var mockListProfile = []specs.ResponseListProfiles{
 	{
 		ID:                1,
@@ -192,6 +193,7 @@ var mockListProfile = []specs.ResponseListProfiles{
 		YearsOfExperience: 1.0,
 		PrimarySkills:     []string{"Golang", "Python", "Java", "React"},
 		IsCurrentEmployee: "YES",
+		EmployeeID:        &mockEmpID,
 	},
 }
 
@@ -860,7 +862,7 @@ func TestResolveEmployeeHandler(t *testing.T) {
 			employeeID: "12345",
 			setVars:    true,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("ResolveEmployeeID", context.Background(), int64(12345)).Return(42, nil).Once()
+				mockSvc.On("ResolveEmployeeID", context.Background(), "12345").Return(42, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   `{"data":{"message":"Employee resolved successfully","profile_id":42}}`,
@@ -875,7 +877,7 @@ func TestResolveEmployeeHandler(t *testing.T) {
 		},
 		{
 			name:               "Fail_for_invalid_employee_id_format",
-			employeeID:         "invalid",
+			employeeID:         "",
 			setVars:            true,
 			setup:              func(mockSvc *mocks.Service) {},
 			expectedStatusCode: http.StatusBadRequest,
@@ -886,7 +888,7 @@ func TestResolveEmployeeHandler(t *testing.T) {
 			employeeID: "99999",
 			setVars:    true,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("ResolveEmployeeID", context.Background(), int64(99999)).Return(0, errors.New("resolution failed")).Once()
+				mockSvc.On("ResolveEmployeeID", context.Background(), "99999").Return(0, errors.New("resolution failed")).Once()
 			},
 			expectedStatusCode: http.StatusNotFound,
 			expectedResponse:   `{"error_code":404,"error_message":"no record found"}`,

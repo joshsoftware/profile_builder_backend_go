@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
@@ -259,17 +258,10 @@ func UpdateProfileStatusHandler(ctx context.Context, profileSvc service.Service)
 func ResolveEmployeeHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		employeeIDStr, ok := vars["employee_id"]
-		if !ok {
+		employeeID, ok := vars["employee_id"]
+		if !ok || employeeID == "" {
 			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidRequestData)
 			zap.S().Error("employee_id missing from request vars")
-			return
-		}
-
-		employeeID, err := strconv.ParseInt(employeeIDStr, 10, 64)
-		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidRequestData)
-			zap.S().Error("invalid employee_id in request: ", err)
 			return
 		}
 

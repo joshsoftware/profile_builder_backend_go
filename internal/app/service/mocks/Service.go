@@ -592,7 +592,7 @@ func (_m *Service) RemoveToken(token string) error {
 }
 
 // ResolveEmployeeID provides a mock function with given fields: ctx, employeeID
-func (_m *Service) ResolveEmployeeID(ctx context.Context, employeeID int64) (int, error) {
+func (_m *Service) ResolveEmployeeID(ctx context.Context, employeeID string) (int, error) {
 	ret := _m.Called(ctx, employeeID)
 
 	if len(ret) == 0 {
@@ -601,16 +601,16 @@ func (_m *Service) ResolveEmployeeID(ctx context.Context, employeeID int64) (int
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (int, error)); ok {
 		return rf(ctx, employeeID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) int); ok {
 		r0 = rf(ctx, employeeID)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, employeeID)
 	} else {
 		r1 = ret.Error(1)
