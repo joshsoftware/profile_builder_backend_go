@@ -45,6 +45,7 @@ type ProfileStorer interface {
 	BackupAllProfiles(backupDir string)
 	GetProfileIDByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error)
 	GetProfileIDByEmployeeID(ctx context.Context, employeeID string, tx pgx.Tx) (int, error)
+	UpdateEmployeeIDByEmail(ctx context.Context, email string, employeeID string) error
 }
 
 // NewProfileRepo creates a new instance of ProfileRepo.
@@ -483,4 +484,29 @@ func (profileStore *ProfileStore) GetProfileIDByEmployeeID(ctx context.Context, 
 	}
 
 	return profileID, nil
+}
+
+// UpdateEmployeeIDByEmail sets the employee_id on the profile identified by email.
+func (profileStore *ProfileStore) UpdateEmployeeIDByEmail(ctx context.Context, email string, employeeID string) error {
+	updateQuery, args, err := psql.Update(ProfileTable).
+		Set("employee_id", employeeID).
+		Where(sq.Eq{"email": email}).
+		ToSql()
+		
+	if err != nil {
+		zap.S().Error("Error generating update employee_id by email query: ", err)
+		return err
+	}
+
+	res, err := profileStore.db.Exec(ctx, updateQuery, args...)
+	if err != nil {
+		zap.S().Errorf("Error executing update employee_id for email %s: %v", email, err)
+		return err
+	}
+
+	if res.RowsAffected() == 0 {
+		return errors.ErrNoRecordFound
+	}
+
+	return nil
 }

@@ -287,6 +287,24 @@ func (_m *ProfileStorer) ListSkills(ctx context.Context, tx pgx.Tx) (specs.ListS
 	return r0, r1
 }
 
+// UpdateEmployeeIDByEmail provides a mock function with given fields: ctx, email, employeeID
+func (_m *ProfileStorer) UpdateEmployeeIDByEmail(ctx context.Context, email string, employeeID string) error {
+	ret := _m.Called(ctx, email, employeeID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateEmployeeIDByEmail")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, email, employeeID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateProfile provides a mock function with given fields: ctx, profileID, pd, tx
 func (_m *ProfileStorer) UpdateProfile(ctx context.Context, profileID int, pd repository.UpdateProfileRepo, tx pgx.Tx) (int, error) {
 	ret := _m.Called(ctx, profileID, pd, tx)

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/joshsoftware/profile_builder_backend_go/internal/client/intranet"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -22,6 +23,7 @@ type service struct {
 	ProjectRepo     repository.ProjectStorer
 	CertificateRepo repository.CertificateStorer
 	AchievementRepo repository.AchievementStorer
+	IntranetClient  intranet.IntranetClient
 }
 
 // Service interface provides methods to interact with user profiles.
@@ -35,6 +37,7 @@ type Service interface {
 	UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error)
 	DeleteProfile(ctx context.Context, profileID int) (err error)
 	ResolveEmployeeID(ctx context.Context, employeeID string) (int, error)
+	SyncEmployees(ctx context.Context) (updated int, skipped int, err error)
 
 	// Description: It takes backups of all user profiles and stores them in an SQL file.
 	// Intentionally added here because, going forward, if there is any requirement for an API endpoint, it is currently being used by a cron job.
@@ -59,6 +62,7 @@ type RepoDeps struct {
 	ProjectDeps     repository.ProjectStorer
 	CertificateDeps repository.CertificateStorer
 	AchievementDeps repository.AchievementStorer
+	IntranetClient  intranet.IntranetClient
 }
 
 // NewServices creates a new instance of the Service.
@@ -72,6 +76,7 @@ func NewServices(rp RepoDeps) Service {
 		ProjectRepo:     rp.ProjectDeps,
 		CertificateRepo: rp.CertificateDeps,
 		AchievementRepo: rp.AchievementDeps,
+		IntranetClient:  rp.IntranetClient,
 	}
 }
 
@@ -375,4 +380,33 @@ func (profileSvc *service) BackupAllProfiles() error {
 	}
 	profileSvc.ProfileRepo.BackupAllProfiles(backupDir)
 	return nil
+}
+
+// SyncEmployees fetches all employees from the Intranet API and updates the employee_id
+func (profileSvc *service) SyncEmployees(ctx context.Context) (updated int, skipped int, err error) {
+	employees, err := profileSvc.IntranetClient.GetEmployees(ctx)
+	if err != nil {
+		zap.S().Error("SyncEmployees: failed to fetch employees from Intranet API: ", err)
+		return 0, 0, err
+	}
+
+	zap.S().Infof("SyncEmployees: fetched %d employees from Intranet API", len(employees))
+
+	for _, emp := range employees {
+		updateErr := profileSvc.ProfileRepo.UpdateEmployeeIDByEmail(ctx, emp.Email, emp.EmployeeID)
+		if updateErr != nil {
+			if updateErr == errors.ErrNoRecordFound {
+				zap.S().Infof("SyncEmployees: no profile found for email %s, skipping", emp.Email)
+			} else {
+				zap.S().Errorf("SyncEmployees: failed to update employee_id for email %s: %v", emp.Email, updateErr)
+			}
+			skipped++
+			continue
+		}
+
+		zap.S().Infof("SyncEmployees: updated employee_id=%s for email %s", emp.EmployeeID, emp.Email)
+		updated++
+	}
+
+	return updated, skipped, nil
 }
