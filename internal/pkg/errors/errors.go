@@ -40,6 +40,12 @@ var (
 	ErrTokenNotFound          = errors.New("token not found in whitelist")
 )
 
+// Internal API key authentication errors
+var (
+	ErrAPIKeyMissing = errors.New("missing API key: X-API-Key header is required")
+	ErrAPIKeyInvalid = errors.New("invalid API key: access denied")
+)
+
 // Profile Related variables
 var (
 	ErrInvalidFormat          = errors.New("invalid request format")

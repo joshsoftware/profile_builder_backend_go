@@ -221,6 +221,12 @@ var (
 	Intranet = "intranet"
 )
 
+// Internal API key authentication constants.
+const (
+	APIKeyHeader = "X-API-Key"
+	APIKeyEnvVar = "PROFILE_BUILDER_API_KEY"
+)
+
 // Default profileID for the admin is 0
 var (
 	AdminProfileID = 0
