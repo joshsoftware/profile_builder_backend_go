@@ -57,7 +57,7 @@ func TestUserLoginHandler(t *testing.T) {
 				AccessToken: "valid_access_token",
 			},
 			ExpectedStatusCode: http.StatusOK,
-			ExpectedResponse:   `{"data":{"message":"Login successfully","profile_id":1,"role":"user","token":"valid_token","status_code":200}}`,
+			ExpectedResponse:   `{"data":{"message":"Login successfully","profile_id":1,"name":"","email":"","role":"user","token":"valid_token","status_code":200}}`,
 		},
 
 		{
