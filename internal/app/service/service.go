@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/client/intranet"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -216,6 +217,23 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, use
 		}
 	}()
 
+	role, _ := ctx.Value(constants.UserRoleKey).(string)
+	if role != constants.Admin && role != "" {
+		existingProfile, getErr := profileSvc.ProfileRepo.GetProfile(ctx, profileID, tx)
+		if getErr != nil {
+			zap.S().Error("Unable to fetch existing profile for comparison: ", getErr)
+			return 0, getErr
+		}
+		var existingEmpID string
+		if existingProfile.EmployeeID != nil {
+			existingEmpID = *existingProfile.EmployeeID
+		}
+		if profileDetail.Profile.EmployeeID != existingEmpID {
+			zap.S().Warnf("Unauthorized attempt to modify employee_id from '%s' to '%s' by user ID %d with role '%s'", existingEmpID, profileDetail.Profile.EmployeeID, userID, role)
+			return 0, errors.ErrAuthToken
+		}
+	}
+
 	today := helpers.GetTodaysDate()
 
 	var profileRepo repository.UpdateProfileRepo
@@ -291,7 +309,6 @@ func (profileSvc *service) ResolveEmployeeID(ctx context.Context, employeeID str
 	}
 	return profileID, nil
 }
-
 
 // UpdateSequence in the service layer updates sequence of components.
 func (profileSvc *service) UpdateSequence(ctx context.Context, userID int, seqDetail specs.UpdateSequenceRequest) (ID int, err error) {

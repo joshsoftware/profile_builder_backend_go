@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository/mocks"
@@ -300,6 +301,7 @@ func TestUpdateProfile(t *testing.T) {
 		name            string
 		profileID       int
 		userID          int
+		ctx             context.Context
 		input           specs.UpdateProfileRequest
 		setup           func(profileMock *mocks.ProfileStorer)
 		isErrorExpected bool
@@ -412,13 +414,41 @@ func TestUpdateProfile(t *testing.T) {
 			},
 			isErrorExpected: true,
 		},
+		{
+			name:      "Failed_unauthorized_employee_id_edit_for_employee_role",
+			profileID: 1,
+			userID:    1,
+			ctx:       context.WithValue(context.Background(), constants.UserRoleKey, constants.Employee),
+			input: specs.UpdateProfileRequest{
+				Profile: specs.Profile{
+					Name:       "Updated Name",
+					Email:      "updated.email@example.com",
+					EmployeeID: "EMP999",
+				},
+			},
+			setup: func(profileMock *mocks.ProfileStorer) {
+				profileMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				emp := "EMP001"
+				profileMock.On("GetProfile", mock.Anything, 1, mock.Anything).Return(specs.ResponseProfile{
+					ProfileID:  1,
+					Name:       "Updated Name",
+					Email:      "updated.email@example.com",
+					EmployeeID: &emp,
+				}, nil).Once()
+				profileMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+			},
+			isErrorExpected: true,
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.setup(mockProfileRepo)
-
-			_, err := profileService.UpdateProfile(context.TODO(), test.profileID, test.userID, test.input)
+			ctx := test.ctx
+			if ctx == nil {
+				ctx = context.TODO()
+			}
+			_, err := profileService.UpdateProfile(ctx, test.profileID, test.userID, test.input)
 
 			if (err != nil) != test.isErrorExpected {
 				t.Errorf("Test %s failed, expected error to be %v, but got err %v", test.name, test.isErrorExpected, err != nil)

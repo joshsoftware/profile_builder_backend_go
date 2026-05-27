@@ -397,7 +397,7 @@ func TestUpdateProfileHandler(t *testing.T) {
                 }
             }`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateProfile", context.Background(), TestProfileID, TestUserID, mock.AnythingOfType("specs.UpdateProfileRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateProfile", mock.Anything, TestProfileID, TestUserID, mock.AnythingOfType("specs.UpdateProfileRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -455,7 +455,7 @@ func TestUpdateProfileHandler(t *testing.T) {
                 }
             }`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateProfile", context.Background(), TestProfileID, TestUserID, mock.AnythingOfType("specs.UpdateProfileRequest")).Return(0, errors.New("error")).Once()
+				mockSvc.On("UpdateProfile", mock.Anything, TestProfileID, TestUserID, mock.AnythingOfType("specs.UpdateProfileRequest")).Return(0, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -682,10 +682,10 @@ func TestUpdateSequenceHandler(t *testing.T) {
 		        }
 		    }`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateSequence", mock.Anything, TestUserID, mock.AnythingOfType("specs.UpdateSequenceRequest")).Return(0, errs.ErrFailedToUpdate).Once()
+				mockSvc.On("UpdateSequence", mock.Anything, TestUserID, mock.AnythingOfType("specs.UpdateSequenceRequest")).Return(0, errs.ErrFailedToUpdateRecord).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
-			expectedResponse:   `{"error_code":502,"error_message":"failed to update status"}`,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to update record"}`,
 		},
 		{
 			name: "Fail_for_missing_profile_id",
