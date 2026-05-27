@@ -73,6 +73,8 @@ paths:
                       type: string
                     career_objectives:
                       type: string
+                    employee_id:
+                      type: string
       responses:
         "201":
           description: Profile created

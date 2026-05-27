@@ -32,6 +32,7 @@ type ProfileRepo struct {
 	UpdatedAt         string   `db:"updated_at"`
 	CreatedByID       int      `db:"created_by_id"`
 	UpdatedByID       int      `db:"updated_by_id"`
+	EmployeeID        *string  `db:"employee_id"`
 }
 
 // UpdateProfileRepo represents a data access object for profile information updation.
@@ -52,6 +53,7 @@ type UpdateProfileRepo struct {
 	CareerObjectives  string   `db:"career_objectives"`
 	UpdatedAt         string   `db:"updated_at"`
 	UpdatedByID       int      `db:"updated_by_id"`
+	EmployeeID        *string  `db:"employee_id"`
 }
 
 // UpdateSequenceRequest represents a data access object for component sequence updation.

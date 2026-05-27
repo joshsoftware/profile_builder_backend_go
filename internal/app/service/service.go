@@ -112,6 +112,9 @@ func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail spec
 	profileRepo.UpdatedAt = today
 	profileRepo.CreatedByID = userID
 	profileRepo.UpdatedByID = userID
+	if profileDetail.Profile.EmployeeID != "" {
+		profileRepo.EmployeeID = &profileDetail.Profile.EmployeeID
+	}
 
 	profileID, err = profileSvc.ProfileRepo.CreateProfile(ctx, profileRepo, tx)
 	if err != nil {
@@ -232,6 +235,9 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, use
 	profileRepo.CareerObjectives = profileDetail.Profile.CareerObjectives
 	profileRepo.UpdatedAt = today
 	profileRepo.UpdatedByID = userID
+	if profileDetail.Profile.EmployeeID != "" {
+		profileRepo.EmployeeID = &profileDetail.Profile.EmployeeID
+	}
 
 	profileID, err = profileSvc.ProfileRepo.UpdateProfile(ctx, profileID, profileRepo, tx)
 	if err != nil {

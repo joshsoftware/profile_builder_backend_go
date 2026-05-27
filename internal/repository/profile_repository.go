@@ -61,7 +61,7 @@ var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileRepo, tx pgx.Tx) (int, error) {
 	values := []interface{}{
 		pd.Name, pd.Email, pd.Gender, pd.Mobile, pd.Designation, pd.Description, pd.Title,
-		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.JoshJoiningDate, pd.GithubLink, pd.LinkedinLink, pd.CareerObjectives, 1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID,
+		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.JoshJoiningDate, pd.GithubLink, pd.LinkedinLink, pd.CareerObjectives, 1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID, pd.EmployeeID,
 	}
 
 	insertQuery, args, err := psql.Insert(ProfileTable).
@@ -184,7 +184,7 @@ func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int,
 	}
 
 	if rows.Next() {
-		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink, &value.CareerObjectives, &value.JoshJoiningDate, &value.IsInvited); err != nil {
+		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink, &value.CareerObjectives, &value.JoshJoiningDate, &value.EmployeeID, &value.IsInvited); err != nil {
 			zap.S().Error("Error scanning row: ", err)
 			return specs.ResponseProfile{}, err
 		}
@@ -205,7 +205,7 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 			"gender": pd.Gender, "mobile": pd.Mobile,
 			"designation": pd.Designation, "description": pd.Description,
 			"title": pd.Title, "years_of_experience": pd.YearsOfExperience,
-			"josh_joining_date": pd.JoshJoiningDate, "primary_skills": pd.PrimarySkills, "secondary_skills": pd.SecondarySkills, "github_link": pd.GithubLink, "linkedin_link": pd.LinkedinLink, "career_objectives": pd.CareerObjectives, "updated_at": pd.UpdatedAt, "updated_by_id": pd.UpdatedByID,
+			"josh_joining_date": pd.JoshJoiningDate, "primary_skills": pd.PrimarySkills, "secondary_skills": pd.SecondarySkills, "github_link": pd.GithubLink, "linkedin_link": pd.LinkedinLink, "career_objectives": pd.CareerObjectives, "updated_at": pd.UpdatedAt, "updated_by_id": pd.UpdatedByID, "employee_id": pd.EmployeeID,
 		}).
 		Where(sq.Eq{"id": profileID}).ToSql()
 	if err != nil {

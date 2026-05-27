@@ -38,6 +38,7 @@ type Profile struct {
 	GithubLink        string   `json:"github_link"`
 	LinkedinLink      string   `json:"linkedin_link"`
 	CareerObjectives  string   `json:"career_objectives"`
+	EmployeeID        string   `json:"employee_id"`
 }
 
 // ListProfiles struct represents details of user profiles for listing.
@@ -105,6 +106,7 @@ type ResponseProfile struct {
 	LinkedinLink      string         `json:"linkedin_link"`
 	CareerObjectives  string         `json:"career_objectives"`
 	IsInvited         string         `json:"is_invited"`
+	EmployeeID        *string        `json:"employee_id"`
 }
 
 // UpdateSequenceRequest struct represents a request to update a sequence of component.
