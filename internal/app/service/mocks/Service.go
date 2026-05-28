@@ -337,6 +337,34 @@ func (_m *Service) GenerateLoginToken(ctx context.Context, filter specs.UserInfo
 	return r0, r1
 }
 
+// GetIntranetEmployee provides a mock function with given fields: ctx, employeeID
+func (_m *Service) GetIntranetEmployee(ctx context.Context, employeeID string) (specs.IntranetEmployeeResponse, error) {
+	ret := _m.Called(ctx, employeeID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetIntranetEmployee")
+	}
+
+	var r0 specs.IntranetEmployeeResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (specs.IntranetEmployeeResponse, error)); ok {
+		return rf(ctx, employeeID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) specs.IntranetEmployeeResponse); ok {
+		r0 = rf(ctx, employeeID)
+	} else {
+		r0 = ret.Get(0).(specs.IntranetEmployeeResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, employeeID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetProfile provides a mock function with given fields: ctx, id
 func (_m *Service) GetProfile(ctx context.Context, id int) (specs.ResponseProfile, error) {
 	ret := _m.Called(ctx, id)

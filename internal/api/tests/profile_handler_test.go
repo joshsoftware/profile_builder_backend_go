@@ -921,3 +921,70 @@ func TestResolveEmployeeHandler(t *testing.T) {
 	}
 }
 
+func TestGetIntranetEmployeeHandler(t *testing.T) {
+	profileSvc := new(mocks.Service)
+	getIntranetEmployeeHandler := handler.GetIntranetEmployeeHandler(context.Background(), profileSvc)
+
+	tests := []struct {
+		name               string
+		employeeID         string
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+	}{
+		{
+			name:       "Success_get_intranet_employee",
+			employeeID: "EMP123",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("GetIntranetEmployee", mock.Anything, "EMP123").Return(specs.IntranetEmployeeResponse{
+					EmployeeID: "EMP123",
+					Name:       "John Doe",
+				}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Fail_missing_employee_id",
+			employeeID:         "",
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:       "Fail_employee_not_found",
+			employeeID: "EMP404",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("GetIntranetEmployee", mock.Anything, "EMP404").Return(specs.IntranetEmployeeResponse{}, errs.ErrNoRecordFound).Once()
+			},
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			name:       "Fail_service_error",
+			employeeID: "EMP500",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("GetIntranetEmployee", mock.Anything, "EMP500").Return(specs.IntranetEmployeeResponse{}, errors.New("upstream error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(profileSvc)
+
+			req := httptest.NewRequest("GET", "/api/intranet/employees/"+test.employeeID, nil)
+			if test.employeeID != "" {
+				req = mux.SetURLVars(req, map[string]string{"employee_id": test.employeeID})
+			} else {
+				req = mux.SetURLVars(req, map[string]string{})
+			}
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(getIntranetEmployeeHandler)
+			handler.ServeHTTP(rr, req)
+
+			if rr.Result().StatusCode != test.expectedStatusCode {
+				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+		})
+	}
+}
+

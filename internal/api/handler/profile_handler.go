@@ -284,3 +284,29 @@ func ResolveEmployeeHandler(ctx context.Context, profileSvc service.Service) fun
 		})
 	}
 }
+
+// GetIntranetEmployeeHandler handles request to fetch employee details from Intranet for form pre-fill.
+func GetIntranetEmployeeHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		employeeID, ok := vars["employee_id"]
+		if !ok || employeeID == "" {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidRequestData)
+			zap.S().Error("employee_id missing from request vars")
+			return
+		}
+
+		response, err := profileSvc.GetIntranetEmployee(ctx, employeeID)
+		if err != nil {
+			if err == errors.ErrNoRecordFound {
+				middleware.ErrorResponse(w, http.StatusNotFound, errors.ErrNoRecordFound)
+			} else {
+				middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToGet)
+			}
+			zap.S().Error("failed to get intranet employee: ", err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, response)
+	}
+}

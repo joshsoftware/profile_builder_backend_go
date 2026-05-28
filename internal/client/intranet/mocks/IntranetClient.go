@@ -15,6 +15,36 @@ type IntranetClient struct {
 	mock.Mock
 }
 
+// GetEmployeeByID provides a mock function with given fields: ctx, employeeID
+func (_m *IntranetClient) GetEmployeeByID(ctx context.Context, employeeID string) (*specs.IntranetEmployee, error) {
+	ret := _m.Called(ctx, employeeID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetEmployeeByID")
+	}
+
+	var r0 *specs.IntranetEmployee
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*specs.IntranetEmployee, error)); ok {
+		return rf(ctx, employeeID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *specs.IntranetEmployee); ok {
+		r0 = rf(ctx, employeeID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*specs.IntranetEmployee)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, employeeID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetEmployees provides a mock function with given fields: ctx
 func (_m *IntranetClient) GetEmployees(ctx context.Context) ([]specs.IntranetEmployee, error) {
 	ret := _m.Called(ctx)

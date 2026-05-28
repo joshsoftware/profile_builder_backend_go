@@ -90,6 +90,27 @@ paths:
         "200":
           description: Successful response
 
+  /api/intranet/employees/{employeeId}:
+    get:
+      summary: Fetch employee details from Intranet
+      tags:
+        - Intranet
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Employee details fetched from Intranet
+        "404":
+          description: Employee not found
+        "502":
+          description: Upstream Intranet error
+
   /api/profiles/{profileId}:
     get:
       summary: Get Profile by ID

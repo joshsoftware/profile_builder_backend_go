@@ -329,6 +329,9 @@ func ProfileIDNotRequiredPath(r *http.Request) bool {
 	if strings.HasPrefix(r.URL.Path, "/api/profiles/resolve/") {
 		return true
 	}
+	if strings.HasPrefix(r.URL.Path, "/api/intranet/employees/") {
+		return true
+	}
 	pathNotRequired := map[string]bool{
 		"/login":              true,
 		"/api/logout":         true,

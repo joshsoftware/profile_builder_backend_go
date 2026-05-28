@@ -35,6 +35,7 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	profileSubrouter.Handle("/profiles/{profile_id}", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.DeleteProfileHandler(ctx, svc)))).Methods(http.MethodDelete)
 	profileSubrouter.Handle("/updateSequence", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.UpdateSequenceHandler(ctx, svc)))).Methods(http.MethodPut)
 	profileSubrouter.Handle("/profiles/{profile_id}", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.UpdateProfileStatusHandler(ctx, svc)))).Methods(http.MethodPatch)
+	profileSubrouter.Handle("/intranet/employees/{employee_id}", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.GetIntranetEmployeeHandler(ctx, svc)))).Methods(http.MethodGet)
 
 	// Educations APIs
 	profileSubrouter.Handle("/profiles/{profile_id}/educations", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.CreateEducationHandler(ctx, svc)))).Methods(http.MethodPost)

@@ -39,6 +39,7 @@ type Service interface {
 	DeleteProfile(ctx context.Context, profileID int) (err error)
 	ResolveEmployeeID(ctx context.Context, employeeID string) (int, error)
 	SyncEmployees(ctx context.Context) (updated int, skipped int, err error)
+	GetIntranetEmployee(ctx context.Context, employeeID string) (specs.IntranetEmployeeResponse, error)
 
 	// Description: It takes backups of all user profiles and stores them in an SQL file.
 	// Intentionally added here because, going forward, if there is any requirement for an API endpoint, it is currently being used by a cron job.
@@ -432,4 +433,48 @@ func (profileSvc *service) SyncEmployees(ctx context.Context) (updated int, skip
 	}
 
 	return updated, skipped, nil
+}
+
+// GetIntranetEmployee fetches an employee by ID from the Intranet API and formats it for form pre-fill.
+func (profileSvc *service) GetIntranetEmployee(ctx context.Context, employeeID string) (specs.IntranetEmployeeResponse, error) {
+	emp, err := profileSvc.IntranetClient.GetEmployeeByID(ctx, employeeID)
+	if err != nil {
+		zap.S().Errorf("GetIntranetEmployee: failed to fetch employee %s from Intranet API: %v", employeeID, err)
+		return specs.IntranetEmployeeResponse{}, err
+	}
+
+	var primarySkills []string
+	if emp.PrimarySkill != "" {
+		for _, s := range strings.Split(emp.PrimarySkill, ",") {
+			primarySkills = append(primarySkills, strings.TrimSpace(s))
+		}
+	} else {
+		primarySkills = []string{}
+	}
+
+	var secondarySkills []string
+	if emp.SecondarySkill != "" {
+		for _, s := range strings.Split(emp.SecondarySkill, ",") {
+			secondarySkills = append(secondarySkills, strings.TrimSpace(s))
+		}
+	} else {
+		secondarySkills = []string{}
+	}
+
+	response := specs.IntranetEmployeeResponse{
+		EmployeeID:        emp.EmployeeID,
+		Email:             emp.Email,
+		Name:              emp.Name,
+		MobileNumber:      emp.MobileNumber,
+		Gender:            emp.Gender,
+		YearsOfExperience: emp.YearsOfExperience,
+		Designation:       emp.Designation,
+		JoshJoiningDate:   emp.JoshDOJ,
+		LinkedinURL:       emp.LinkedinURL,
+		GithubURL:         emp.GithubURL,
+		PrimarySkills:     primarySkills,
+		SecondarySkills:   secondarySkills,
+	}
+
+	return response, nil
 }
