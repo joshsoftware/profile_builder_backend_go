@@ -229,4 +229,5 @@ var (
 var (
 	EmployeeInvitationSubject = "Action Required: Profile Successfully Created - Please Complete Your Profile"
 	AdminRequestSubject       = "Profile Update: Employee Profile Completed - Please Review and Download"
+	AdminInvitationSubject    = "You have been invited as an Admin on Profile Builder"
 )

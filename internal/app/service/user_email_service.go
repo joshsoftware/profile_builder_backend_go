@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -14,6 +15,7 @@ import (
 type UserEmailService interface {
 	SendUserInvitation(ctx context.Context, userID int, profileID int) error
 	UpdateInvitation(ctx context.Context, userID int, profileID int) error
+	InviteAdmin(ctx context.Context, userID int, req specs.AdminInviteRequest) error
 }
 
 // inviteUser sends an email to the user with the invitation link
@@ -127,5 +129,42 @@ func (userService *service) UpdateInvitation(ctx context.Context, userID int, pr
 	}
 
 	zap.S().Infof("Profile completed successfully for user : user ID : %d and profile ID : %d", userID, profileID)
+	return nil
+}
+
+// InviteAdmin sends an invitation email to a new admin and creates their user record
+func (userService *service) InviteAdmin(ctx context.Context, userID int, req specs.AdminInviteRequest) (err error) {
+	tx, _ := userService.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := userService.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	filter := specs.UserInfoFilter{Email: req.Email}
+	_, checkErr := userService.UserLoginRepo.GetUserInfo(ctx, filter)
+	if checkErr == nil {
+		zap.S().Infof("Admin invite failed: email already exists: %s", req.Email)
+		return errors.ErrDuplicateKey
+	} else if checkErr != errors.ErrNoRecordFound {
+		zap.S().Errorf("Error checking existing user %s: %v", req.Email, checkErr)
+		return checkErr
+	}
+
+	err = helpers.SendAdminWelcomeInvitation(req.Email, req.Name)
+	if err != nil {
+		zap.S().Errorf("Error sending admin invitation: %v for email: %s", err, req.Email)
+		return err
+	}
+
+	err = userService.UserLoginRepo.CreateUser(ctx, req.Name, req.Email, constants.Admin, tx)
+	if err != nil {
+		zap.S().Errorf("Error creating admin user: %v for user %s: ", err, req.Email)
+		return err
+	}
+
+	zap.S().Infof("Admin invitation sent successfully to %s by user ID: %d", req.Email, userID)
 	return nil
 }

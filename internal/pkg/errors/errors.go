@@ -38,6 +38,7 @@ var (
 	ErrProfileID              = errors.New("error in parsing profileID from claims")
 	ErrEmptyToken             = errors.New("empty token")
 	ErrTokenNotFound          = errors.New("token not found in whitelist")
+	ErrInvalidAdminRequest    = errors.New("name and email are required")
 )
 
 // Profile Related variables

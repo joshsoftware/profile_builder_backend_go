@@ -125,6 +125,25 @@ func ConstructAdminEmailMessage(email, name string, profileID int) string {
 	return content
 }
 
+// ConstructAdminInviteMessage constructs the email body for a new admin invitation
+func ConstructAdminInviteMessage(name string) string {
+	link := fmt.Sprintf("%s", os.Getenv("HOST_URL"))
+	content := fmt.Sprintf(`
+		<html>
+		<body>
+			<div class="email-content">
+				<p>Hello %s,</p>
+				<p>You have been invited as an Admin on Profile Builder.</p>
+				<p>Please <a href="%s">click here</a> to log in and access the admin dashboard.</p>
+				<p>Best Regards,</p>
+				<p>Profile Builder Team</p>
+			</div>
+		</body>
+		</html>
+	`, name, link)
+	return content
+}
+
 // GetCurrentISTTime returns the current time in the Asia/Kolkata time zone formatted as RFC3339
 func GetCurrentISTTime() string {
 	loc, err := time.LoadLocation("Asia/Kolkata")
