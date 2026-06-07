@@ -30,3 +30,9 @@ type LoginResponse struct {
 	Role      string `json:"role"`
 	Token     string `json:"token"`
 }
+
+// AdminInviteRequest is the request body for inviting a new admin
+type AdminInviteRequest struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}

@@ -393,6 +393,24 @@ func (_m *Service) GetProfile(ctx context.Context, id int) (specs.ResponseProfil
 	return r0, r1
 }
 
+// InviteAdmin provides a mock function with given fields: ctx, userID, req
+func (_m *Service) InviteAdmin(ctx context.Context, userID int, req specs.AdminInviteRequest) error {
+	ret := _m.Called(ctx, userID, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for InviteAdmin")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, specs.AdminInviteRequest) error); ok {
+		r0 = rf(ctx, userID, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ListAchievements provides a mock function with given fields: ctx, profileID, filter
 func (_m *Service) ListAchievements(ctx context.Context, profileID int, filter specs.ListAchievementFilter) ([]specs.AchievementResponse, error) {
 	ret := _m.Called(ctx, profileID, filter)

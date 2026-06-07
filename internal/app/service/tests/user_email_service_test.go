@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
+	errs "github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/repository"
@@ -382,4 +383,105 @@ func (s *ServiceTestSuite) TestUpdateInvitation() {
 		})
 	}
 
+}
+
+func (s *ServiceTestSuite) TestInviteAdmin() {
+	type args struct {
+		ctx    context.Context
+		userID int
+		req    specs.AdminInviteRequest
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		prepare func(args args)
+	}{
+		// POSITIVE || Successfully invite admin
+		{
+			name: "Successfully invite admin",
+			args: args{
+				ctx:    context.Background(),
+				userID: 1,
+				req: specs.AdminInviteRequest{
+					Name:  "Admin Name",
+					Email: "admin@example.com",
+				},
+			},
+			wantErr: false,
+			prepare: func(args args) {
+				s.profileRepo.On("BeginTransaction", args.ctx).Return(mockTx, nil).Once()
+
+				// Mock GetUserInfo to simulate no existing user
+				filter := specs.UserInfoFilter{Email: args.req.Email}
+				s.loginRepo.On("GetUserInfo", args.ctx, filter).Return(repository.User{}, errs.ErrNoRecordFound).Once()
+
+				patch, _ := mpatch.PatchMethod(helpers.SendAdminWelcomeInvitation, func(email, name string) error {
+					return nil
+				})
+				defer patch.Unpatch()
+
+				s.loginRepo.On("CreateUser", args.ctx, args.req.Name, args.req.Email, constants.Admin, mock.Anything).Return(nil).Once()
+				s.profileRepo.On("HandleTransaction", args.ctx, mock.Anything, nil).Return(nil).Once()
+			},
+		},
+		// NEGATIVE || Failed duplicate email
+		{
+			name: "Failed_duplicate_email",
+			args: args{
+				ctx:    context.Background(),
+				userID: 1,
+				req: specs.AdminInviteRequest{
+					Name:  "Admin Name",
+					Email: "admin@example.com",
+				},
+			},
+			wantErr: true,
+			prepare: func(args args) {
+				s.profileRepo.On("BeginTransaction", args.ctx).Return(mockTx, nil).Once()
+
+				// Mock GetUserInfo to simulate existing user
+				filter := specs.UserInfoFilter{Email: args.req.Email}
+				s.loginRepo.On("GetUserInfo", args.ctx, filter).Return(repository.User{ID: 1}, nil).Once()
+
+				s.profileRepo.On("HandleTransaction", args.ctx, mock.Anything, errs.ErrDuplicateKey).Return(errs.ErrDuplicateKey).Once()
+			},
+		},
+		// NEGATIVE || Failed to create user
+		{
+			name: "Failed to create user",
+			args: args{
+				ctx:    context.Background(),
+				userID: 1,
+				req: specs.AdminInviteRequest{
+					Name:  "Admin Name",
+					Email: "admin@example.com",
+				},
+			},
+			wantErr: true,
+			prepare: func(args args) {
+				s.profileRepo.On("BeginTransaction", args.ctx).Return(mockTx, nil).Once()
+
+				filter := specs.UserInfoFilter{Email: args.req.Email}
+				s.loginRepo.On("GetUserInfo", args.ctx, filter).Return(repository.User{}, errs.ErrNoRecordFound).Once()
+
+				patch, _ := mpatch.PatchMethod(helpers.SendAdminWelcomeInvitation, func(email, name string) error {
+					return nil
+				})
+				defer patch.Unpatch()
+
+				s.loginRepo.On("CreateUser", args.ctx, args.req.Name, args.req.Email, constants.Admin, mock.Anything).Return(errors.New("db error")).Once()
+				s.profileRepo.On("HandleTransaction", args.ctx, mock.Anything, errors.New("db error")).Return(errors.New("db error")).Once()
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.prepare(tt.args)
+			err := s.emailService.InviteAdmin(tt.args.ctx, tt.args.userID, tt.args.req)
+			assert.Equal(s.T(), tt.wantErr, err != nil)
+		})
+	}
 }

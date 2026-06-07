@@ -277,6 +277,12 @@ func SendAdminInvitation(email, name string, profileID int) error {
 	return SendInvitation(email, constants.AdminRequestSubject, message)
 }
 
+// SendAdminWelcomeInvitation sends an admin welcome invitation email
+func SendAdminWelcomeInvitation(email, name string) error {
+	message := ConstructAdminInviteMessage(name)
+	return SendInvitation(email, constants.AdminInvitationSubject, message)
+}
+
 // SendUserInvitation sends a user invitation email
 func SendUserInvitation(email, name string, profileID int) error {
 	message := ConstructUserMessage(email, name, profileID)
@@ -338,6 +344,7 @@ func ProfileIDNotRequiredPath(r *http.Request) bool {
 		"/api/profiles":       true,
 		"/api/skills":         true,
 		"/api/updateSequence": true,
+		"/api/admin_invite":   true,
 	}
 
 	return pathNotRequired[r.URL.Path]
