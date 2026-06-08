@@ -40,6 +40,7 @@ var (
 	ErrEmptyToken             = errors.New("empty token")
 	ErrTokenNotFound          = errors.New("token not found in whitelist")
 	ErrInvalidAdminRequest    = errors.New("name and email are required")
+	ErrProfileExists          = errors.New("profile already exists for this employee id")
 )
 
 // Internal API key authentication errors
