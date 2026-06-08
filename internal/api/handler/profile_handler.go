@@ -300,8 +300,8 @@ func GetIntranetEmployeeHandler(ctx context.Context, profileSvc service.Service)
 		if err != nil {
 			if err == errors.ErrNoRecordFound {
 				middleware.ErrorResponse(w, http.StatusNotFound, errors.ErrNoRecordFound)
-			} else if err == errors.ErrProfileExists {
-				middleware.ErrorResponse(w, http.StatusConflict, errors.ErrProfileExists)
+			} else if _, ok := err.(errors.ProfileExistsError); ok {
+				middleware.ErrorResponse(w, http.StatusConflict, err)
 			} else {
 				middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToGet)
 			}

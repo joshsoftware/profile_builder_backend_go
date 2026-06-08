@@ -66,3 +66,18 @@ var (
 	ErrInvalidConfig    = errors.New("invalid configuration for database connection")
 	ErrMisMatchParams   = errors.New("mismatch in number of records for component")
 )
+
+type ProfileExistsError struct {
+	Name string
+}
+
+func (e ProfileExistsError) Error() string {
+	if e.Name != "" {
+		return "Profile already exists for " + e.Name
+	}
+	return "Profile already exists for this Employee ID"
+}
+
+func (e ProfileExistsError) Is(target error) bool {
+	return target == ErrProfileExists
+}

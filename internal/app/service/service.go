@@ -437,10 +437,15 @@ func (profileSvc *service) SyncEmployees(ctx context.Context) (updated int, skip
 
 // GetIntranetEmployee fetches an employee by ID from the Intranet API and formats it for form pre-fill.
 func (profileSvc *service) GetIntranetEmployee(ctx context.Context, employeeID string) (specs.IntranetEmployeeResponse, error) {
-	_, err := profileSvc.ResolveEmployeeID(ctx, employeeID)
+	profileID, err := profileSvc.ResolveEmployeeID(ctx, employeeID)
 	if err == nil {
 		zap.S().Warnf("GetIntranetEmployee: profile already exists for employeeID %s", employeeID)
-		return specs.IntranetEmployeeResponse{}, errors.ErrProfileExists
+		var profileName string
+		profile, getErr := profileSvc.GetProfile(ctx, profileID)
+		if getErr == nil {
+			profileName = profile.Name
+		}
+		return specs.IntranetEmployeeResponse{}, errors.ProfileExistsError{Name: profileName}
 	} else if err != errors.ErrNoRecordFound {
 		zap.S().Errorf("GetIntranetEmployee: failed to check if profile exists: %v", err)
 		return specs.IntranetEmployeeResponse{}, err

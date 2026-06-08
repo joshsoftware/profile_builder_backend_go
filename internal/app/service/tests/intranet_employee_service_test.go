@@ -74,13 +74,14 @@ func TestGetIntranetEmployee(t *testing.T) {
 			name:       "Fail_profile_already_exists",
 			employeeID: "EMP123",
 			setup: func(clientMock *intranetMocks.IntranetClient, repoMock *repoMocks.ProfileStorer) {
-				repoMock.On("BeginTransaction", mock.Anything).Return(nil, nil).Once()
+				repoMock.On("BeginTransaction", mock.Anything).Return(nil, nil)
 				repoMock.On("GetProfileIDByEmployeeID", mock.Anything, "EMP123", mock.Anything).Return(1, nil).Once()
-				repoMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+				repoMock.On("GetProfile", mock.Anything, 1, mock.Anything).Return(specs.ResponseProfile{Name: "Test User"}, nil).Once()
+				repoMock.On("HandleTransaction", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			isErrorExpected: true,
 			wantResponse:    specs.IntranetEmployeeResponse{},
-			expectedError:   errs.ErrProfileExists,
+			expectedError:   errs.ProfileExistsError{Name: "Test User"},
 		},
 		{
 			name:       "Fail_intranet_client_returns_error",
