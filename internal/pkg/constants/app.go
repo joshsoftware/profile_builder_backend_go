@@ -25,7 +25,7 @@ var CorsOptions = cors.Options{
 // CreateUserColumns defines the columns required for creating a new user profile.
 var CreateUserColumns = []string{
 	"name", "email", "gender", "mobile", "designation", "description", "title",
-	"years_of_experience", "primary_skills", "secondary_skills", "josh_joining_date", "github_link", "linkedin_link", "career_objectives", "is_active", "is_current_employee", "created_at", "updated_at", "created_by_id", "updated_by_id",
+	"years_of_experience", "primary_skills", "secondary_skills", "josh_joining_date", "github_link", "linkedin_link", "career_objectives", "is_active", "is_current_employee", "created_at", "updated_at", "created_by_id", "updated_by_id", "employee_id",
 }
 
 // CreateEducationColumns defines the columns required for creating education details.
@@ -69,6 +69,7 @@ var ListProfilesColumns = []string{
 	"p.josh_joining_date",
 	"p.created_at",
 	"p.updated_at",
+	"p.employee_id",
 	`(SELECT 
 			CASE 
 				WHEN COUNT(*) = 0 THEN 0 
@@ -82,7 +83,7 @@ var ListProfilesColumns = []string{
 // ResponseProfileColumns defines the columns required for returning a specific user profile.
 var ResponseProfileColumns = []string{
 	"id", "name", "email", "gender", "mobile", "designation", "description", "title",
-	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link", "career_objectives", "josh_joining_date",
+	"years_of_experience", "primary_skills", "secondary_skills", "github_link", "linkedin_link", "career_objectives", "josh_joining_date", "employee_id",
 }
 
 // ResponseEducationColumns defines the columns required for returning a specific user education.
@@ -220,6 +221,12 @@ var (
 	Intranet = "intranet"
 )
 
+// Internal API key authentication constants.
+const (
+	APIKeyHeader = "X-API-Key"
+	APIKeyEnvVar = "PROFILE_BUILDER_API_KEY"
+)
+
 // Default profileID for the admin is 0
 var (
 	AdminProfileID = 0
@@ -229,4 +236,5 @@ var (
 var (
 	EmployeeInvitationSubject = "Action Required: Profile Successfully Created - Please Complete Your Profile"
 	AdminRequestSubject       = "Profile Update: Employee Profile Completed - Please Review and Download"
+	AdminInvitationSubject    = "You have been invited as an Admin on Profile Builder"
 )

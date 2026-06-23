@@ -21,6 +21,11 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	profileSubrouter := router.PathPrefix("/api").Subrouter()
 	profileSubrouter.Use(middleware.AuthMiddleware)
 
+	// Internal server-to-server subrouter — protected by API key only (no JWT).
+	internalSubrouter := router.PathPrefix("/api/internal").Subrouter()
+	internalSubrouter.Use(middleware.APIKeyMiddleware)
+	internalSubrouter.Handle("/profiles/resolve/{employee_id}", http.HandlerFunc(handler.ResolveEmployeeHandler(ctx, svc))).Methods(http.MethodGet)
+
 	// Profile APIs
 	profileSubrouter.Handle("/profiles", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.CreateProfileHandler(ctx, svc)))).Methods(http.MethodPost)
 	profileSubrouter.Handle("/profiles/{profile_id}", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.UpdateProfileHandler(ctx, svc)))).Methods(http.MethodPut)
@@ -30,6 +35,7 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	profileSubrouter.Handle("/profiles/{profile_id}", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.DeleteProfileHandler(ctx, svc)))).Methods(http.MethodDelete)
 	profileSubrouter.Handle("/updateSequence", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.UpdateSequenceHandler(ctx, svc)))).Methods(http.MethodPut)
 	profileSubrouter.Handle("/profiles/{profile_id}", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.UpdateProfileStatusHandler(ctx, svc)))).Methods(http.MethodPatch)
+	profileSubrouter.Handle("/intranet/employees/{employee_id}", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.GetIntranetEmployeeHandler(ctx, svc)))).Methods(http.MethodGet)
 
 	// Educations APIs
 	profileSubrouter.Handle("/profiles/{profile_id}/educations", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.CreateEducationHandler(ctx, svc)))).Methods(http.MethodPost)
@@ -64,6 +70,7 @@ func NewRouter(ctx context.Context, svc service.Service) *mux.Router {
 	// User Email APIs
 	profileSubrouter.Handle("/profiles/{profile_id}/employee_invite", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.SendUserInvitation(ctx, svc)))).Methods(http.MethodPost)
 	profileSubrouter.Handle("/profiles/{profile_id}/profile_complete", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.SendAdminInvitation(ctx, svc)))).Methods(http.MethodPatch)
+	profileSubrouter.Handle("/admin_invite", middleware.RoleMiddleware([]string{constants.Admin})(http.HandlerFunc(handler.InviteAdmin(ctx, svc)))).Methods(http.MethodPost)
 
 	// User Logout APIs
 	profileSubrouter.Handle("/logout", middleware.RoleMiddleware([]string{constants.Admin, constants.Employee})(http.HandlerFunc(handler.Logout(ctx, svc)))).Methods(http.MethodPost)

@@ -184,6 +184,7 @@ func TestCreateProfileHandler(t *testing.T) {
 	}
 }
 
+var mockEmpID = "EMP123"
 var mockListProfile = []specs.ResponseListProfiles{
 	{
 		ID:                1,
@@ -192,6 +193,7 @@ var mockListProfile = []specs.ResponseListProfiles{
 		YearsOfExperience: 1.0,
 		PrimarySkills:     []string{"Golang", "Python", "Java", "React"},
 		IsCurrentEmployee: "YES",
+		EmployeeID:        &mockEmpID,
 	},
 }
 
@@ -395,7 +397,7 @@ func TestUpdateProfileHandler(t *testing.T) {
                 }
             }`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateProfile", context.Background(), TestProfileID, TestUserID, mock.AnythingOfType("specs.UpdateProfileRequest")).Return(1, nil).Once()
+				mockSvc.On("UpdateProfile", mock.Anything, TestProfileID, TestUserID, mock.AnythingOfType("specs.UpdateProfileRequest")).Return(1, nil).Once()
 			},
 			expectedStatusCode: http.StatusOK,
 		},
@@ -453,7 +455,7 @@ func TestUpdateProfileHandler(t *testing.T) {
                 }
             }`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateProfile", context.Background(), TestProfileID, TestUserID, mock.AnythingOfType("specs.UpdateProfileRequest")).Return(0, errors.New("error")).Once()
+				mockSvc.On("UpdateProfile", mock.Anything, TestProfileID, TestUserID, mock.AnythingOfType("specs.UpdateProfileRequest")).Return(0, errors.New("error")).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
 		},
@@ -680,10 +682,10 @@ func TestUpdateSequenceHandler(t *testing.T) {
 		        }
 		    }`,
 			setup: func(mockSvc *mocks.Service) {
-				mockSvc.On("UpdateSequence", mock.Anything, TestUserID, mock.AnythingOfType("specs.UpdateSequenceRequest")).Return(0, errs.ErrFailedToUpdate).Once()
+				mockSvc.On("UpdateSequence", mock.Anything, TestUserID, mock.AnythingOfType("specs.UpdateSequenceRequest")).Return(0, errs.ErrFailedToUpdateRecord).Once()
 			},
 			expectedStatusCode: http.StatusBadGateway,
-			expectedResponse:   `{"error_code":502,"error_message":"failed to update status"}`,
+			expectedResponse:   `{"error_code":502,"error_message":"failed to update record"}`,
 		},
 		{
 			name: "Fail_for_missing_profile_id",
@@ -842,3 +844,147 @@ func TestUpdateProfileStatusHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveEmployeeHandler(t *testing.T) {
+	profileSvc := new(mocks.Service)
+	resolveEmployeeHandler := handler.ResolveEmployeeHandler(context.Background(), profileSvc)
+
+	tests := []struct {
+		name               string
+		employeeID         string
+		setVars            bool
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+		expectedResponse   string
+	}{
+		{
+			name:       "Success_for_resolving_employee_id",
+			employeeID: "12345",
+			setVars:    true,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("ResolveEmployeeID", context.Background(), "12345").Return(42, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"data":{"message":"Employee resolved successfully","profile_id":42}}`,
+		},
+		{
+			name:               "Fail_for_missing_employee_id_vars",
+			employeeID:         "",
+			setVars:            false,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request data"}`,
+		},
+		{
+			name:               "Fail_for_invalid_employee_id_format",
+			employeeID:         "",
+			setVars:            true,
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error_code":400,"error_message":"invalid request data"}`,
+		},
+		{
+			name:       "Fail_for_service_layer_resolution_failure",
+			employeeID: "99999",
+			setVars:    true,
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("ResolveEmployeeID", context.Background(), "99999").Return(0, errors.New("resolution failed")).Once()
+			},
+			expectedStatusCode: http.StatusNotFound,
+			expectedResponse:   `{"error_code":404,"error_message":"no record found"}`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(profileSvc)
+
+			req := httptest.NewRequest("GET", "/employees/resolve", nil)
+			if test.setVars {
+				req = mux.SetURLVars(req, map[string]string{"employee_id": test.employeeID})
+			}
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(resolveEmployeeHandler)
+			handler.ServeHTTP(rr, req)
+
+			if rr.Result().StatusCode != test.expectedStatusCode {
+				t.Errorf("Expected status code %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+
+			if rr.Body.String() != test.expectedResponse {
+				t.Errorf("Expected body %s but got %s", test.expectedResponse, rr.Body.String())
+			}
+
+			profileSvc.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGetIntranetEmployeeHandler(t *testing.T) {
+	profileSvc := new(mocks.Service)
+	getIntranetEmployeeHandler := handler.GetIntranetEmployeeHandler(context.Background(), profileSvc)
+
+	tests := []struct {
+		name               string
+		employeeID         string
+		setup              func(mockSvc *mocks.Service)
+		expectedStatusCode int
+	}{
+		{
+			name:       "Success_get_intranet_employee",
+			employeeID: "EMP123",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("GetIntranetEmployee", mock.Anything, "EMP123").Return(specs.IntranetEmployeeResponse{
+					EmployeeID: "EMP123",
+					Name:       "John Doe",
+				}, nil).Once()
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Fail_missing_employee_id",
+			employeeID:         "",
+			setup:              func(mockSvc *mocks.Service) {},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:       "Fail_employee_not_found",
+			employeeID: "EMP404",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("GetIntranetEmployee", mock.Anything, "EMP404").Return(specs.IntranetEmployeeResponse{}, errs.ErrNoRecordFound).Once()
+			},
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			name:       "Fail_service_error",
+			employeeID: "EMP500",
+			setup: func(mockSvc *mocks.Service) {
+				mockSvc.On("GetIntranetEmployee", mock.Anything, "EMP500").Return(specs.IntranetEmployeeResponse{}, errors.New("upstream error")).Once()
+			},
+			expectedStatusCode: http.StatusBadGateway,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.setup(profileSvc)
+
+			req := httptest.NewRequest("GET", "/api/intranet/employees/"+test.employeeID, nil)
+			if test.employeeID != "" {
+				req = mux.SetURLVars(req, map[string]string{"employee_id": test.employeeID})
+			} else {
+				req = mux.SetURLVars(req, map[string]string{})
+			}
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(getIntranetEmployeeHandler)
+			handler.ServeHTTP(rr, req)
+
+			if rr.Result().StatusCode != test.expectedStatusCode {
+				t.Errorf("Expected %d but got %d", test.expectedStatusCode, rr.Result().StatusCode)
+			}
+		})
+	}
+}
+

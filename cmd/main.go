@@ -12,6 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/api"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/client/intranet"
 	cronjob "github.com/joshsoftware/profile_builder_backend_go/internal/cron-job"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/log"
@@ -58,6 +59,7 @@ func main() {
 		ProjectDeps:     repository.NewProjectRepo(db),
 		CertificateDeps: repository.NewCertificateRepo(db),
 		AchievementDeps: repository.NewAchievementRepo(db),
+		IntranetClient:  intranet.NewClient(os.Getenv("INTRANET_API_BASE_URL"), os.Getenv("INTRANET_API_KEY")),
 	}
 
 	//Initializing Services

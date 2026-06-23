@@ -44,6 +44,8 @@ type ProfileStorer interface {
 	HandleTransaction(ctx context.Context, tx pgx.Tx, incomingErr error) (err error)
 	BackupAllProfiles(backupDir string)
 	GetProfileIDByEmail(ctx context.Context, email string, tx pgx.Tx) (int, error)
+	GetProfileIDByEmployeeID(ctx context.Context, employeeID string, tx pgx.Tx) (int, error)
+	UpdateEmployeeIDByEmail(ctx context.Context, email string, employeeID string) error
 }
 
 // NewProfileRepo creates a new instance of ProfileRepo.
@@ -59,7 +61,7 @@ var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 func (profileStore *ProfileStore) CreateProfile(ctx context.Context, pd ProfileRepo, tx pgx.Tx) (int, error) {
 	values := []interface{}{
 		pd.Name, pd.Email, pd.Gender, pd.Mobile, pd.Designation, pd.Description, pd.Title,
-		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.JoshJoiningDate, pd.GithubLink, pd.LinkedinLink, pd.CareerObjectives, 1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID,
+		pd.YearsOfExperience, pd.PrimarySkills, pd.SecondarySkills, pd.JoshJoiningDate, pd.GithubLink, pd.LinkedinLink, pd.CareerObjectives, 1, 1, pd.CreatedAt, pd.UpdatedAt, pd.CreatedByID, pd.UpdatedByID, pd.EmployeeID,
 	}
 
 	insertQuery, args, err := psql.Insert(ProfileTable).
@@ -123,6 +125,7 @@ func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) (
 			&profile.JoshJoiningDate,
 			&profile.CreatedAt,
 			&profile.UpdatedAt,
+			&profile.EmployeeID,
 			&profile.IsProfileComplete,
 		)
 		if err != nil {
@@ -181,7 +184,7 @@ func (profileStore *ProfileStore) GetProfile(ctx context.Context, profileID int,
 	}
 
 	if rows.Next() {
-		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink, &value.CareerObjectives, &value.JoshJoiningDate, &value.IsInvited); err != nil {
+		if err := rows.Scan(&value.ProfileID, &value.Name, &value.Email, &value.Gender, &value.Mobile, &value.Designation, &value.Description, &value.Title, &value.YearsOfExperience, &value.PrimarySkills, &value.SecondarySkills, &value.GithubLink, &value.LinkedinLink, &value.CareerObjectives, &value.JoshJoiningDate, &value.EmployeeID, &value.IsInvited); err != nil {
 			zap.S().Error("Error scanning row: ", err)
 			return specs.ResponseProfile{}, err
 		}
@@ -202,7 +205,7 @@ func (profileStore *ProfileStore) UpdateProfile(ctx context.Context, profileID i
 			"gender": pd.Gender, "mobile": pd.Mobile,
 			"designation": pd.Designation, "description": pd.Description,
 			"title": pd.Title, "years_of_experience": pd.YearsOfExperience,
-			"josh_joining_date": pd.JoshJoiningDate, "primary_skills": pd.PrimarySkills, "secondary_skills": pd.SecondarySkills, "github_link": pd.GithubLink, "linkedin_link": pd.LinkedinLink, "career_objectives": pd.CareerObjectives, "updated_at": pd.UpdatedAt, "updated_by_id": pd.UpdatedByID,
+			"josh_joining_date": pd.JoshJoiningDate, "primary_skills": pd.PrimarySkills, "secondary_skills": pd.SecondarySkills, "github_link": pd.GithubLink, "linkedin_link": pd.LinkedinLink, "career_objectives": pd.CareerObjectives, "updated_at": pd.UpdatedAt, "updated_by_id": pd.UpdatedByID, "employee_id": pd.EmployeeID,
 		}).
 		Where(sq.Eq{"id": profileID}).ToSql()
 	if err != nil {
@@ -459,4 +462,51 @@ func (profileStore *ProfileStore) GetProfileIDByEmail(ctx context.Context, email
 	}
 
 	return profileID, nil
+}
+
+// GetProfileIDByEmployeeID returns the profile ID for a given employee ID.
+func (profileStore *ProfileStore) GetProfileIDByEmployeeID(ctx context.Context, employeeID string, tx pgx.Tx) (int, error) {
+	query := psql.Select("id").From("profiles").Where(sq.Eq{"employee_id": employeeID})
+	sql, args, err := query.ToSql()
+	if err != nil {
+		zap.S().Error("Error generating select query: ", err)
+		return 0, err
+	}
+
+	var profileID int
+	err = tx.QueryRow(ctx, sql, args...).Scan(&profileID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return 0, errors.ErrNoRecordFound
+		}
+		zap.S().Error("Error executing select query: ", err)
+		return 0, err
+	}
+
+	return profileID, nil
+}
+
+// UpdateEmployeeIDByEmail sets the employee_id on the profile identified by email.
+func (profileStore *ProfileStore) UpdateEmployeeIDByEmail(ctx context.Context, email string, employeeID string) error {
+	updateQuery, args, err := psql.Update(ProfileTable).
+		Set("employee_id", employeeID).
+		Where(sq.Eq{"email": email}).
+		ToSql()
+		
+	if err != nil {
+		zap.S().Error("Error generating update employee_id by email query: ", err)
+		return err
+	}
+
+	res, err := profileStore.db.Exec(ctx, updateQuery, args...)
+	if err != nil {
+		zap.S().Errorf("Error executing update employee_id for email %s: %v", email, err)
+		return err
+	}
+
+	if res.RowsAffected() == 0 {
+		return errors.ErrNoRecordFound
+	}
+
+	return nil
 }

@@ -49,12 +49,14 @@ func TestUserLogin(t *testing.T) {
 
 	mockAdminResponse := specs.LoginResponse{
 		ProfileID: constants.AdminProfileID,
+		Email:     TestAdminEmail,
 		Role:      constants.Admin,
 		Token:     "valid_admin_token",
 	}
 
 	mockEmployeeResponse := specs.LoginResponse{
 		ProfileID: 2,
+		Email:     TestEmployeeEmail,
 		Role:      constants.Employee,
 		Token:     "valid_employee_token",
 	}

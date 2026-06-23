@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/joshsoftware/profile_builder_backend_go/internal/client/intranet"
+	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/helpers"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/specs"
@@ -22,6 +24,7 @@ type service struct {
 	ProjectRepo     repository.ProjectStorer
 	CertificateRepo repository.CertificateStorer
 	AchievementRepo repository.AchievementStorer
+	IntranetClient  intranet.IntranetClient
 }
 
 // Service interface provides methods to interact with user profiles.
@@ -34,6 +37,9 @@ type Service interface {
 	UpdateSequence(ctx context.Context, userID int, seqDetail specs.UpdateSequenceRequest) (ID int, err error)
 	UpdateProfileStatus(ctx context.Context, profileID int, req specs.UpdateProfileStatus) (err error)
 	DeleteProfile(ctx context.Context, profileID int) (err error)
+	ResolveEmployeeID(ctx context.Context, employeeID string) (int, error)
+	SyncEmployees(ctx context.Context) (updated int, skipped int, err error)
+	GetIntranetEmployee(ctx context.Context, employeeID string) (specs.IntranetEmployeeResponse, error)
 
 	// Description: It takes backups of all user profiles and stores them in an SQL file.
 	// Intentionally added here because, going forward, if there is any requirement for an API endpoint, it is currently being used by a cron job.
@@ -58,6 +64,7 @@ type RepoDeps struct {
 	ProjectDeps     repository.ProjectStorer
 	CertificateDeps repository.CertificateStorer
 	AchievementDeps repository.AchievementStorer
+	IntranetClient  intranet.IntranetClient
 }
 
 // NewServices creates a new instance of the Service.
@@ -71,6 +78,7 @@ func NewServices(rp RepoDeps) Service {
 		ProjectRepo:     rp.ProjectDeps,
 		CertificateRepo: rp.CertificateDeps,
 		AchievementRepo: rp.AchievementDeps,
+		IntranetClient:  rp.IntranetClient,
 	}
 }
 
@@ -106,6 +114,9 @@ func (profileSvc *service) CreateProfile(ctx context.Context, profileDetail spec
 	profileRepo.UpdatedAt = today
 	profileRepo.CreatedByID = userID
 	profileRepo.UpdatedByID = userID
+	if profileDetail.Profile.EmployeeID != "" {
+		profileRepo.EmployeeID = &profileDetail.Profile.EmployeeID
+	}
 
 	profileID, err = profileSvc.ProfileRepo.CreateProfile(ctx, profileRepo, tx)
 	if err != nil {
@@ -135,6 +146,11 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 	}
 
 	for _, profile := range profiles {
+		var empID *string
+		if profile.EmployeeID.Valid {
+			val := profile.EmployeeID.String
+			empID = &val
+		}
 		values = append(values, specs.ResponseListProfiles{
 			ID:                profile.ID,
 			Name:              profile.Name,
@@ -147,6 +163,7 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 			CreatedAt:         profile.CreatedAt,
 			UpdatedAt:         profile.UpdatedAt,
 			IsProfileComplete: helpers.CheckBoolStatus(profile.IsProfileComplete),
+			EmployeeID:        empID,
 		})
 	}
 	return values, nil
@@ -201,6 +218,23 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, use
 		}
 	}()
 
+	role, _ := ctx.Value(constants.UserRoleKey).(string)
+	if role != constants.Admin && role != "" {
+		existingProfile, getErr := profileSvc.ProfileRepo.GetProfile(ctx, profileID, tx)
+		if getErr != nil {
+			zap.S().Error("Unable to fetch existing profile for comparison: ", getErr)
+			return 0, getErr
+		}
+		var existingEmpID string
+		if existingProfile.EmployeeID != nil {
+			existingEmpID = *existingProfile.EmployeeID
+		}
+		if profileDetail.Profile.EmployeeID != existingEmpID {
+			zap.S().Warnf("Unauthorized attempt to modify employee_id from '%s' to '%s' by user ID %d with role '%s'", existingEmpID, profileDetail.Profile.EmployeeID, userID, role)
+			return 0, errors.ErrAuthToken
+		}
+	}
+
 	today := helpers.GetTodaysDate()
 
 	var profileRepo repository.UpdateProfileRepo
@@ -220,6 +254,9 @@ func (profileSvc *service) UpdateProfile(ctx context.Context, profileID int, use
 	profileRepo.CareerObjectives = profileDetail.Profile.CareerObjectives
 	profileRepo.UpdatedAt = today
 	profileRepo.UpdatedByID = userID
+	if profileDetail.Profile.EmployeeID != "" {
+		profileRepo.EmployeeID = &profileDetail.Profile.EmployeeID
+	}
 
 	profileID, err = profileSvc.ProfileRepo.UpdateProfile(ctx, profileID, profileRepo, tx)
 	if err != nil {
@@ -253,6 +290,25 @@ func (profileSvc *service) DeleteProfile(ctx context.Context, profileID int) (er
 	}
 	zap.S().Info("profile deleted with profile_id : ", profileID)
 	return nil
+}
+
+// ResolveEmployeeID resolves employee_id to its internal profile_id in the service layer.
+func (profileSvc *service) ResolveEmployeeID(ctx context.Context, employeeID string) (profileID int, err error) {
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	profileID, err = profileSvc.ProfileRepo.GetProfileIDByEmployeeID(ctx, employeeID, tx)
+	if err != nil {
+		zap.S().Error("Unable to resolve employee ID : ", err, " for employee ID : ", employeeID)
+		return 0, err
+	}
+	return profileID, nil
 }
 
 // UpdateSequence in the service layer updates sequence of components.
@@ -348,4 +404,91 @@ func (profileSvc *service) BackupAllProfiles() error {
 	}
 	profileSvc.ProfileRepo.BackupAllProfiles(backupDir)
 	return nil
+}
+
+// SyncEmployees fetches all employees from the Intranet API and updates the employee_id
+func (profileSvc *service) SyncEmployees(ctx context.Context) (updated int, skipped int, err error) {
+	employees, err := profileSvc.IntranetClient.GetEmployees(ctx)
+	if err != nil {
+		zap.S().Error("SyncEmployees: failed to fetch employees from Intranet API: ", err)
+		return 0, 0, err
+	}
+
+	zap.S().Infof("SyncEmployees: fetched %d employees from Intranet API", len(employees))
+
+	for _, emp := range employees {
+		updateErr := profileSvc.ProfileRepo.UpdateEmployeeIDByEmail(ctx, emp.Email, emp.EmployeeID)
+		if updateErr != nil {
+			if updateErr == errors.ErrNoRecordFound {
+				zap.S().Infof("SyncEmployees: no profile found for email %s, skipping", emp.Email)
+			} else {
+				zap.S().Errorf("SyncEmployees: failed to update employee_id for email %s: %v", emp.Email, updateErr)
+			}
+			skipped++
+			continue
+		}
+
+		zap.S().Infof("SyncEmployees: updated employee_id=%s for email %s", emp.EmployeeID, emp.Email)
+		updated++
+	}
+
+	return updated, skipped, nil
+}
+
+// GetIntranetEmployee fetches an employee by ID from the Intranet API and formats it for form pre-fill.
+func (profileSvc *service) GetIntranetEmployee(ctx context.Context, employeeID string) (specs.IntranetEmployeeResponse, error) {
+	profileID, err := profileSvc.ResolveEmployeeID(ctx, employeeID)
+	if err == nil {
+		zap.S().Warnf("GetIntranetEmployee: profile already exists for employeeID %s", employeeID)
+		var profileName string
+		profile, getErr := profileSvc.GetProfile(ctx, profileID)
+		if getErr == nil {
+			profileName = profile.Name
+		}
+		return specs.IntranetEmployeeResponse{}, errors.ProfileExistsError{Name: profileName}
+	} else if err != errors.ErrNoRecordFound {
+		zap.S().Errorf("GetIntranetEmployee: failed to check if profile exists: %v", err)
+		return specs.IntranetEmployeeResponse{}, err
+	}
+
+	emp, err := profileSvc.IntranetClient.GetEmployeeByID(ctx, employeeID)
+	if err != nil {
+		zap.S().Errorf("GetIntranetEmployee: failed to fetch employee %s from Intranet API: %v", employeeID, err)
+		return specs.IntranetEmployeeResponse{}, err
+	}
+
+	var primarySkills []string
+	if emp.PrimarySkill != "" {
+		for _, s := range strings.Split(emp.PrimarySkill, ",") {
+			primarySkills = append(primarySkills, strings.TrimSpace(s))
+		}
+	} else {
+		primarySkills = []string{}
+	}
+
+	var secondarySkills []string
+	if emp.SecondarySkill != "" {
+		for _, s := range strings.Split(emp.SecondarySkill, ",") {
+			secondarySkills = append(secondarySkills, strings.TrimSpace(s))
+		}
+	} else {
+		secondarySkills = []string{}
+	}
+
+	response := specs.IntranetEmployeeResponse{
+		EmployeeID:        emp.EmployeeID,
+		Email:             emp.Email,
+		Name:              emp.Name,
+		MobileNumber:      emp.MobileNumber,
+		Gender:            emp.Gender,
+		YearsOfExperience: emp.YearsOfExperience,
+		Designation:       emp.Designation,
+		JoshJoiningDate:   emp.JoshDOJ,
+		LinkedinURL:       emp.LinkedinURL,
+		GithubURL:         emp.GithubURL,
+		PrimarySkills:     primarySkills,
+		SecondarySkills:   secondarySkills,
+	}
+
+	return response, nil
 }

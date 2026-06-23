@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/app/service"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/constants"
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
@@ -37,7 +38,8 @@ func CreateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 			return
 		}
 
-		profileID, err := profileSvc.CreateProfile(ctx, req, userID)
+		// r.Context() to send request-specific context, set by AuthMiddleware
+		profileID, err := profileSvc.CreateProfile(r.Context(), req, userID)
 		if err != nil {
 			middleware.ErrorResponse(w, http.StatusBadGateway, err)
 			zap.S().Error("Unable to create profile : ", err, "for profile id : ", profileID)
@@ -135,9 +137,14 @@ func UpdateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 			return
 		}
 
-		updatedResp, err := profileSvc.UpdateProfile(ctx, profileID, userID, req)
+		// r.Context() to send request-specific context, set by AuthMiddleware
+		updatedResp, err := profileSvc.UpdateProfile(r.Context(), profileID, userID, req)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToUpdate)
+			if err == errors.ErrAuthToken {
+				middleware.ErrorResponse(w, http.StatusUnauthorized, err)
+				return
+			}
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToUpdateRecord)
 			zap.S().Error("Unable to update profile : ", err, "for profile id : ", profileID)
 			return
 		}
@@ -205,7 +212,7 @@ func UpdateSequenceHandler(ctx context.Context, profileSvc service.Service) func
 
 		updatedResp, err := profileSvc.UpdateSequence(ctx, userID, req)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToUpdate)
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToUpdateRecord)
 			zap.S().Error("Unable to update sequence : ", err, "for profile id : ", updatedResp)
 			return
 		}
@@ -242,7 +249,7 @@ func UpdateProfileStatusHandler(ctx context.Context, profileSvc service.Service)
 
 		err = profileSvc.UpdateProfileStatus(ctx, profileID, req)
 		if err != nil {
-			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToUpdate)
+			middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToUpdateStatus)
 			zap.S().Error("error while updating the profile status: ", err)
 			return
 		}
@@ -250,5 +257,58 @@ func UpdateProfileStatusHandler(ctx context.Context, profileSvc service.Service)
 		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponse{
 			Message: "Profile status updated successfully",
 		})
+	}
+}
+
+// ResolveEmployeeHandler handles request to resolve employee_id to its internal profile_id.
+func ResolveEmployeeHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		employeeID, ok := vars["employee_id"]
+		if !ok || employeeID == "" {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidRequestData)
+			zap.S().Error("employee_id missing from request vars")
+			return
+		}
+
+		profileID, err := profileSvc.ResolveEmployeeID(ctx, employeeID)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusNotFound, errors.ErrNoRecordFound)
+			zap.S().Error("employee not found or resolution failed: ", err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, specs.MessageResponseWithID{
+			Message:   "Employee resolved successfully",
+			ProfileID: profileID,
+		})
+	}
+}
+
+// GetIntranetEmployeeHandler handles request to fetch employee details from Intranet for form pre-fill.
+func GetIntranetEmployeeHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		employeeID, ok := vars["employee_id"]
+		if !ok || employeeID == "" {
+			middleware.ErrorResponse(w, http.StatusBadRequest, errors.ErrInvalidRequestData)
+			zap.S().Error("employee_id missing from request vars")
+			return
+		}
+
+		response, err := profileSvc.GetIntranetEmployee(ctx, employeeID)
+		if err != nil {
+			if err == errors.ErrNoRecordFound {
+				middleware.ErrorResponse(w, http.StatusNotFound, errors.ErrNoRecordFound)
+			} else if _, ok := err.(errors.ProfileExistsError); ok {
+				middleware.ErrorResponse(w, http.StatusConflict, err)
+			} else {
+				middleware.ErrorResponse(w, http.StatusBadGateway, errors.ErrFailedToGet)
+			}
+			zap.S().Error("failed to get intranet employee: ", err)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusOK, response)
 	}
 }

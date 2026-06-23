@@ -38,6 +38,7 @@ type Profile struct {
 	GithubLink        string   `json:"github_link"`
 	LinkedinLink      string   `json:"linkedin_link"`
 	CareerObjectives  string   `json:"career_objectives"`
+	EmployeeID        string   `json:"employee_id"`
 }
 
 // ListProfiles struct represents details of user profiles for listing.
@@ -53,6 +54,7 @@ type ListProfiles struct {
 	CreatedAt         time.Time      `json:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at"`
 	IsProfileComplete int            `json:"is_profile_complete"`
+	EmployeeID        sql.NullString `json:"employee_id"`
 }
 
 // ResponseListProfiles struct represents response of user profiles for listing.
@@ -68,6 +70,7 @@ type ResponseListProfiles struct {
 	CreatedAt         time.Time      `json:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at"`
 	IsProfileComplete string         `json:"is_profile_complete"`
+	EmployeeID        *string        `json:"employee_id"`
 }
 
 // ListSkills struct represents details of skills for listing.
@@ -103,6 +106,7 @@ type ResponseProfile struct {
 	LinkedinLink      string         `json:"linkedin_link"`
 	CareerObjectives  string         `json:"career_objectives"`
 	IsInvited         string         `json:"is_invited"`
+	EmployeeID        *string        `json:"employee_id"`
 }
 
 // UpdateSequenceRequest struct represents a request to update a sequence of component.

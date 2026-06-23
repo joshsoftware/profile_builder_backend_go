@@ -277,6 +277,12 @@ func SendAdminInvitation(email, name string, profileID int) error {
 	return SendInvitation(email, constants.AdminRequestSubject, message)
 }
 
+// SendAdminWelcomeInvitation sends an admin welcome invitation email
+func SendAdminWelcomeInvitation(email, name string) error {
+	message := ConstructAdminInviteMessage(name)
+	return SendInvitation(email, constants.AdminInvitationSubject, message)
+}
+
 // SendUserInvitation sends a user invitation email
 func SendUserInvitation(email, name string, profileID int) error {
 	message := ConstructUserMessage(email, name, profileID)
@@ -326,12 +332,19 @@ func GetProfileID(r *http.Request) (int, error) {
 
 // ProfileIDNotRequiredPath returns true if the profile_id is not required for the given path
 func ProfileIDNotRequiredPath(r *http.Request) bool {
+	if strings.HasPrefix(r.URL.Path, "/api/profiles/resolve/") {
+		return true
+	}
+	if strings.HasPrefix(r.URL.Path, "/api/intranet/employees/") {
+		return true
+	}
 	pathNotRequired := map[string]bool{
 		"/login":              true,
 		"/api/logout":         true,
 		"/api/profiles":       true,
 		"/api/skills":         true,
 		"/api/updateSequence": true,
+		"/api/admin_invite":   true,
 	}
 
 	return pathNotRequired[r.URL.Path]

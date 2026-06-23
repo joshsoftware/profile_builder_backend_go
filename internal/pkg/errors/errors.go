@@ -29,7 +29,8 @@ var (
 	ErrInvalidEnv             = errors.New("no env variable found")
 	ErrFailedToDelete         = errors.New("failed to delete")
 	ErrNoData                 = errors.New("no data found")
-	ErrFailedToUpdate         = errors.New("failed to update status")
+	ErrFailedToUpdateStatus   = errors.New("failed to update status")
+	ErrFailedToUpdateRecord   = errors.New("failed to update record")
 	ErrComponentNotSuppoerted = errors.New("component name not supported")
 	ErrUnableToSendEmail      = errors.New("unable to send email")
 	ErrFailedToGet            = errors.New("failed to get data")
@@ -38,6 +39,14 @@ var (
 	ErrProfileID              = errors.New("error in parsing profileID from claims")
 	ErrEmptyToken             = errors.New("empty token")
 	ErrTokenNotFound          = errors.New("token not found in whitelist")
+	ErrInvalidAdminRequest    = errors.New("name and email are required")
+	ErrProfileExists          = errors.New("profile already exists for this employee id")
+)
+
+// Internal API key authentication errors
+var (
+	ErrAPIKeyMissing = errors.New("missing API key: X-API-Key header is required")
+	ErrAPIKeyInvalid = errors.New("invalid API key: access denied")
 )
 
 // Profile Related variables
@@ -57,3 +66,18 @@ var (
 	ErrInvalidConfig    = errors.New("invalid configuration for database connection")
 	ErrMisMatchParams   = errors.New("mismatch in number of records for component")
 )
+
+type ProfileExistsError struct {
+	Name string
+}
+
+func (e ProfileExistsError) Error() string {
+	if e.Name != "" {
+		return "Profile already exists for " + e.Name
+	}
+	return "Profile already exists for this Employee ID"
+}
+
+func (e ProfileExistsError) Is(target error) bool {
+	return target == ErrProfileExists
+}
