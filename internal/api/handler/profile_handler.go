@@ -53,6 +53,44 @@ func CreateProfileHandler(ctx context.Context, profileSvc service.Service) func(
 	}
 }
 
+// CreateFullProfileHandler handles HTTP requests to create a full user profile including education and projects.
+func CreateFullProfileHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := helpers.GetUserIDFromContext(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		req, err := decodeCreateFullProfileRequest(r)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		err = req.Validate()
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadRequest, err)
+			zap.S().Error(err)
+			return
+		}
+
+		profileID, err := profileSvc.CreateFullProfile(r.Context(), req, userID)
+		if err != nil {
+			middleware.ErrorResponse(w, http.StatusBadGateway, err)
+			zap.S().Error("Unable to create full profile : ", err, "for profile id : ", profileID)
+			return
+		}
+
+		middleware.SuccessResponse(w, http.StatusCreated, specs.MessageResponseWithID{
+			Message:   "Profile created successfully",
+			ProfileID: profileID,
+		})
+	}
+}
+
 // ProfileListHandler returns an HTTP handler that lists profiles using profileSvc.
 func ProfileListHandler(ctx context.Context, profileSvc service.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

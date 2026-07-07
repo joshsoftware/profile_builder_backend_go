@@ -40,6 +40,7 @@ type Service interface {
 	ResolveEmployeeID(ctx context.Context, employeeID string) (int, error)
 	SyncEmployees(ctx context.Context) (updated int, skipped int, err error)
 	GetIntranetEmployee(ctx context.Context, employeeID string) (specs.IntranetEmployeeResponse, error)
+	CreateFullProfile(ctx context.Context, req specs.CreateFullProfileRequest, userID int) (profileID int, err error)
 
 	// Description: It takes backups of all user profiles and stores them in an SQL file.
 	// Intentionally added here because, going forward, if there is any requirement for an API endpoint, it is currently being used by a cron job.
@@ -488,7 +489,127 @@ func (profileSvc *service) GetIntranetEmployee(ctx context.Context, employeeID s
 		GithubURL:         emp.GithubURL,
 		PrimarySkills:     primarySkills,
 		SecondarySkills:   secondarySkills,
+		Qualification:     emp.Qualification,
 	}
 
+	var projects []specs.IntranetProjectResponse
+	for _, p := range emp.Projects {
+		projects = append(projects, specs.IntranetProjectResponse{
+			Name:        p.Name,
+			Description: p.Description,
+			StartDate:   p.StartDate,
+			EndDate:     p.EndDate,
+		})
+	}
+	if projects == nil {
+		projects = []specs.IntranetProjectResponse{}
+	}
+	response.Projects = projects
+
 	return response, nil
+}
+
+// CreateFullProfile creates a profile along with educations and projects in a single transaction.
+func (profileSvc *service) CreateFullProfile(ctx context.Context, req specs.CreateFullProfileRequest, userID int) (profileID int, err error) {
+	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
+	defer func() {
+		txErr := profileSvc.ProfileRepo.HandleTransaction(ctx, tx, err)
+		if txErr != nil {
+			err = txErr
+			return
+		}
+	}()
+
+	today := helpers.GetTodaysDate()
+
+	var profileRepo repository.ProfileRepo
+	profileRepo.Name = req.Profile.Name
+	profileRepo.Email = req.Profile.Email
+	profileRepo.Gender = req.Profile.Gender
+	profileRepo.Mobile = req.Profile.Mobile
+	profileRepo.Designation = req.Profile.Designation
+	profileRepo.Description = req.Profile.Description
+	profileRepo.Title = req.Profile.Title
+	profileRepo.YearsOfExperience = req.Profile.YearsOfExperience
+	profileRepo.PrimarySkills = req.Profile.PrimarySkills
+	profileRepo.SecondarySkills = req.Profile.SecondarySkills
+	profileRepo.JoshJoiningDate = req.Profile.JoshJoiningDate
+	profileRepo.GithubLink = req.Profile.GithubLink
+	profileRepo.LinkedinLink = req.Profile.LinkedinLink
+	profileRepo.CareerObjectives = req.Profile.CareerObjectives
+	profileRepo.CreatedAt = today
+	profileRepo.UpdatedAt = today
+	profileRepo.CreatedByID = userID
+	profileRepo.UpdatedByID = userID
+	if req.Profile.EmployeeID != "" {
+		profileRepo.EmployeeID = &req.Profile.EmployeeID
+	}
+
+	profileID, err = profileSvc.ProfileRepo.CreateProfile(ctx, profileRepo, tx)
+	if err != nil {
+		zap.S().Error("Unable to create profile : ", err, " for profile id : ", profileID)
+		return 0, err
+	}
+	zap.S().Info("profile created with profile id : ", profileID)
+
+	if len(req.Educations) > 0 {
+		var eduValues []repository.EducationRepo
+		for i, edu := range req.Educations {
+			val := repository.EducationRepo{
+				ProfileID:        profileID,
+				Degree:           edu.Degree,
+				UniversityName:   edu.UniversityName,
+				Place:            edu.Place,
+				PercentageOrCgpa: edu.PercentageOrCgpa,
+				PassingYear:      edu.PassingYear,
+				Priorities:       i + 1,
+				CreatedAt:        today,
+				UpdatedAt:        today,
+				CreatedByID:      userID,
+				UpdatedByID:      userID,
+			}
+			eduValues = append(eduValues, val)
+		}
+		err = profileSvc.EducationRepo.CreateEducation(ctx, eduValues, tx)
+		if err != nil {
+			zap.S().Error("Unable to create educations in full profile flow : ", err, " for profile id : ", profileID)
+			return 0, err
+		}
+	}
+
+	if len(req.Projects) > 0 {
+		var projValues []repository.ProjectRepo
+		for i, proj := range req.Projects {
+			techWorkedOn := proj.TechWorkedOn
+			if len(techWorkedOn) == 0 {
+				techWorkedOn = []string{}
+			}
+
+			val := repository.ProjectRepo{
+				ProfileID:        profileID,
+				Name:             proj.Name,
+				Description:      proj.Description,
+				Role:             proj.Role,
+				Responsibilities: proj.Responsibilities,
+				Technologies:     proj.Technologies,
+				TechWorkedOn:     techWorkedOn,
+				WorkingStartDate: proj.WorkingStartDate,
+				WorkingEndDate:   proj.WorkingEndDate,
+				Duration:         proj.Duration,
+				Priorities:       i + 1,
+				CreatedAt:        today,
+				UpdatedAt:        today,
+				CreatedByID:      userID,
+				UpdatedByID:      userID,
+			}
+			projValues = append(projValues, val)
+		}
+		err = profileSvc.ProjectRepo.CreateProject(ctx, projValues, tx)
+		if err != nil {
+			zap.S().Error("Unable to create projects in full profile flow : ", err, " for profile id : ", profileID)
+			return 0, err
+		}
+	}
+
+	return profileID, nil
 }

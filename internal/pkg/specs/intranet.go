@@ -14,6 +14,16 @@ type IntranetEmployee struct {
 	GithubURL         string  `json:"github_url"`
 	PrimarySkill      string  `json:"primary_skill"`
 	SecondarySkill    string  `json:"secondary_skill"`
+	Qualification     string  `json:"qualification"`
+	Projects          []IntranetProject `json:"projects"`
+}
+
+// IntranetProject represents a project fetched from the Intranet API.
+type IntranetProject struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	StartDate   string `json:"start_date"`
+	EndDate     string `json:"end_date"`
 }
 
 // IntranetEmployeeResponse represents the payload returned to the frontend for form pre-fill.
@@ -30,4 +40,14 @@ type IntranetEmployeeResponse struct {
 	GithubURL         string   `json:"githubUrl"`
 	PrimarySkills     []string `json:"primarySkills"`
 	SecondarySkills   []string `json:"secondarySkills"`
+	Qualification     string   `json:"qualification"`
+	Projects          []IntranetProjectResponse `json:"projects"`
+}
+
+// IntranetProjectResponse represents a project for the frontend form pre-fill.
+type IntranetProjectResponse struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	StartDate   string `json:"startDate"`
+	EndDate     string `json:"endDate"`
 }
