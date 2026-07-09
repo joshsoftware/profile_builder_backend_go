@@ -22,6 +22,18 @@ func decodeUserLoginRequest(r *http.Request) (specs.UserLoginRequest, error) {
 	return req, nil
 }
 
+// Decodes the Full Profile Creation object Request
+func decodeCreateFullProfileRequest(r *http.Request) (specs.CreateFullProfileRequest, error) {
+	var req specs.CreateFullProfileRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		zap.S().Error(err)
+		return specs.CreateFullProfileRequest{}, errors.ErrInvalidBody
+	}
+
+	return req, nil
+}
+
 // Decodes the Profile Creation object Request
 func decodeCreateProfileRequest(r *http.Request) (specs.CreateProfileRequest, error) {
 	var req specs.CreateProfileRequest

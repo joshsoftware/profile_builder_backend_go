@@ -342,6 +342,7 @@ func ProfileIDNotRequiredPath(r *http.Request) bool {
 		"/login":              true,
 		"/api/logout":         true,
 		"/api/profiles":       true,
+		"/api/profiles/full":  true,
 		"/api/skills":         true,
 		"/api/updateSequence": true,
 		"/api/admin_invite":   true,
