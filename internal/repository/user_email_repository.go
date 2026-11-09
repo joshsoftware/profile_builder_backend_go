@@ -28,6 +28,7 @@ type EmailStorer interface {
 	GetInvitations(ctx context.Context, getRequest GetRequest, tx pgx.Tx) (specs.InvitationResponse, error)
 	CreateInvitation(ctx context.Context, invitation Invitations, tx pgx.Tx) error
 	UpdateProfileCompleteStatus(ctx context.Context, profileID int, updateReq UpdateRequest, tx pgx.Tx) error
+	UpdateInvitationTimestamps(ctx context.Context, profileID int, updatedByID int, updatedAt string, tx pgx.Tx) error
 }
 
 // NewUserEmailRepo creates a new instance of the email repository
@@ -117,6 +118,32 @@ func (emailStore *EmailStore) UpdateProfileCompleteStatus(ctx context.Context, p
 
 	if res.RowsAffected() == 0 {
 		zap.S().Info("No rows were updated for profile_id: ", profileID)
+		return nil
+	}
+	return nil
+}
+
+// UpdateInvitationTimestamps updates the timestamps on a pending invitation for the given profile ID
+func (emailStore *EmailStore) UpdateInvitationTimestamps(ctx context.Context, profileID int, updatedByID int, updatedAt string, tx pgx.Tx) error {
+	queryBuilder := psql.Update(invitationTable).
+		Set("updated_at", updatedAt).
+		Set("updated_by_id", updatedByID).
+		Where(sq.Eq{"profile_id": profileID, "is_profile_complete": 0})
+
+	updateQuery, args, err := queryBuilder.ToSql()
+	if err != nil {
+		zap.S().Error("Error generating update invitation timestamps query: ", err)
+		return err
+	}
+
+	res, err := tx.Exec(ctx, updateQuery, args...)
+	if err != nil {
+		zap.S().Error("Error executing update invitation timestamps query: ", err)
+		return err
+	}
+
+	if res.RowsAffected() == 0 {
+		zap.S().Info("No pending invitation found to update for profile_id: ", profileID)
 		return nil
 	}
 	return nil
