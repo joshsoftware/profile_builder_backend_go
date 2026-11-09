@@ -18,7 +18,9 @@ type UserEmailService interface {
 	InviteAdmin(ctx context.Context, userID int, req specs.AdminInviteRequest) error
 }
 
-// inviteUser sends an email to the user with the invitation link
+// SendUserInvitation sends an invitation email to the user. If a pending invitation
+// already exists for this profile, it resends the email and updates the existing
+// invitation's timestamps instead of creating a duplicate record.
 func (userService *service) SendUserInvitation(ctx context.Context, userID int, profileID int) (err error) {
 	tx, _ := userService.ProfileRepo.BeginTransaction(ctx)
 	defer func() {
@@ -42,28 +44,48 @@ func (userService *service) SendUserInvitation(ctx context.Context, userID int, 
 	}
 
 	now := helpers.GetCurrentISTTime()
-	createInvitationRequest := repository.Invitations{
-		ProfileID:       profileID,
-		ProfileComplete: constants.ProfileIncomplete,
-		CreatedAt:       now,
-		UpdatedAt:       now,
-		CreatedByID:     userID,
-		UpdatedByID:     userID,
+
+	// Check if a pending invitation already exists for this profile
+	getRequest := repository.GetRequest{
+		ProfileID:         profileID,
+		IsProfileComplete: constants.ProfileIncomplete,
+	}
+	_, getErr := userService.UserEmailRepo.GetInvitations(ctx, getRequest, tx)
+
+	if getErr == nil {
+		// Pending invitation exists — update its timestamps instead of creating a new one
+		err = userService.UserEmailRepo.UpdateInvitationTimestamps(ctx, profileID, userID, now, tx)
+		if err != nil {
+			zap.S().Errorf("Error updating invitation timestamps %v for profile ID : %d", err, profileID)
+			return err
+		}
+		zap.S().Infof("Invitation resent to user : user ID : %d and profile ID : %d", userID, profileID)
+	} else {
+		// No pending invitation — create a new one
+		createInvitationRequest := repository.Invitations{
+			ProfileID:       profileID,
+			ProfileComplete: constants.ProfileIncomplete,
+			CreatedAt:       now,
+			UpdatedAt:       now,
+			CreatedByID:     userID,
+			UpdatedByID:     userID,
+		}
+
+		err = userService.UserEmailRepo.CreateInvitation(ctx, createInvitationRequest, tx)
+		if err != nil {
+			zap.S().Errorf("Error creating send invitation %v. for user %s : ", err, profile.Email)
+			return err
+		}
+		zap.S().Infof("Invitation sent to user : user ID : %d and profile ID : %d", userID, profileID)
 	}
 
-	err = userService.UserEmailRepo.CreateInvitation(ctx, createInvitationRequest, tx)
-	if err != nil {
-		zap.S().Errorf("Error creating send invitation %v. for user %s : ", err, profile.Email)
-		return err
-	}
-
+	// Ensure the user exists in the users table so they can log in
 	err = userService.UserLoginRepo.CreateUser(ctx, profile.Name, profile.Email, constants.Employee, tx)
 	if err != nil {
 		zap.S().Errorf("Error creating user employee: %v for user %s: ", err, profile.Email)
 		return err
 	}
 
-	zap.S().Infof("Invitation sent to user : user ID : %d and profile ID : %d", userID, profileID)
 	return nil
 }
 

@@ -120,6 +120,7 @@ func (s *ServiceTestSuite) TestSendUserInvitation() {
 				})
 				defer patch.Unpatch()
 
+				s.emailRepo.On("GetInvitations", args.ctx, repository.GetRequest{ProfileID: args.profileID, IsProfileComplete: constants.ProfileIncomplete}, mock.Anything).Return(specs.InvitationResponse{}, pgx.ErrNoRows).Once()
 				s.emailRepo.On("CreateInvitation", args.ctx, mockInvitationRequest, mock.Anything).Return(nil).Once()
 				s.loginRepo.On("CreateUser", args.ctx, mockResponseProfile.Name, mockResponseProfile.Email, constants.Employee, mock.Anything).Return(nil).Once()
 				s.profileRepo.On("HandleTransaction", args.ctx, mock.Anything, nil).Return(nil).Once()
@@ -159,6 +160,7 @@ func (s *ServiceTestSuite) TestSendUserInvitation() {
 				})
 				defer patch.Unpatch()
 
+				s.emailRepo.On("GetInvitations", args.ctx, repository.GetRequest{ProfileID: args.profileID, IsProfileComplete: constants.ProfileIncomplete}, mock.Anything).Return(specs.InvitationResponse{}, pgx.ErrNoRows).Once()
 				s.emailRepo.On("CreateInvitation", args.ctx, mockInvitationRequest, mock.Anything).Return(args.err).Once()
 				s.profileRepo.On("HandleTransaction", args.ctx, mock.Anything, args.err).Return(args.err).Once()
 			},
@@ -182,6 +184,7 @@ func (s *ServiceTestSuite) TestSendUserInvitation() {
 				})
 				defer patch.Unpatch()
 
+				s.emailRepo.On("GetInvitations", args.ctx, repository.GetRequest{ProfileID: args.profileID, IsProfileComplete: constants.ProfileIncomplete}, mock.Anything).Return(specs.InvitationResponse{}, pgx.ErrNoRows).Once()
 				s.emailRepo.On("CreateInvitation", args.ctx, mockInvitationRequest, mock.Anything).Return(nil).Once()
 				s.loginRepo.On("CreateUser", args.ctx, mockResponseProfile.Name, mockResponseProfile.Email, constants.Employee, mock.Anything).Return(args.err).Once()
 				s.profileRepo.On("HandleTransaction", args.ctx, mock.Anything, args.err).Return(args.err).Once()
