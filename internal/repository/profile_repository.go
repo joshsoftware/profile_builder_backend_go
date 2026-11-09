@@ -127,6 +127,7 @@ func (profileStore *ProfileStore) ListProfiles(ctx context.Context, tx pgx.Tx) (
 			&profile.UpdatedAt,
 			&profile.EmployeeID,
 			&profile.IsProfileComplete,
+			&profile.LastInvitationAt,
 		)
 		if err != nil {
 			zap.S().Error("Error scanning row: ", err)
