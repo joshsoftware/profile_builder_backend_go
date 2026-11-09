@@ -152,6 +152,12 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 			val := profile.EmployeeID.String
 			empID = &val
 		}
+		var lastInvitationAt *string
+		if profile.LastInvitationAt.Valid {
+			formatted := profile.LastInvitationAt.Time.Format("02 Jan 2006, 03:04 PM")
+			lastInvitationAt = &formatted
+		}
+
 		values = append(values, specs.ResponseListProfiles{
 			ID:                profile.ID,
 			Name:              profile.Name,
@@ -165,6 +171,7 @@ func (profileSvc *service) ListProfiles(ctx context.Context) (values []specs.Res
 			UpdatedAt:         profile.UpdatedAt,
 			IsProfileComplete: helpers.CheckBoolStatus(profile.IsProfileComplete),
 			EmployeeID:        empID,
+			LastInvitationAt:  lastInvitationAt,
 		})
 	}
 	return values, nil

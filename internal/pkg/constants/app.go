@@ -70,14 +70,19 @@ var ListProfilesColumns = []string{
 	"p.created_at",
 	"p.updated_at",
 	"p.employee_id",
-	`(SELECT 
-			CASE 
-				WHEN COUNT(*) = 0 THEN 0 
-				WHEN COUNT(*) FILTER (WHERE is_profile_complete = 0) > 0 THEN 1 
-				ELSE 0 
-			END 
-		FROM invitations 
+	`(SELECT
+			CASE
+				WHEN COUNT(*) = 0 THEN 0
+				WHEN COUNT(*) FILTER (WHERE is_profile_complete = 0) > 0 THEN 1
+				ELSE 0
+			END
+		FROM invitations
 		WHERE invitations.profile_id = p.id) as is_profile_complete`,
+	`(SELECT updated_at
+		FROM invitations
+		WHERE invitations.profile_id = p.id
+		ORDER BY updated_at DESC
+		LIMIT 1) as last_invitation_at`,
 }
 
 // ResponseProfileColumns defines the columns required for returning a specific user profile.
