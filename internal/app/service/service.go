@@ -516,7 +516,7 @@ func (profileSvc *service) GetIntranetEmployee(ctx context.Context, employeeID s
 	return response, nil
 }
 
-// CreateFullProfile creates a profile along with educations and projects in a single transaction.
+// CreateFullProfile creates a profile along with educations, projects and experiences in a single transaction.
 func (profileSvc *service) CreateFullProfile(ctx context.Context, req specs.CreateFullProfileRequest, userID int) (profileID int, err error) {
 	tx, _ := profileSvc.ProfileRepo.BeginTransaction(ctx)
 	defer func() {
@@ -614,6 +614,30 @@ func (profileSvc *service) CreateFullProfile(ctx context.Context, req specs.Crea
 		err = profileSvc.ProjectRepo.CreateProject(ctx, projValues, tx)
 		if err != nil {
 			zap.S().Error("Unable to create projects in full profile flow : ", err, " for profile id : ", profileID)
+			return 0, err
+		}
+	}
+
+	if len(req.Experiences) > 0 {
+		var expValues []repository.ExperienceRepo
+		for i, exp := range req.Experiences {
+			val := repository.ExperienceRepo{
+				ProfileID:   profileID,
+				Designation: exp.Designation,
+				CompanyName: exp.CompanyName,
+				FromDate:    exp.FromDate,
+				ToDate:      exp.ToDate,
+				Priorities:  i + 1,
+				CreatedAt:   today,
+				UpdatedAt:   today,
+				CreatedByID: userID,
+				UpdatedByID: userID,
+			}
+			expValues = append(expValues, val)
+		}
+		err = profileSvc.ExperienceRepo.CreateExperience(ctx, expValues, tx)
+		if err != nil {
+			zap.S().Error("Unable to create experiences in full profile flow : ", err, " for profile id : ", profileID)
 			return 0, err
 		}
 	}

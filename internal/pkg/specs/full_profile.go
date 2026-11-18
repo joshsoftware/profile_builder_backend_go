@@ -5,11 +5,12 @@ import (
 	"github.com/joshsoftware/profile_builder_backend_go/internal/pkg/errors"
 )
 
-// CreateFullProfileRequest represents a request to create a profile along with educations and projects.
+// CreateFullProfileRequest represents a request to create a profile along with educations, projects and experiences.
 type CreateFullProfileRequest struct {
-	Profile    Profile     `json:"profile"`
-	Educations []Education `json:"educations,omitempty"`
-	Projects   []Project   `json:"projects,omitempty"`
+	Profile     Profile      `json:"profile"`
+	Educations  []Education  `json:"educations,omitempty"`
+	Projects    []Project    `json:"projects,omitempty"`
+	Experiences []Experience `json:"experiences,omitempty"`
 }
 
 // Validate checks if the CreateFullProfileRequest is valid.
@@ -29,6 +30,12 @@ func (req *CreateFullProfileRequest) Validate() error {
 	for _, proj := range req.Projects {
 		if proj.Name == "" {
 			return fmt.Errorf("%s : project name ", errors.ErrParameterMissing.Error())
+		}
+	}
+
+	for _, exp := range req.Experiences {
+		if exp.Designation == "" {
+			return fmt.Errorf("%s : designation ", errors.ErrParameterMissing.Error())
 		}
 	}
 
